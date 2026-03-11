@@ -5,6 +5,9 @@ import {
   normalizeEventToBinding,
 } from "../config/keybinds.js";
 import { ConfigStore } from "../store/configStore.js";
+import packageJson from "../../package.json";
+
+const APP_VERSION = packageJson.version;
 
 const SETTING_TOOLTIPS = {
   adBlock: "Hides common ad containers and promo close buttons.",
@@ -230,7 +233,7 @@ export class SettingsModalView {
         <div class="au-tab-panels">
           ${sectionHtml}
         </div>
-        <div class="au-modal-signature">By Rocks</div>
+        <div class="au-modal-signature">Made by Rocks &bull; v${APP_VERSION}</div>
       </div>
     `;
 
