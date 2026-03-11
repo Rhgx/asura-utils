@@ -19,13 +19,14 @@
   background: var(--au-settings-btn-hover);
 }
 body.au-theme-enabled .au-settings-btn {
-  background: var(--auo-accent-strong);
-  border-color: var(--auo-auth-border);
-  box-shadow: none;
+  background: var(--auo-accent) !important;
+  color: var(--auo-on-accent) !important;
+  border-color: var(--auo-auth-border) !important;
+  box-shadow: none !important;
 }
 body.au-theme-enabled .au-settings-btn:hover {
-  background: var(--auo-auth-hover-bg);
-  border-color: var(--auo-auth-hover-border);
+  background: var(--auo-accent-strong) !important;
+  border-color: var(--auo-auth-hover-border) !important;
 }
 
 #au-modal-overlay {
