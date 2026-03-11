@@ -3,6 +3,7 @@
   padding: 0 1rem;
   background: var(--au-settings-btn-bg);
   color: var(--au-shortcut-text);
+  border: 1px solid transparent;
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
@@ -11,12 +12,20 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, border-color 0.2s;
   margin-right: 10px;
-  border: none;
 }
 .au-settings-btn:hover {
   background: var(--au-settings-btn-hover);
+}
+body.au-theme-enabled .au-settings-btn {
+  background: var(--auo-accent-strong);
+  border-color: var(--auo-auth-border);
+  box-shadow: none;
+}
+body.au-theme-enabled .au-settings-btn:hover {
+  background: var(--auo-auth-hover-bg);
+  border-color: var(--auo-auth-hover-border);
 }
 
 #au-modal-overlay {
