@@ -572,13 +572,16 @@ export const PageController = {
 
   stopReaderAutoScrollForEndAction() {
     if (!this.reader) return;
+    if (!this.reader.isScrolling()) return false;
     this.reader.stopScroll();
     this.reader.emitState();
+    return true;
   },
 
   async performSmartEndAction(actionMode) {
     if (actionMode === "stopScroll") {
-      this.stopReaderAutoScrollForEndAction();
+      const stopped = this.stopReaderAutoScrollForEndAction();
+      if (!stopped) return false;
       this.showEndActionHint("End Action: Auto-scroll stopped");
       return true;
     }

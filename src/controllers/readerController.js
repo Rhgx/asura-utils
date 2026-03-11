@@ -35,6 +35,10 @@ export class ReaderController {
     }
   }
 
+  isScrolling() {
+    return this.state.isScrolling;
+  }
+
   toggleScroll() {
     this.state.isScrolling = !this.state.isScrolling;
     if (this.state.isScrolling) {
