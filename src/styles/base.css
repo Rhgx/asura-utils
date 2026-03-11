@@ -1,0 +1,117 @@
+:root {
+  --au-accent: #913fe2;
+  --au-accent-strong: #6f2598;
+  --au-accent-glow: rgba(145, 63, 226, 0.38);
+  --au-bg-soft: rgba(21, 19, 31, 0.94);
+  --au-bg-panel: #1a1725;
+  --au-bg-control: rgba(34, 29, 49, 0.92);
+  --au-border: rgba(145, 63, 226, 0.34);
+  --au-border-soft: rgba(201, 166, 243, 0.24);
+  --au-text: #f5eeff;
+  --au-text-dim: #bcabd4;
+  --au-shadow: 0 18px 40px rgba(11, 8, 20, 0.55);
+  --au-settings-btn-bg: #6f2598;
+  --au-settings-btn-hover: #5a1f78;
+  --au-modal-overlay: rgba(7, 5, 13, 0.86);
+  --au-modal-bg: linear-gradient(160deg, #1b1629 0%, #121019 100%);
+  --au-modal-title: #f5eeff;
+  --au-section-title: #af95cc;
+  --au-input-bg: #130f1f;
+  --au-input-border: rgba(165, 130, 208, 0.32);
+  --au-toggle-bg: #3b3150;
+  --au-progress-track: rgba(9, 7, 14, 0.6);
+  --au-progress-end: #b67dff;
+  --au-dock-handle-bg: linear-gradient(165deg, rgba(31, 24, 46, 0.96), rgba(19, 15, 30, 0.96));
+  --au-dock-handle-hover-bg: rgba(48, 35, 72, 0.96);
+  --au-dock-handle-hover-border: rgba(179, 138, 234, 0.62);
+  --au-dock-panel-bg: linear-gradient(160deg, rgba(26, 22, 39, 0.96), rgba(18, 15, 29, 0.96));
+  --au-dock-section-border: rgba(188, 159, 226, 0.2);
+  --au-dock-title: #efe4ff;
+  --au-dock-btn-border: rgba(166, 133, 212, 0.38);
+  --au-dock-btn-hover-bg: rgba(66, 51, 96, 0.92);
+  --au-dock-btn-hover-border: rgba(195, 152, 248, 0.64);
+  --au-dock-btn-active-border: rgba(229, 203, 255, 0.4);
+  --au-dock-btn-active-inset: rgba(145, 63, 226, 0.25);
+  --au-dock-input-bg: #140f20;
+  --au-dock-footer: #9f8dbc;
+  --au-reader-backdrop: rgba(8, 5, 16, 0.56);
+  --au-shortcut-bg: rgba(20, 15, 32, 0.95);
+  --au-shortcut-border: rgba(185, 147, 235, 0.45);
+  --au-shortcut-shadow: 0 12px 30px rgba(21, 11, 39, 0.55);
+  --au-shortcut-text: #fff;
+  --au-shortcuts-copy: #b8a6d3;
+  --au-signature-text: #907cab;
+  --auo-accent: #913fe2;
+  --auo-accent-strong: #6f2598;
+  --auo-surface: #222222;
+  --auo-surface-hover: #343434;
+  --auo-text: #d9d9d9;
+  --auo-text-dim: #a2a2a2;
+  --auo-border: rgba(162, 162, 162, 0.2);
+  --auo-bg: #16151d;
+  --auo-header-start: #7d33c8;
+  --auo-nav-hover-bg: rgba(22, 21, 29, 0.55);
+  --auo-nav-hover-text: #fff;
+  --auo-search-bg: #16151d;
+  --auo-search-border: #2e2a3a;
+  --auo-auth-border: rgba(255, 255, 255, 0.12);
+  --auo-auth-hover-bg: #5a1f78;
+  --auo-auth-hover-border: rgba(255, 255, 255, 0.2);
+  --auo-card-alt-bg: #1f1f26;
+  --auo-link: #e7deff;
+  --auo-chapter-bg: #25252d;
+  --auo-chapter-hover-border: rgba(145, 63, 226, 0.45);
+  --auo-on-accent: #fff;
+  --au-logo-filter: none;
+}
+
+
+body.au-adblock #header-ads,
+body.au-adblock #main-menu-ads,
+body.au-adblock div[id*="google_ads"],
+body.au-adblock div[class*="adsbygoogle"],
+body.au-adblock button[aria-label="Close promotion"],
+body.au-adblock div[data-state="open"]:has(+ div[role="dialog"]:has([class*="style_loginModal__"])),
+body.au-adblock div[role="dialog"]:has([class*="style_loginModal__"]) {
+  display: none !important;
+  pointer-events: none !important;
+}
+body.au-hide-slider .au-hide-slider-target,
+body.au-hide-toraka .au-hide-toraka-target,
+body.au-hide-comments #disqus_thread,
+body.au-hide-comments .comments-section,
+body.au-hide-comments [class*="comment"],
+body.au-hide-comments [id*="comment"],
+body.au-hide-popular .au-hide-popular-target { display: none !important; }
+body.au-hide-btt .au-hide-btt-target,
+body.au-hide-btt a[class*="scroll-to-top"],
+body.au-hide-btt [class*="scrollToTop"],
+body.au-hide-btt [class*="scrolltotop"],
+body.au-hide-btt [class*="scroll_to_top"],
+body.au-hide-btt [class*="back-to-top"],
+body.au-hide-btt [id*="scrollToTop"],
+body.au-hide-btt [id*="scrolltotop"],
+body.au-hide-btt [id*="scroll_to_top"],
+body.au-hide-btt [id*="back-to-top"],
+body.au-hide-btt [aria-label*="back to top" i],
+body.au-hide-btt [aria-label*="scroll to top" i] {
+  display: none !important;
+  pointer-events: none !important;
+}
+body.au-compact-sidebar .au-compact-sidebar-target {
+  width: clamp(220px, 24vw, 320px) !important;
+  max-width: 32% !important;
+  flex: 0 0 clamp(220px, 24vw, 320px) !important;
+}
+body.au-compact-sidebar .au-compact-sidebar-target > div {
+  margin: 0 5px !important;
+}
+
+html { scroll-behavior: auto !important; }
+.w-full.mx-auto.center img {
+  display: block !important;
+  width: 100% !important;
+  max-width: var(--comic-width, 800px) !important;
+  margin: 0 auto !important;
+}
+body.au-fit-width .w-full.mx-auto.center img { max-width: 100% !important; width: auto !important; }
