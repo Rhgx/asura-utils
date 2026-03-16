@@ -105,6 +105,7 @@ export const PageController = {
     }
 
     this.cleanupBackToTopControl();
+    this.cleanupBetaBanner();
     this.cleanupCompactSidebar();
     this.cleanupHomeSections();
     this.syncReaderState();
@@ -901,6 +902,37 @@ export const PageController = {
     return Array.from(targets);
   },
 
+  findBetaBannerPromos() {
+    const anchors = Array.from(
+      document.querySelectorAll('a[href*="beta.asurascans.com"]')
+    );
+    const targets = new Set();
+
+    anchors.forEach((anchor) => {
+      const candidate = this.findAncestor(anchor, (el) => {
+        if (!el || !el.querySelectorAll) return false;
+        if (el === document.body || el === document.documentElement) return false;
+        if (el.closest("header") || el.closest("footer")) return false;
+        const betaLinkCount = el.querySelectorAll(
+          'a[href*="beta.asurascans.com"]'
+        ).length;
+        if (betaLinkCount === 0) return false;
+        const rect = el.getBoundingClientRect();
+        if (!rect || rect.width < 220 || rect.height < 40) return false;
+        const text = (el.textContent || "").toLowerCase();
+        const hasBetaText =
+          text.includes("beta") ||
+          text.includes("new chapter reader ui") ||
+          text.includes("premium members only") ||
+          text.includes("try the beta");
+        return el.parentElement === document.body || hasBetaText;
+      });
+      targets.add(candidate || anchor);
+    });
+
+    return Array.from(targets);
+  },
+
   findPopularSections() {
     const targets = new Set();
     const titlePattern =
@@ -1122,6 +1154,26 @@ export const PageController = {
     this.findBackToTopTargets().forEach((el) =>
       el.classList.add("au-hide-btt-target")
     );
+  },
+
+  cleanupBetaBanner() {
+    document
+      .querySelectorAll(".au-hide-beta-banner-target")
+      .forEach((el) => {
+        el.classList.remove("au-hide-beta-banner-target");
+        el.style.removeProperty("display");
+        el.style.removeProperty("pointer-events");
+      });
+
+    const adBlockEnabled = ConfigStore.get("adBlock");
+    if (!adBlockEnabled) return;
+
+    const targets = this.findBetaBannerPromos();
+    targets.forEach((el) => {
+      el.classList.add("au-hide-beta-banner-target");
+      el.style.setProperty("display", "none", "important");
+      el.style.setProperty("pointer-events", "none", "important");
+    });
   },
 
   cleanupHomeSections() {

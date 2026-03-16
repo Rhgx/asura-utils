@@ -70,9 +70,18 @@ body.au-adblock #header-ads,
 body.au-adblock #main-menu-ads,
 body.au-adblock div[id*="google_ads"],
 body.au-adblock div[class*="adsbygoogle"],
-body.au-adblock a[href^="https://beta.asurascans.com/"].bb-wrap,
-body.au-adblock div:has(> a[href^="https://beta.asurascans.com/"].bb-wrap),
-body.au-adblock button[aria-label="Close promotion"],
+body.au-adblock .au-hide-beta-banner-target,
+body.au-adblock a[href*="beta.asurascans.com"],
+body.au-adblock button[aria-label="Close promotion"] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+body.au-adblock div:has(> a[href*="beta.asurascans.com"]) {
+  display: none !important;
+  pointer-events: none !important;
+}
+
 body.au-adblock div[data-state="open"]:has(+ div[role="dialog"]:has([class*="style_loginModal__"])),
 body.au-adblock div[role="dialog"]:has([class*="style_loginModal__"]) {
   display: none !important;
