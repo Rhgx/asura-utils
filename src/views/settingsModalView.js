@@ -442,9 +442,9 @@ export class SettingsModalView {
     if (!tooltip) return `<span>${safeLabel}</span>`;
     const safeTip = this.escapeHtml(tooltip);
     return `
-      <span class="au-control-label" title="${safeTip}">
+      <span class="au-control-label" data-tooltip="${safeTip}">
         <span>${safeLabel}</span>
-        <span class="au-control-tooltip" aria-hidden="true" title="${safeTip}">?</span>
+        <span class="au-control-tooltip" aria-hidden="true">?</span>
       </span>
     `;
   }

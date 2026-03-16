@@ -139,9 +139,52 @@ body.au-theme-enabled .au-settings-btn:hover {
   gap: 10px;
 }
 .au-control-label {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+.au-control-label[data-tooltip] {
+  cursor: help;
+}
+.au-control-label[data-tooltip]::before,
+.au-control-label[data-tooltip]::after {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 3;
+}
+.au-control-label[data-tooltip]::before {
+  content: "";
+  left: 18px;
+  top: calc(100% + 2px);
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent color-mix(in srgb, var(--au-bg-panel) 96%, black) transparent;
+  transform: translateY(-2px);
+}
+.au-control-label[data-tooltip]::after {
+  content: attr(data-tooltip);
+  left: 0;
+  top: calc(100% + 12px);
+  width: max-content;
+  max-width: min(280px, calc(100vw - 88px));
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--au-border-soft) 82%, transparent);
+  background: color-mix(in srgb, var(--au-bg-panel) 96%, black);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--au-shadow) 42%, transparent);
+  color: var(--au-text);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: normal;
+  transform: translateY(-4px);
+}
+.au-control-label[data-tooltip]:hover::before,
+.au-control-label[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 .au-control-tooltip {
   display: inline-flex;
@@ -156,6 +199,12 @@ body.au-theme-enabled .au-settings-btn:hover {
   line-height: 1;
   cursor: help;
   user-select: none;
+  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+}
+.au-control-label[data-tooltip]:hover .au-control-tooltip {
+  border-color: var(--au-dock-btn-hover-border);
+  color: var(--au-text);
+  background: color-mix(in srgb, var(--au-dock-btn-hover-bg) 72%, transparent);
 }
 .au-input-num {
   background: var(--au-input-bg);
