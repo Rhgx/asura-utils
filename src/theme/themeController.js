@@ -4,6 +4,7 @@ import { BASE_THEME_TOKENS, THEME_PRESETS } from "./themePresets.js";
 
 export const ThemeController = {
   activeThemeKey: DEFAULTS.themePreset,
+  appliedThemeKey: "",
   bodyThemeObserver: null,
 
   resolveTheme(themeKey) {
@@ -50,11 +51,22 @@ export const ThemeController = {
     const root = document.documentElement;
     if (!root) return resolved.key;
 
+    // run() re-applies the theme after every DOM mutation batch; skip the
+    // token rewrite when nothing changed and only keep body markers synced.
+    const alreadyApplied =
+      this.appliedThemeKey === resolved.key &&
+      root.getAttribute("data-au-theme") === resolved.key;
+    if (alreadyApplied) {
+      this.ensureBodyTheme(resolved.key);
+      return resolved.key;
+    }
+
     Object.entries(resolved.tokens).forEach(([token, value]) => {
       root.style.setProperty(token, value);
     });
 
     this.activeThemeKey = resolved.key;
+    this.appliedThemeKey = resolved.key;
     root.classList.add("au-theme-enabled");
     root.setAttribute("data-au-theme", resolved.key);
     this.ensureBodyTheme(resolved.key);

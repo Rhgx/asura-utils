@@ -40,6 +40,4 @@ To release a new version:
 - `src/theme/*`: Theme presets and application.
 - `src/views/*`: Settings/progress/dock view classes.
 - `src/controllers/*`: Reader/page controller logic.
-- `src/styles/*`: Multi-file CSS imports.
-
-Legacy monolith reference is kept at `reference/main.legacy.js`.
+- `src/styles/*`: Multi-file CSS imports plus the dynamic purple-accent remap engine (`dynamic-color-remaps.js`) that themes hardcoded site colors when a non-default theme is active.

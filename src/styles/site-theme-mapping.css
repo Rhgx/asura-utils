@@ -8,6 +8,49 @@ body.au-theme-enabled {
   color: var(--auo-text);
 }
 
+/*
+ * Site-wide neutral surface remaps. The current Asura UI hardcodes these
+ * hexes via Tailwind arbitrary values on every page, so mapping them here
+ * themes pages that have no tagged astro-island section.
+ */
+body.au-theme-enabled [class~="bg-[#13111A]"],
+body.au-theme-enabled [class~="bg-[#0D0B12]"] {
+  background-color: var(--auo-bg) !important;
+}
+
+body.au-theme-enabled [class~="bg-[#13111A]/50"] {
+  background-color: color-mix(in srgb, var(--auo-bg) 50%, transparent) !important;
+}
+
+body.au-theme-enabled [class~="bg-[#1D1B22]"],
+body.au-theme-enabled [class~="bg-[#25252d]"] {
+  background-color: var(--auo-surface) !important;
+}
+
+body.au-theme-enabled [class~="bg-[#1C1924]"],
+body.au-theme-enabled [class~="bg-[#1f1a2e]"] {
+  background-color: var(--auo-card-alt-bg) !important;
+}
+
+body.au-theme-enabled [class~="bg-[#2b2931]"],
+body.au-theme-enabled [class~="hover:bg-[#252230]"]:hover,
+body.au-theme-enabled [class~="hover:bg-[#2a1f3d]"]:hover,
+body.au-theme-enabled [class~="hover:bg-[#3a3842]"]:hover,
+body.au-theme-enabled [class~="hover:bg-[#1B1820]/50"]:hover {
+  background-color: var(--auo-surface-hover) !important;
+}
+
+body.au-theme-enabled [class*="border-[#312f40]"],
+body.au-theme-enabled [class*="border-[#3d3655]"] {
+  border-color: var(--auo-border) !important;
+}
+
+body.au-theme-enabled [class~="text-[#999]"],
+body.au-theme-enabled [class~="text-[#999999]"],
+body.au-theme-enabled [class~="text-[#888]"] {
+  color: var(--auo-text-dim) !important;
+}
+
 body.au-theme-enabled .au-overhaul-header {
   background-color: var(--auo-accent) !important;
   color: var(--auo-on-accent) !important;
@@ -192,6 +235,11 @@ body.au-theme-enabled .au-theme-site-section .au-theme-accent-text-hover:hover {
 
 body.au-theme-enabled .au-theme-site-section .group:hover .au-theme-accent-text-group-hover {
   color: var(--auo-accent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .group:hover .au-theme-accent-bg-group-hover {
+  background-color: var(--auo-accent) !important;
+  color: var(--auo-on-accent) !important;
 }
 
 body.au-theme-enabled .au-theme-site-section .au-theme-accent-bg {

@@ -257,6 +257,7 @@ export const PageController = {
       "au-theme-accent-bg-hover",
       "au-theme-accent-bg-soft-hover",
       "au-theme-accent-text-group-hover",
+      "au-theme-accent-bg-group-hover",
       "au-theme-accent-ring-hover",
       "au-theme-accent-ring-focus",
       "au-theme-accent-focus-border",
@@ -367,7 +368,7 @@ export const PageController = {
         Array.from(target.querySelectorAll("[class]")).forEach((el) => {
           const tokens = Array.from(el.classList);
           const isAccentToken = (token) =>
-            /(?:\[#(?:913fe2|8e3fdd|7c35c2|7c3aed|6f2598|5a1f78|a78bfa)\]|(?:purple|violet|fuchsia)-)/i.test(
+            /(?:\[#(?:913fe2|8e3fdd|7c35c2|7c3aed|7b35c1|7b2fd1|6f2598|5a1f78|a78bfa|c084fc)\]|(?:purple|violet|fuchsia)-)/i.test(
               token
             );
 
@@ -379,6 +380,14 @@ export const PageController = {
           }
           if (tokens.some((token) => /^group-hover:text-/.test(token) && isAccentToken(token))) {
             el.classList.add("au-theme-accent-text-group-hover");
+          }
+          if (
+            tokens.some(
+              (token) =>
+                /^group-hover:bg-/.test(token) && !token.includes("/") && isAccentToken(token)
+            )
+          ) {
+            el.classList.add("au-theme-accent-bg-group-hover");
           }
           if (
             tokens.some(
