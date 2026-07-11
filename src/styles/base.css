@@ -88,7 +88,7 @@ body.au-hide-comments .comments-section,
 body.au-hide-comments [class*="comment"],
 body.au-hide-comments [id*="comment"],
 body.au-hide-popular .au-hide-popular-target { display: none !important; }
-body.au-color-timestamps a[href*="/chapter/"] time:not([class*="text-yellow"]):not([class*="text-amber"]) {
+body.au-color-timestamps .au-chapter-timestamp:not([class*="text-yellow"]):not([class*="text-amber"]) {
   color: color-mix(in srgb, var(--auo-accent) 52%, var(--auo-text-dim)) !important;
   font-weight: 500;
 }

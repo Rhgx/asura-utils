@@ -77,6 +77,13 @@ export class ReaderDockView {
                 <button id="au-dock-width-inc" class="au-dock-step" type="button">+</button>
               </div>
             </div>
+            <div class="au-dock-row">
+              <span>Brightness</span>
+              <div class="au-dock-stepper">
+                <input id="au-dock-brightness" class="au-dock-range" type="range" min="40" max="100" step="5">
+                <span id="au-dock-brightness-val" class="au-dock-range-val">100%</span>
+              </div>
+            </div>
           </div>
 
           <div class="au-dock-section">
@@ -147,6 +154,12 @@ export class ReaderDockView {
     }
     if (fitBtn) fitBtn.onclick = () => this.actions.toggleFitWidth();
 
+    const brightness = byId("au-dock-brightness");
+    if (brightness) {
+      brightness.onkeydown = (e) => e.stopPropagation();
+      brightness.oninput = (e) => this.actions.setBrightness(e.target.value);
+    }
+
     const mobileClose = () => {
       if (this.isMobile()) this.setCollapsed(true, true);
     };
@@ -197,6 +210,13 @@ export class ReaderDockView {
     }
     if (speedInput) speedInput.value = String(state.speed);
     if (widthInput) widthInput.value = String(state.width);
+
+    const brightness = byId("au-dock-brightness");
+    const brightnessVal = byId("au-dock-brightness-val");
+    if (brightness && document.activeElement !== brightness) {
+      brightness.value = String(state.brightness);
+    }
+    if (brightnessVal) brightnessVal.textContent = `${state.brightness}%`;
     if (fitBtn) {
       fitBtn.textContent = state.fitWidth ? "On (W)" : "Off (W)";
       fitBtn.classList.toggle("active", state.fitWidth);

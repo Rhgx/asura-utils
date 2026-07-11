@@ -354,9 +354,10 @@ function injectStyle(cssText) {
 }
 
 function applyDynamicColorRemaps() {
-  const activeTheme =
-    document.documentElement?.getAttribute("data-au-theme") || NATIVE_THEME_KEY;
-  if (activeTheme === NATIVE_THEME_KEY) {
+  const root = document.documentElement;
+  const activeTheme = root?.getAttribute("data-au-theme") || NATIVE_THEME_KEY;
+  const hasCustomAccent = root?.hasAttribute("data-au-custom-accent");
+  if (activeTheme === NATIVE_THEME_KEY && !hasCustomAccent) {
     injectStyle("");
     return;
   }
@@ -367,7 +368,9 @@ function hasRelevantRemapMutation(mutations) {
   return mutations.some((mutation) => {
     if (
       mutation.type === "attributes" &&
-      (mutation.attributeName === "class" || mutation.attributeName === "data-au-theme")
+      (mutation.attributeName === "class" ||
+        mutation.attributeName === "data-au-theme" ||
+        mutation.attributeName === "data-au-custom-accent")
     ) {
       return mutation.target?.id !== STYLE_ID;
     }
@@ -398,6 +401,6 @@ export function installDynamicColorRemaps() {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ["class", "data-au-theme"],
+    attributeFilter: ["class", "data-au-theme", "data-au-custom-accent"],
   });
 }

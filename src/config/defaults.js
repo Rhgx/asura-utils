@@ -22,6 +22,11 @@ const DEFAULTS = {
   chapterEndAction: "nextChapter",
   hasPremiumAccess: false,
   themePreset: "asuraClassic",
+  trackReadingHistory: true,
+  resumeChapterPosition: true,
+  customAccentEnabled: false,
+  customAccent: "#913fe2",
+  readerBrightness: 100,
   ...KEYBIND_DEFAULTS,
 };
 
@@ -41,6 +46,11 @@ const CONFIG_META = {
     options: ["off", "nextChapter", "seriesPage", "stopScroll"],
   },
   hasPremiumAccess: { type: "boolean" },
+  trackReadingHistory: { type: "boolean" },
+  resumeChapterPosition: { type: "boolean" },
+  customAccentEnabled: { type: "boolean" },
+  customAccent: { type: "string" },
+  readerBrightness: { type: "number", min: 40, max: 100, step: 5 },
   ...Object.fromEntries(KEYBIND_FIELDS.map((field) => [field.key, { type: "string" }])),
   themePreset: { type: "string", options: Object.keys(THEME_PRESETS) },
 };

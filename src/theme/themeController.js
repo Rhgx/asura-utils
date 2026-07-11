@@ -4,8 +4,30 @@ import { BASE_THEME_TOKENS, THEME_PRESETS } from "./themePresets.js";
 
 export const ThemeController = {
   activeThemeKey: DEFAULTS.themePreset,
-  appliedThemeKey: "",
+  appliedSignature: "",
   bodyThemeObserver: null,
+
+  resolveCustomAccent() {
+    if (!ConfigStore.get("customAccentEnabled")) return "";
+    const value = String(ConfigStore.get("customAccent") || "").trim();
+    return /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : "";
+  },
+
+  buildCustomAccentTokens(accent) {
+    return {
+      "--au-accent": accent,
+      "--auo-accent": accent,
+      "--au-accent-strong": `color-mix(in srgb, ${accent} 68%, black)`,
+      "--auo-accent-strong": `color-mix(in srgb, ${accent} 68%, black)`,
+      "--au-accent-glow": `color-mix(in srgb, ${accent} 38%, transparent)`,
+      "--au-settings-btn-bg": `color-mix(in srgb, ${accent} 68%, black)`,
+      "--au-settings-btn-hover": `color-mix(in srgb, ${accent} 54%, black)`,
+      "--au-progress-end": `color-mix(in srgb, ${accent} 55%, white)`,
+      "--auo-link": `color-mix(in srgb, ${accent} 45%, white)`,
+      "--auo-auth-hover-bg": `color-mix(in srgb, ${accent} 54%, black)`,
+      "--auo-chapter-hover-border": `color-mix(in srgb, ${accent} 45%, transparent)`,
+    };
+  },
 
   resolveTheme(themeKey) {
     const key = ConfigStore.sanitize("themePreset", themeKey);
@@ -51,24 +73,35 @@ export const ThemeController = {
     const root = document.documentElement;
     if (!root) return resolved.key;
 
+    const customAccent = this.resolveCustomAccent();
+    const signature = `${resolved.key}|${customAccent}`;
+
     // run() re-applies the theme after every DOM mutation batch; skip the
     // token rewrite when nothing changed and only keep body markers synced.
     const alreadyApplied =
-      this.appliedThemeKey === resolved.key &&
+      this.appliedSignature === signature &&
       root.getAttribute("data-au-theme") === resolved.key;
     if (alreadyApplied) {
       this.ensureBodyTheme(resolved.key);
       return resolved.key;
     }
 
-    Object.entries(resolved.tokens).forEach(([token, value]) => {
+    const tokens = customAccent
+      ? { ...resolved.tokens, ...this.buildCustomAccentTokens(customAccent) }
+      : resolved.tokens;
+    Object.entries(tokens).forEach(([token, value]) => {
       root.style.setProperty(token, value);
     });
 
     this.activeThemeKey = resolved.key;
-    this.appliedThemeKey = resolved.key;
+    this.appliedSignature = signature;
     root.classList.add("au-theme-enabled");
     root.setAttribute("data-au-theme", resolved.key);
+    if (customAccent) {
+      root.setAttribute("data-au-custom-accent", "1");
+    } else {
+      root.removeAttribute("data-au-custom-accent");
+    }
     this.ensureBodyTheme(resolved.key);
 
     return resolved.key;

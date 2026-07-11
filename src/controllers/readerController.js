@@ -233,6 +233,7 @@ export class ReaderController {
       speed: this.state.speed,
       width: this.state.width,
       fitWidth: ConfigStore.get("fitWidthMode"),
+      brightness: ConfigStore.get("readerBrightness"),
       progress: this.getProgress(),
       canPrev: this.canNavigate("prev"),
       canNext: this.canNavigate("next"),

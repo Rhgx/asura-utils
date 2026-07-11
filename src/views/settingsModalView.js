@@ -1,11 +1,13 @@
 import { APPEARANCE_MODAL_SECTION, READER_MODAL_SECTION } from "../config/modalSections.js";
 import {
   KEYBIND_FIELDS,
-  bindingToLabel,
   normalizeEventToBinding,
 } from "../config/keybinds.js";
 import { ConfigStore } from "../store/configStore.js";
+import { HistoryStore } from "../store/historyStore.js";
+import { DEFAULTS } from "../config/defaults.js";
 import packageJson from "../../package.json";
+import { shortcutsEditorHTML, setShortcutListeningState, stopShortcutCapture } from "./settingsShortcuts.js";
 
 const APP_VERSION = packageJson.version;
 
@@ -28,6 +30,13 @@ const SETTING_TOOLTIPS = {
   chapterEndAction: "Action to run when you reach chapter end.",
   imageWidth: "Base max width used when Fit Width is disabled.",
   autoScrollSpeed: "Auto-scroll speed in pixels-per-frame steps.",
+  trackReadingHistory:
+    "Remembers your last-read chapter and progress per series.",
+  resumeChapterPosition:
+    "Jumps back to where you left off when reopening a chapter.",
+  customAccentEnabled: "Overrides the theme accent with your own color.",
+  customAccent: "Accent color used across the themed UI.",
+  readerBrightness: "Dims chapter images for night reading (40-100%).",
 };
 
 export class SettingsModalView {
@@ -166,15 +175,18 @@ export class SettingsModalView {
         const inputs = (section.inputs || [])
           .map((input) => {
             const isDisabled =
-              input.key === "imageWidth" && !!cfg.fitWidthMode;
+              (input.key === "imageWidth" && !!cfg.fitWidthMode) ||
+              (input.key === "customAccent" && !cfg.customAccentEnabled);
             const tooltip = input.tooltip || SETTING_TOOLTIPS[input.key] || "";
+            const inputClass =
+              input.type === "color" ? "au-input-color" : "au-input-num";
             return `
               <div class="au-control-row">
                 ${this.controlLabelHTML(input.label, tooltip)}
                 <input
                   type="${input.type}"
                   id="${input.id}"
-                  class="au-input-num"
+                  class="${inputClass}"
                   data-key="${input.key}"
                   step="${input.step || "1"}"
                   value="${cfg[input.key]}"
@@ -472,88 +484,14 @@ export class SettingsModalView {
   }
 
   shortcutsEditorHTML(cfg) {
-    const grouped = KEYBIND_FIELDS.reduce((acc, field) => {
-      if (!acc[field.group]) acc[field.group] = [];
-      acc[field.group].push(field);
-      return acc;
-    }, {});
-    const groupsHtml = Object.entries(grouped)
-      .map(([group, fields]) => {
-        const rows = fields
-          .map((field) => {
-            const helpHtml = field.help
-              ? `<div class="au-shortcut-help">${field.help}</div>`
-              : "";
-            return `
-              <div class="au-shortcut-row" data-shortcut-row="${field.key}">
-                <div class="au-shortcut-meta">
-                  <div class="au-shortcut-name">${field.label}</div>
-                  ${helpHtml}
-                </div>
-                <div class="au-shortcut-actions">
-                  <button
-                    type="button"
-                    class="au-shortcut-bind-btn"
-                    data-shortcut-capture="${field.key}"
-                  >
-                    <span class="au-shortcut-bind-label">${bindingToLabel(cfg[field.key])}</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="au-shortcut-reset-btn"
-                    data-shortcut-reset="${field.key}"
-                  >
-                    Reset
-                  </button>
-                </div>
-              </div>
-            `;
-          })
-          .join("");
-        return `
-          <div class="au-shortcut-card">
-            <div class="au-shortcut-card-title">${group}</div>
-            <div class="au-shortcut-grid">
-              ${rows}
-            </div>
-          </div>
-        `;
-      })
-      .join("");
-
-    return `
-      <div class="au-shortcut-scroll">
-        <div class="au-shortcut-intro">
-          <div class="au-shortcut-intro-title">Rebind your controls</div>
-          <div class="au-shortcut-intro-copy">
-            Click a binding to capture a new key. Press <b>Esc</b> to cancel or <b>Backspace/Delete</b> to clear.
-          </div>
-        </div>
-        <div class="au-shortcut-cards">
-          ${groupsHtml}
-        </div>
-      </div>
-    `;
+    return shortcutsEditorHTML(this, cfg);
   }
 
-  setShortcutListeningState(overlay, key, isListening, labelOverride) {
-    if (!overlay || !key) return;
-    const row = overlay.querySelector(`[data-shortcut-row="${key}"]`);
-    const bindButton = overlay.querySelector(`[data-shortcut-capture="${key}"]`);
-    const label = bindButton && bindButton.querySelector(".au-shortcut-bind-label");
-    if (row) row.classList.toggle("is-listening", !!isListening);
-    if (bindButton) bindButton.classList.toggle("is-listening", !!isListening);
-    if (label) {
-      const text =
-        isListening
-          ? labelOverride || "Press a key..."
-          : bindingToLabel(ConfigStore.get(key));
-      label.textContent = text;
-    }
+  setShortcutListeningState(...args) {
+    return setShortcutListeningState(...args);
   }
 
-  stopShortcutCapture(overlay, key) {
-    if (!key) return;
-    this.setShortcutListeningState(overlay, key, false);
+  stopShortcutCapture(...args) {
+    return stopShortcutCapture(this, ...args);
   }
 }
