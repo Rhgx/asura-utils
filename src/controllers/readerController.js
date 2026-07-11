@@ -1,6 +1,16 @@
 import { CONSTANTS } from "../config/defaults.js";
 import { ConfigStore } from "../store/configStore.js";
 
+const CHAPTER_IMAGE_SELECTOR = [
+  ".w-full.mx-auto.center img",
+  'img[src*="/asura-images/chapters/"]',
+  'img[data-src*="/asura-images/chapters/"]',
+  'img[data-loaded-src*="/asura-images/chapters/"]',
+  'img[srcset*="/asura-images/chapters/"]',
+  'img[src*="/storage/media/"]',
+  'img[src*="/storage/comics/"]',
+].join(",");
+
 export class ReaderController {
   constructor(onStateChange, onHint) {
     this.onStateChange = onStateChange;
@@ -117,7 +127,7 @@ export class ReaderController {
   }
 
   getChapterContentBounds() {
-    const images = Array.from(document.querySelectorAll(".w-full.mx-auto.center img"));
+    const images = Array.from(document.querySelectorAll(CHAPTER_IMAGE_SELECTOR));
     if (images.length === 0) return null;
 
     let minTop = Number.POSITIVE_INFINITY;
@@ -145,7 +155,18 @@ export class ReaderController {
   }
 
   findSeriesLink() {
-    return document.querySelector('a[href*="/series/"]:not([href*="/chapter/"])');
+    const directLink = document.querySelector(
+      'a[href*="/comics/"]:not([href*="/chapter/"]), a[href*="/series/"]:not([href*="/chapter/"])'
+    );
+    if (directLink) return directLink;
+
+    const path = window.location.pathname || "";
+    const match = path.match(/^\/(comics|series)\/([^/]+)\/chapter\/[^/]+/);
+    if (!match) return null;
+
+    return {
+      href: `${window.location.origin}/${match[1]}/${match[2]}`,
+    };
   }
 
   hasSeriesLink() {

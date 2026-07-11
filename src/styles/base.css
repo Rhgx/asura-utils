@@ -71,13 +71,7 @@ body.au-adblock #main-menu-ads,
 body.au-adblock div[id*="google_ads"],
 body.au-adblock div[class*="adsbygoogle"],
 body.au-adblock .au-hide-beta-banner-target,
-body.au-adblock a[href*="beta.asurascans.com"],
 body.au-adblock button[aria-label="Close promotion"] {
-  display: none !important;
-  pointer-events: none !important;
-}
-
-body.au-adblock div:has(> a[href*="beta.asurascans.com"]) {
   display: none !important;
   pointer-events: none !important;
 }
@@ -94,6 +88,10 @@ body.au-hide-comments .comments-section,
 body.au-hide-comments [class*="comment"],
 body.au-hide-comments [id*="comment"],
 body.au-hide-popular .au-hide-popular-target { display: none !important; }
+body.au-color-timestamps a[href*="/chapter/"] time:not([class*="text-yellow"]):not([class*="text-amber"]) {
+  color: color-mix(in srgb, var(--auo-accent) 52%, var(--auo-text-dim)) !important;
+  font-weight: 500;
+}
 body.au-hide-btt .au-hide-btt-target,
 body.au-hide-btt a[class*="scroll-to-top"],
 body.au-hide-btt [class*="scrollToTop"],
@@ -104,6 +102,7 @@ body.au-hide-btt [id*="scrollToTop"],
 body.au-hide-btt [id*="scrolltotop"],
 body.au-hide-btt [id*="scroll_to_top"],
 body.au-hide-btt [id*="back-to-top"],
+body.au-hide-btt #scroll-top-btn,
 body.au-hide-btt [aria-label*="back to top" i],
 body.au-hide-btt [aria-label*="scroll to top" i] {
   display: none !important;
@@ -119,10 +118,19 @@ body.au-compact-sidebar .au-compact-sidebar-target > div {
 }
 
 html { scroll-behavior: auto !important; }
-.w-full.mx-auto.center img {
+body.au-page-reader .w-full.mx-auto.center img,
+body.au-page-reader img[src*="/asura-images/chapters/"],
+body.au-page-reader img[data-src*="/asura-images/chapters/"],
+body.au-page-reader img[data-loaded-src*="/asura-images/chapters/"] {
   display: block !important;
   width: 100% !important;
   max-width: var(--comic-width, 800px) !important;
   margin: 0 auto !important;
 }
-body.au-fit-width .w-full.mx-auto.center img { max-width: 100% !important; width: auto !important; }
+body.au-page-reader.au-fit-width .w-full.mx-auto.center img,
+body.au-page-reader.au-fit-width img[src*="/asura-images/chapters/"],
+body.au-page-reader.au-fit-width img[data-src*="/asura-images/chapters/"],
+body.au-page-reader.au-fit-width img[data-loaded-src*="/asura-images/chapters/"] {
+  max-width: 100% !important;
+  width: auto !important;
+}

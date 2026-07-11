@@ -7,6 +7,18 @@ import { ReaderDockView } from "../views/readerDockView.js";
 import { SettingsModalView } from "../views/settingsModalView.js";
 import { ReaderController } from "./readerController.js";
 
+const SERIES_LINK_SELECTOR = 'a[href*="/comics/"],a[href*="/series/"]';
+const CHAPTER_LINK_SELECTOR = 'a[href*="/chapter/"]';
+const CHAPTER_IMAGE_SELECTOR = [
+  ".w-full.mx-auto.center img",
+  'img[src*="/asura-images/chapters/"]',
+  'img[data-src*="/asura-images/chapters/"]',
+  'img[data-loaded-src*="/asura-images/chapters/"]',
+  'img[srcset*="/asura-images/chapters/"]',
+  'img[src*="/storage/media/"]',
+  'img[src*="/storage/comics/"]',
+].join(",");
+
 export const PageController = {
   settingsView: null,
   progressBarView: null,
@@ -77,11 +89,10 @@ export const PageController = {
   },
 
   getPageContext() {
-    const url = window.location.href;
     const path = window.location.pathname || "/";
-    const isReader = url.includes("/chapter/");
-    const isSeriesListing = /\/series(\?|$)/.test(url);
-    const isSeriesPage = /\/series\/[^/?#]+/.test(url) && !isReader;
+    const isReader = /\/chapter\/[^/?#]+/.test(path);
+    const isSeriesListing = /^\/(browse|series)(\/|$)/.test(path);
+    const isSeriesPage = /^\/(comics|series)\/[^/?#]+/.test(path) && !isReader;
     const isAuthPage = /^\/(login|signup|forgot-password|reset-password)(\/|$)/.test(
       path
     );
@@ -165,6 +176,10 @@ export const PageController = {
 
     body.classList.add("au-theme-enabled");
     body.classList.toggle("au-hide-slider", !!ConfigStore.get("hideSlider"));
+    body.classList.toggle(
+      "au-color-timestamps",
+      !!ConfigStore.get("colorTimestamps")
+    );
     body.classList.toggle("au-adblock", !!ConfigStore.get("adBlock"));
     body.classList.toggle("au-hide-toraka", !!ConfigStore.get("hideToraka"));
     body.classList.toggle(
@@ -192,14 +207,25 @@ export const PageController = {
       "au-page-series",
       this.pageContext.isSeriesPage && !this.pageContext.isSeriesListing
     );
+    body.classList.toggle("au-page-listing", this.pageContext.isSeriesListing);
     body.classList.toggle("au-page-reader", this.pageContext.isReader);
     body.classList.toggle("au-page-auth", this.pageContext.isAuthPage);
+    body.classList.toggle("au-page-ebooks", window.location.pathname.startsWith("/ebooks"));
+    body.classList.toggle(
+      "au-page-series-ranking",
+      window.location.pathname.startsWith("/series-ranking")
+    );
+    body.classList.toggle(
+      "au-page-leaderboard",
+      window.location.pathname.startsWith("/leaderboard")
+    );
   },
 
   applyOverhaulTargets() {
     this.clearOverhaulTargets();
 
     this.tagHeaderOverhaulTargets();
+    this.tagThemeTargets();
     if (this.pageContext.isSeriesPage && !this.pageContext.isSeriesListing) {
       this.tagSeriesOverhaulTargets();
     }
@@ -212,6 +238,7 @@ export const PageController = {
       "au-overhaul-nav-link",
       "au-overhaul-search",
       "au-overhaul-auth-btn",
+      "au-theme-dropdown-surface",
       "au-series-breadcrumb",
       "au-series-card",
       "au-series-synopsis",
@@ -221,6 +248,23 @@ export const PageController = {
       "au-series-chapter-row",
       "au-series-comments",
       "au-series-related",
+      "au-theme-site-section",
+      "au-theme-muted-gradient",
+      "au-theme-accent-text",
+      "au-theme-accent-text-hover",
+      "au-theme-accent-bg",
+      "au-theme-accent-bg-soft",
+      "au-theme-accent-bg-hover",
+      "au-theme-accent-bg-soft-hover",
+      "au-theme-accent-text-group-hover",
+      "au-theme-accent-ring-hover",
+      "au-theme-accent-ring-focus",
+      "au-theme-accent-focus-border",
+      "au-theme-accent-gradient",
+      "au-theme-card-surface",
+      "au-theme-control-surface",
+      "au-theme-accent-shadow",
+      "au-theme-accent-shadow-hover",
     ];
     const selector = markerClasses.map((cls) => `.${cls}`).join(",");
     document.querySelectorAll(selector).forEach((el) => {
@@ -229,18 +273,25 @@ export const PageController = {
   },
 
   tagHeaderOverhaulTargets() {
-    const header = document.querySelector("header.bg-themecolor");
+    const header = document.querySelector("header");
     if (!header) return;
 
     header.classList.add("au-overhaul-header");
 
     const inner =
-      header.querySelector('div[class*="max-w-[1220px]"]') ||
+      Array.from(header.querySelectorAll("div")).find((el) => {
+        const className = typeof el.className === "string" ? el.className : "";
+        return (
+          className.includes("max-w-[1220px]") ||
+          className.includes("max-w-[1285px]") ||
+          (className.includes("mx-auto") && className.includes("w-full"))
+        );
+      }) ||
       header.firstElementChild;
     if (inner) inner.classList.add("au-overhaul-header-inner");
 
     header
-      .querySelectorAll("ul li a span, ul li a")
+      .querySelectorAll("nav a, ul li a")
       .forEach((el) => el.classList.add("au-overhaul-nav-link"));
 
     const searchInput =
@@ -250,38 +301,226 @@ export const PageController = {
     if (searchInput) searchInput.classList.add("au-overhaul-search");
 
     header
-      .querySelectorAll('a[href*="/login"], a[href*="/dashboard"]')
+      .querySelectorAll('a[href*="/login"], a[href*="/dashboard"], a[href*="/account"]')
       .forEach((anchor) => {
-        const btn = anchor.querySelector("button");
-        if (btn) btn.classList.add("au-overhaul-auth-btn");
+        const btn = anchor.querySelector("button") || anchor;
+        btn.classList.add("au-overhaul-auth-btn");
       });
+
+    const resourcesMenu = Array.from(header.querySelectorAll("div")).find((el) =>
+      Array.from(el.classList).includes("group/resources")
+    );
+    const resourcesDropdown = resourcesMenu
+      ? Array.from(resourcesMenu.children).find((el) =>
+          Array.from(el.classList).some((token) => token === "bg-[#1C1924]")
+        )
+      : null;
+    if (resourcesDropdown) {
+      resourcesDropdown.classList.add("au-theme-dropdown-surface");
+    }
+  },
+
+  tagThemeTargets() {
+    const componentNames = [
+      "TrendingSection",
+      "LatestUpdates",
+      "PopularSidebar",
+      "AnnouncementsSection",
+      "ChapterListReact",
+      "CommentsSection",
+      "Recommended",
+      "BrowseFilters",
+      "NovelStore",
+    ];
+    const selector = componentNames
+      .map((name) => `astro-island[component-url*="${name}"]`)
+      .join(",");
+
+    const themeRoots = Array.from(document.querySelectorAll(selector));
+    const footer = document.querySelector("footer");
+    if (footer) themeRoots.push(footer);
+    const path = window.location.pathname || "/";
+    if (/^\/(series-ranking|leaderboard)(\/|$)/.test(path)) {
+      const main = document.querySelector("main");
+      if (main) themeRoots.push(main);
+    }
+
+    themeRoots.forEach((island) => {
+      const componentUrl =
+        island.getAttribute("component-url") ||
+        (island.tagName === "MAIN" ? "PageScope" : "");
+      const candidates = Array.from(
+        island.querySelectorAll("section, aside, article, div")
+      );
+      const target =
+        (/BrowseFilters|NovelStore|PageScope/.test(componentUrl) ? island : null) ||
+        candidates.find((el) => {
+          const rect = el.getBoundingClientRect();
+          if (!rect || rect.width < 220 || rect.height < 80) return false;
+          const background = window.getComputedStyle(el).backgroundColor;
+          return background && background !== "transparent" && background !== "rgba(0, 0, 0, 0)";
+        }) ||
+        island.firstElementChild ||
+        island.parentElement;
+      if (target && target !== document.body && target !== document.documentElement) {
+        target.classList.add("au-theme-site-section");
+        Array.from(target.querySelectorAll("[class]")).forEach((el) => {
+          const tokens = Array.from(el.classList);
+          const isAccentToken = (token) =>
+            /(?:\[#(?:913fe2|8e3fdd|7c35c2|7c3aed|6f2598|5a1f78|a78bfa)\]|(?:purple|violet|fuchsia)-)/i.test(
+              token
+            );
+
+          if (tokens.some((token) => /^text-/.test(token) && isAccentToken(token))) {
+            el.classList.add("au-theme-accent-text");
+          }
+          if (tokens.some((token) => /^hover:text-/.test(token) && isAccentToken(token))) {
+            el.classList.add("au-theme-accent-text-hover");
+          }
+          if (tokens.some((token) => /^group-hover:text-/.test(token) && isAccentToken(token))) {
+            el.classList.add("au-theme-accent-text-group-hover");
+          }
+          if (
+            tokens.some(
+              (token) => /^bg-/.test(token) && !token.includes("/") && isAccentToken(token)
+            )
+          ) {
+            el.classList.add("au-theme-accent-bg");
+          }
+          if (
+            tokens.some(
+              (token) => /^bg-/.test(token) && token.includes("/") && isAccentToken(token)
+            )
+          ) {
+            el.classList.add("au-theme-accent-bg-soft");
+          }
+          if (
+            tokens.some(
+              (token) =>
+                /^hover:bg-/.test(token) && !token.includes("/") && isAccentToken(token)
+            )
+          ) {
+            el.classList.add("au-theme-accent-bg-hover");
+          }
+          if (
+            tokens.some(
+              (token) =>
+                /^hover:bg-/.test(token) && token.includes("/") && isAccentToken(token)
+            )
+          ) {
+            el.classList.add("au-theme-accent-bg-soft-hover");
+          }
+          if (tokens.some((token) => /^hover:ring-/.test(token) && isAccentToken(token))) {
+            el.classList.add("au-theme-accent-ring-hover");
+          }
+          if (tokens.some((token) => /^focus:ring-/.test(token) && isAccentToken(token))) {
+            el.classList.add("au-theme-accent-ring-focus");
+          }
+          if (tokens.some((token) => /^shadow-/.test(token) && isAccentToken(token))) {
+            el.classList.add("au-theme-accent-shadow");
+          }
+          if (
+            !tokens.some((token) => /^hover:ring-/.test(token) && isAccentToken(token)) &&
+            tokens.some((token) => /^hover:shadow-/.test(token) && isAccentToken(token))
+          ) {
+            el.classList.add("au-theme-accent-shadow-hover");
+          }
+          if (tokens.some((token) => /^focus-within:border-/.test(token) && isAccentToken(token))) {
+            el.classList.add("au-theme-accent-focus-border");
+          }
+          if (tokens.some((token) => /^(?:from|via|to)-/.test(token) && isAccentToken(token))) {
+            el.classList.add("au-theme-accent-gradient");
+          }
+        });
+        if (componentUrl.includes("BrowseFilters")) {
+          target.querySelectorAll(".series-card").forEach((card) => {
+            card.classList.add("au-theme-card-surface");
+          });
+          target
+            .querySelectorAll(
+              'button[class*="bg-[#1f1a2e]"], label[class*="bg-[#1f1a2e]"]'
+            )
+            .forEach((control) => {
+              control.classList.add("au-theme-control-surface");
+            });
+        }
+        if (componentUrl.includes("ChapterListReact")) {
+          target.querySelectorAll("input, button, select").forEach((control) => {
+            const tokens = Array.from(control.classList);
+            if (
+              tokens.some(
+                (token) => token === "bg-[#13111A]" || token === "bg-[#1C1924]"
+              )
+            ) {
+              control.classList.add("au-theme-control-surface");
+            }
+          });
+        }
+        Array.from(target.querySelectorAll("div, article, a")).forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          if (!rect || rect.width < 220 || rect.height < 80) return;
+          const backgroundImage = window.getComputedStyle(el).backgroundImage;
+          if (backgroundImage && backgroundImage.includes("gradient")) {
+            el.classList.add("au-theme-muted-gradient");
+          }
+        });
+      }
+    });
   },
 
   tagSeriesOverhaulTargets() {
-    const divs = Array.from(document.querySelectorAll("div"));
     const textOf = (el) => (el.textContent || "").trim().toLowerCase();
+    const chapterAnchors = this.getChapterAnchors(document);
+    const chapterRows = chapterAnchors.filter((anchor) => {
+      const txt = textOf(anchor);
+      return /chapter\s*\d+/i.test(txt) && !/(first|latest)\s+chapter/i.test(txt);
+    });
+    const seriesCardArticle =
+      Array.from(document.querySelectorAll("article")).find((el) => {
+        const txt = textOf(el);
+        return (
+          txt.includes("bookmark") ||
+          txt.includes("status") ||
+          txt.includes("author") ||
+          txt.includes("artist")
+        );
+      }) || document.querySelector("main article");
+    const seriesCard = seriesCardArticle?.parentElement || seriesCardArticle;
 
-    const breadcrumb = divs.find(
-      (el) =>
-        this.hasClassSnippets(el, ["bg-[#222222]", "px-5", "py-2.5"]) &&
-        textOf(el).includes("asura scans")
+    const breadcrumb = Array.from(document.querySelectorAll("nav,div,section")).find(
+      (el) => {
+        const links = Array.from(el.querySelectorAll("a"));
+        if (links.length < 2 || links.length > 6) return false;
+        const hrefs = links.map((anchor) => anchor.getAttribute("href") || anchor.href || "");
+        const hasHome = hrefs.some(
+          (href) => href === "/" || /^https?:\/\/[^/]+\/?$/.test(href)
+        );
+        const hasBrowse = hrefs.some(
+          (href) => href.includes("/browse") || href.includes("/series")
+        );
+        const hasSeries = hrefs.some(
+          (href) => /\/(comics|series)\//.test(href) && !href.includes("/chapter/")
+        );
+        return hasHome && hasBrowse && hasSeries && textOf(el).length < 220;
+      }
     );
     if (breadcrumb) breadcrumb.classList.add("au-series-breadcrumb");
 
-    const seriesCard = divs.find(
-      (el) =>
-        this.hasClassSnippets(el, ["bg-[#222222]"]) &&
-        /synopsis|bookmark|followed by|keywords/i.test(el.textContent || "")
-    );
     if (seriesCard) seriesCard.classList.add("au-series-card");
 
-    const synopsisHeading = Array.from(document.querySelectorAll("h3")).find((h) =>
-      /^synopsis/i.test((h.textContent || "").trim())
-    );
-    if (synopsisHeading) {
-      const synopsisBlock = synopsisHeading.closest("div");
-      if (synopsisBlock) synopsisBlock.classList.add("au-series-synopsis");
-    }
+    const synopsisBlock =
+      document.getElementById("description-text")?.parentElement ||
+      Array.from(document.querySelectorAll("div,section")).find((el) => {
+        const txt = textOf(el);
+        return (
+          txt.length > 140 &&
+          txt.length < 2200 &&
+          (el.querySelector("#description-text") ||
+            el.querySelector("#expand-description") ||
+            txt.includes("fate did not let him go"))
+        );
+      });
+    if (synopsisBlock) synopsisBlock.classList.add("au-series-synopsis");
 
     const metaScope = seriesCard || document.body;
     Array.from(metaScope.querySelectorAll("div"))
@@ -289,54 +528,47 @@ export const PageController = {
         const txt = textOf(el);
         if (!txt) return false;
         const hasTargetText =
+          txt.includes("rating") ||
+          txt.includes("chapters") ||
+          txt.includes("author") ||
+          txt.includes("artist") ||
+          txt.includes("genre") ||
           txt.includes("status") ||
           txt.includes("type") ||
           txt.includes("bookmark") ||
           txt.includes("followed by");
         return hasTargetText && txt.length < 700;
       })
-      .slice(0, 4)
+      .slice(0, 8)
       .forEach((el) => el.classList.add("au-series-meta"));
 
-    const chapterHeader = divs.find(
-      (el) =>
-        this.hasClassSnippets(el, ["border-b-[1px]", "border-[#312f40]"]) &&
-        /^chapter\b/i.test((el.textContent || "").trim())
+    const chapterListIsland = document.querySelector(
+      'astro-island[component-url*="ChapterListReact"]'
     );
-    const chapterContainer = chapterHeader && chapterHeader.parentElement;
+    const chapterContainer =
+      chapterListIsland?.closest("div.mt-4") ||
+      this.findAncestor(chapterRows[0], (el) => this.getChapterAnchors(el).length >= 6) ||
+      this.findAncestor(chapterAnchors[0], (el) => this.getChapterAnchors(el).length >= 6);
     if (chapterContainer) chapterContainer.classList.add("au-series-chapters");
 
-    divs
-      .filter((el) => {
-        const txt = (el.textContent || "").toLowerCase();
-        if (!txt || !/(first|new|latest|last)\s+chapter/.test(txt)) return false;
-        if (!this.hasClassSnippets(el, ["rounded-sm"])) return false;
-        const chapterAnchor = el.closest('a[href*="/chapter/"]');
-        return !!chapterAnchor;
-      })
-      .forEach((el) => el.classList.add("au-series-chapter-jump"));
+    chapterAnchors
+      .filter((anchor) => /(first|latest)\s+chapter/i.test(anchor.textContent || ""))
+      .forEach((anchor) => anchor.classList.add("au-series-chapter-jump"));
 
-    divs
-      .filter(
-        (el) =>
-          this.hasClassSnippets(el, ["pl-4", "py-2", "rounded-md"]) &&
-          /chapter\s*\d+/i.test(el.textContent || "")
-      )
-      .forEach((el) => el.classList.add("au-series-chapter-row"));
+    chapterRows.forEach((anchor) => anchor.classList.add("au-series-chapter-row"));
 
-    const commentsHeading = Array.from(document.querySelectorAll("h3")).find(
-      (h) => (h.textContent || "").trim().toLowerCase() === "comments"
+    const commentsIsland = document.querySelector(
+      'astro-island[component-url*="CommentsSection"], astro-island[component-url*="Comments"]'
     );
-    const commentsContainer = commentsHeading
-      ? commentsHeading.closest(".bg-comments-background")
-      : null;
+    const commentsContainer =
+      commentsIsland?.closest(".mt-6") || commentsIsland?.firstElementChild || null;
     if (commentsContainer) commentsContainer.classList.add("au-series-comments");
 
-    const relatedHeading = Array.from(document.querySelectorAll("h3")).find(
-      (h) => (h.textContent || "").trim().toLowerCase() === "related series"
+    const relatedHeading = Array.from(document.querySelectorAll("h2, h3, h4")).find((h) =>
+      /related\s+series|you\s+may\s+also\s+like/i.test(h.textContent || "")
     );
     const relatedContainer = relatedHeading
-      ? relatedHeading.closest(".bg-comments-background")
+      ? this.findAncestor(relatedHeading, (el) => this.getSeriesAnchors(el).length >= 3)
       : null;
     if (relatedContainer) relatedContainer.classList.add("au-series-related");
   },
@@ -435,12 +667,13 @@ export const PageController = {
 
   getChapterImageCount(root = document) {
     if (!root || !root.querySelectorAll) return 0;
-    const primaryCount = root.querySelectorAll(".w-full.mx-auto.center img").length;
+    const primaryCount = root.querySelectorAll(CHAPTER_IMAGE_SELECTOR).length;
     if (primaryCount > 0) return primaryCount;
-    const fallbackImages = root.querySelectorAll(
-      'img[src*="/storage/media/"],img[src*="/storage/comics/"],img[src*="/comics/"]'
+    const chapterReaderIsland = root.querySelector?.(
+      'astro-island[component-url*="ChapterReader"]'
     );
-    return fallbackImages.length;
+    const readerProps = chapterReaderIsland?.getAttribute?.("props") || "";
+    return readerProps.includes("/asura-images/chapters/") ? 1 : 0;
   },
 
   hasPremiumLockSignals(root = document) {
@@ -713,6 +946,7 @@ export const PageController = {
     const searchInput =
       document.querySelector('input[placeholder*="Search"]') ||
       document.querySelector('input[type="search"]') ||
+      document.querySelector("#browse-interactive input") ||
       document.querySelector(".series-search input");
 
     if (searchInput) {
@@ -729,6 +963,7 @@ export const PageController = {
 
     const chapterSection =
       chapterHeading ||
+      document.querySelector('astro-island[component-url*="ChapterListReact"]') ||
       document.querySelector('[class*="chapter"]') ||
       document.querySelector("div.chapter");
 
@@ -770,9 +1005,46 @@ export const PageController = {
     return null;
   },
 
+  getSeriesAnchors(root = document, options = {}) {
+    const { includeChapters = false } = options;
+    if (!root || !root.querySelectorAll) return [];
+    return Array.from(root.querySelectorAll(SERIES_LINK_SELECTOR)).filter((anchor) => {
+      const href = anchor.getAttribute("href") || anchor.href || "";
+      if (!href) return false;
+      return includeChapters || !href.includes("/chapter/");
+    });
+  },
+
+  getChapterAnchors(root = document) {
+    if (!root || !root.querySelectorAll) return [];
+    return Array.from(root.querySelectorAll(CHAPTER_LINK_SELECTOR)).filter((anchor) => {
+      const href = anchor.getAttribute("href") || anchor.href || "";
+      return /\/chapter\//.test(href);
+    });
+  },
+
   findHomeSlider() {
     const normalizeSliderTarget = (node) => {
       if (!node || !node.querySelector) return node || null;
+      if (node.tagName === "ASTRO-ISLAND") {
+        const islandHero =
+          node.querySelector(".hero-section-embla, .embla-hero") || node.firstElementChild;
+        if (islandHero) node = islandHero;
+      }
+
+      const emblaHero =
+        node.matches(".hero-section-embla, .embla-hero") ?
+          node :
+          node.querySelector?.(".hero-section-embla, .embla-hero");
+      if (emblaHero) {
+        return emblaHero.closest(".hero-section-embla") || emblaHero;
+      }
+
+      const heroNode =
+        node.matches('[component-url*="HeroCarousel"],[class*="hero-carousel"]') ?
+          node :
+          node.querySelector?.('[component-url*="HeroCarousel"],[class*="hero-carousel"]');
+      if (heroNode) return heroNode.firstElementChild || heroNode;
 
       const loopNode =
         node.matches("div.loop.owl-carousel.full") ?
@@ -803,7 +1075,7 @@ export const PageController = {
 
     // Prefer explicit home-slider structures from the current Asura homepage markup.
     const explicitSlider = document.querySelector(
-      "div.loop.owl-carousel.full, div.carousel-root, div.carousel.carousel-slider"
+      'astro-island[component-url*="HeroCarousel"], .hero-section-embla, .embla-hero, div.loop.owl-carousel.full, div.carousel-root, div.carousel.carousel-slider'
     );
     if (explicitSlider) {
       const explicitContainer = normalizeSliderTarget(explicitSlider);
@@ -814,10 +1086,10 @@ export const PageController = {
 
     const hasManyPosters = (el) =>
       el.querySelectorAll(
-        'img[alt="poster"], img[src*="thumb"], img[src*="storage/media"]'
-      ).length >= 4;
+        'img[alt="poster"], img[src*="thumb"], img[src*="storage/media"], img[src*="/asura-images/covers/"], img[src*="/asura-images/banners/"]'
+      ).length >= 3;
     const hasManySeriesLinks = (el) => {
-      const count = el.querySelectorAll('a[href*="/series/"]').length;
+      const count = this.getSeriesAnchors(el).length;
       return count >= 4 && count <= 24;
     };
     const isReasonableSliderContainer = (el) => {
@@ -873,6 +1145,7 @@ export const PageController = {
   },
 
   findTorakaPromos() {
+    const explicitBadges = Array.from(document.querySelectorAll(".toraka-badge"));
     const anchors = Array.from(document.querySelectorAll('a[href*="toraka.com"]'));
     const images = Array.from(
       document.querySelectorAll('img[src*="toraka"], img[alt*="Toraka"]')
@@ -880,20 +1153,33 @@ export const PageController = {
     const nodes = anchors.concat(images);
     const targets = new Set();
 
+    explicitBadges.forEach((badge) => {
+      targets.add(badge.closest("div") || badge);
+    });
+
     nodes.forEach((node) => {
+      const badge = node.closest?.(".toraka-badge");
+      if (badge) {
+        targets.add(badge.closest("div") || badge);
+        return;
+      }
+
       const candidate = this.findAncestor(node, (el) => {
         if (!el || !el.querySelectorAll) return false;
-        if (el.closest && el.closest("footer")) return false;
         const text = (el.textContent || "").toLowerCase();
-        const hasTorakaText = text.includes("toraka");
+        const hasTorakaText =
+          text.includes("toraka") ||
+          text.includes("powered by toraka") ||
+          text.includes("track what you're reading");
         const linkCount = el.querySelectorAll('a[href*="toraka.com"]').length;
         const imgCount = el.querySelectorAll(
           'img[src*="toraka"], img[alt*="Toraka"]'
         ).length;
+        if (el.closest("main") && linkCount === 1 && imgCount === 0) return false;
         return (
-          (hasTorakaText && (linkCount >= 1 || imgCount >= 1)) ||
-          (linkCount >= 1 && imgCount >= 1) ||
-          (linkCount >= 2 && imgCount >= 1)
+          (hasTorakaText && linkCount >= 1 && imgCount >= 1) ||
+          (hasTorakaText && linkCount >= 2) ||
+          imgCount >= 2
         );
       });
       if (candidate) targets.add(candidate);
@@ -903,31 +1189,45 @@ export const PageController = {
   },
 
   findBetaBannerPromos() {
+    const explicitBanners = Array.from(
+      document.querySelectorAll(
+        'astro-island[component-url*="MigrationBanner"],astro-island[component-url*="MonthlySubBanner"],astro-island[component-url*="ChargebackBanner"],astro-island[component-url*="RelinkBanner"],astro-island[component-url*="AnnouncementBanner"],astro-island[component-url*="PromoBanner"]'
+      )
+    );
     const anchors = Array.from(
-      document.querySelectorAll('a[href*="beta.asurascans.com"]')
+      document.querySelectorAll('a[href*="beta.asurascans.com"], a[href*="/announcement/"]')
     );
     const targets = new Set();
+
+    explicitBanners.forEach((node) => {
+      targets.add(node);
+    });
 
     anchors.forEach((anchor) => {
       const candidate = this.findAncestor(anchor, (el) => {
         if (!el || !el.querySelectorAll) return false;
         if (el === document.body || el === document.documentElement) return false;
-        if (el.closest("header") || el.closest("footer")) return false;
-        const betaLinkCount = el.querySelectorAll(
-          'a[href*="beta.asurascans.com"]'
+        if (el.closest("header") || el.closest("footer") || el.closest("main")) return false;
+        if (el.querySelector("header, main, footer")) return false;
+        const bannerLinkCount = el.querySelectorAll(
+          'a[href*="beta.asurascans.com"], a[href*="/announcement/"]'
         ).length;
-        if (betaLinkCount === 0) return false;
+        if (bannerLinkCount === 0) return false;
         const rect = el.getBoundingClientRect();
         if (!rect || rect.width < 220 || rect.height < 40) return false;
+        if (rect.height > 220) return false;
+        if (rect.top > window.innerHeight * 0.35) return false;
         const text = (el.textContent || "").toLowerCase();
-        const hasBetaText =
+        const hasBannerText =
           text.includes("beta") ||
-          text.includes("new chapter reader ui") ||
+          text.includes("announcement") ||
+          text.includes("project:") ||
           text.includes("premium members only") ||
-          text.includes("try the beta");
-        return el.parentElement === document.body || hasBetaText;
+          text.includes("chargeback") ||
+          text.includes("read");
+        return hasBannerText;
       });
-      targets.add(candidate || anchor);
+      if (candidate) targets.add(candidate);
     });
 
     return Array.from(targets);
@@ -982,7 +1282,7 @@ export const PageController = {
     if (!el || !el.querySelectorAll) return false;
     if (el === document.body || el === document.documentElement) return false;
     if (el.closest("header") || el.closest("footer")) return false;
-    const linkCount = el.querySelectorAll('a[href*="/series/"]').length;
+    const linkCount = this.getSeriesAnchors(el).length;
     if (linkCount < minLinks || linkCount > maxLinks) return false;
     const rect = el.getBoundingClientRect();
     if (!rect || rect.width < 220 || rect.height < 80) return false;
@@ -1008,7 +1308,7 @@ export const PageController = {
       className.includes("float-right");
     const rightAligned = rect.left >= window.innerWidth * 0.48;
     if (!hasSidebarHint && !rightAligned) return false;
-    const linkCount = el.querySelectorAll('a[href*="/series/"]').length;
+    const linkCount = this.getSeriesAnchors(el).length;
     if (linkCount < 4 || linkCount > 140) return false;
     return true;
   },
@@ -1108,6 +1408,7 @@ export const PageController = {
       '[id*="scrollToTop"]',
       '[id*="scrolltotop"]',
       '[id*="scroll_to_top"]',
+      '#scroll-top-btn',
       '[aria-label*="back to top" i]',
       '[aria-label*="scroll to top" i]',
       '[title*="back to top" i]',

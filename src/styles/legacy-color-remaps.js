@@ -1,4 +1,5 @@
 const STYLE_ID = "au-legacy-color-remaps";
+const NATIVE_THEME_KEY = "asuraClassic";
 
 // Update this list when Asura changes hardcoded purple tokens.
 const LEGACY_PURPLE_TOKENS = ["#913FE2", "#8E3FDD", "#6F2598", "#7928ca", "#9333ea"];
@@ -51,14 +52,15 @@ function hexToRgb(hex) {
   };
 }
 
-function rgbToHue(r, g, b) {
+function rgbToHsl(r, g, b) {
   const rn = r / 255;
   const gn = g / 255;
   const bn = b / 255;
   const max = Math.max(rn, gn, bn);
   const min = Math.min(rn, gn, bn);
   const delta = max - min;
-  if (delta === 0) return 0;
+  const lightness = (max + min) / 2;
+  if (delta === 0) return { hue: 0, saturation: 0, lightness: lightness * 100 };
   let hue;
   if (max === rn) {
     hue = ((gn - bn) / delta) % 6;
@@ -68,14 +70,25 @@ function rgbToHue(r, g, b) {
     hue = (rn - gn) / delta + 4;
   }
   const degrees = Math.round(hue * 60);
-  return degrees < 0 ? degrees + 360 : degrees;
+  const normalizedHue = degrees < 0 ? degrees + 360 : degrees;
+  const saturation = delta / (1 - Math.abs(2 * lightness - 1));
+  return {
+    hue: normalizedHue,
+    saturation: saturation * 100,
+    lightness: lightness * 100,
+  };
 }
 
 function isPurpleHex(hex) {
   const rgb = hexToRgb(hex);
   if (!rgb) return false;
-  const hue = rgbToHue(rgb.r, rgb.g, rgb.b);
-  return hue >= PURPLE_HUE_MIN && hue <= PURPLE_HUE_MAX;
+  const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+  return (
+    hsl.hue >= PURPLE_HUE_MIN &&
+    hsl.hue <= PURPLE_HUE_MAX &&
+    hsl.saturation >= 38 &&
+    hsl.lightness >= 24
+  );
 }
 
 function extractHexes(input) {
@@ -364,8 +377,8 @@ function buildLegacyColorRemapCss() {
 }
 
 function injectStyle(cssText) {
-  if (!cssText) return;
   let style = document.getElementById(STYLE_ID);
+  if (!cssText && !style) return;
   if (!style) {
     style = document.createElement("style");
     style.id = STYLE_ID;
@@ -375,13 +388,22 @@ function injectStyle(cssText) {
 }
 
 function applyLegacyColorRemaps() {
+  const activeTheme =
+    document.documentElement?.getAttribute("data-au-theme") || NATIVE_THEME_KEY;
+  if (activeTheme === NATIVE_THEME_KEY) {
+    injectStyle("");
+    return;
+  }
   const cssText = `${buildLegacyColorRemapCss()}${buildDynamicPurpleRemapCss()}`;
   injectStyle(cssText);
 }
 
 function hasRelevantRemapMutation(mutations) {
   return mutations.some((mutation) => {
-    if (mutation.type === "attributes" && mutation.attributeName === "class") {
+    if (
+      mutation.type === "attributes" &&
+      (mutation.attributeName === "class" || mutation.attributeName === "data-au-theme")
+    ) {
       return true;
     }
     if (mutation.type !== "childList") return false;
@@ -411,6 +433,6 @@ export function installLegacyColorRemaps() {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ["class"],
+    attributeFilter: ["class", "data-au-theme"],
   });
 }

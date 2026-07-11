@@ -34,7 +34,12 @@ export class ReaderDockView {
     shell.id = "au-reader-dock-shell";
     shell.className = "is-collapsed";
     shell.innerHTML = `
-      <button id="au-reader-dock-handle" type="button" aria-label="Toggle reader dock">|||</button>
+      <button id="au-reader-dock-handle" type="button" aria-label="Toggle reader tools" title="Reader tools">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 6h10"></path><path d="M18 6h2"></path><path d="M4 12h2"></path><path d="M10 12h10"></path><path d="M4 18h7"></path><path d="M15 18h5"></path>
+          <circle cx="16" cy="6" r="2"></circle><circle cx="8" cy="12" r="2"></circle><circle cx="13" cy="18" r="2"></circle>
+        </svg>
+      </button>
       <aside id="au-reader-dock" aria-label="Reader controls">
         <div class="au-dock-content">
           <div class="au-dock-header">
@@ -217,4 +222,3 @@ export class ReaderDockView {
     window.removeEventListener("resize", this.onResize);
   }
 }
-

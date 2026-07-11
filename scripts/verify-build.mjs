@@ -48,7 +48,7 @@ function verifyMeta(meta, filePath) {
     `Unexpected @namespace in ${filePath}`
   );
   assert(
-    meta.get("match").includes("https://asuracomic.net/*"),
+    meta.get("match").includes("https://asurascans.com/*"),
     `Unexpected @match in ${filePath}`
   );
   assert(

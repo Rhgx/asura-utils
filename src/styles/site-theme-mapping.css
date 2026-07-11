@@ -1,0 +1,299 @@
+/*
+ * Semantic site theming for the current Asura UI.
+ * Preserve editorial art, gradients, ratings, warnings, and status colors;
+ * map only stable visual roles.
+ */
+body.au-theme-enabled {
+  background-color: var(--auo-bg) !important;
+  color: var(--auo-text);
+}
+
+body.au-theme-enabled .au-overhaul-header {
+  background-color: var(--auo-accent) !important;
+  color: var(--auo-on-accent) !important;
+}
+
+body.au-theme-enabled img[src$="/images/logo.webp"],
+body.au-theme-enabled img[src*="asurascans.com/images/logo.webp"] {
+  filter: var(--au-logo-filter);
+  transition: filter 0.25s ease, transform 0.2s ease;
+}
+
+body.au-theme-enabled .au-overhaul-header .au-overhaul-auth-btn,
+body.au-theme-enabled .au-settings-btn {
+  background-color: transparent !important;
+  border-color: color-mix(in srgb, white 22%, transparent) !important;
+  color: #fff !important;
+}
+
+body.au-theme-enabled .au-overhaul-header .au-overhaul-auth-btn svg,
+body.au-theme-enabled .au-settings-btn svg {
+  color: #fff !important;
+  stroke: currentColor !important;
+}
+
+body.au-theme-enabled .au-overhaul-header .au-overhaul-auth-btn:hover,
+body.au-theme-enabled .au-settings-btn:hover {
+  background-color: color-mix(in srgb, white 14%, transparent) !important;
+  border-color: color-mix(in srgb, white 34%, transparent) !important;
+}
+
+body.au-theme-enabled .au-overhaul-header .au-theme-dropdown-surface {
+  background-color: var(--auo-card-alt-bg) !important;
+  border-color: var(--auo-border) !important;
+  color: var(--auo-text) !important;
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--auo-bg) 72%, transparent) !important;
+}
+
+body.au-theme-enabled .au-overhaul-header .au-theme-dropdown-surface [class*="text-[#913FE2]"] {
+  color: var(--auo-accent) !important;
+}
+
+body.au-theme-enabled .au-overhaul-header .au-theme-dropdown-surface a:hover {
+  background-color: color-mix(in srgb, var(--auo-accent) 12%, var(--auo-card-alt-bg)) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section {
+  background-color: var(--auo-surface) !important;
+  border-color: var(--auo-border) !important;
+  color: var(--auo-text) !important;
+}
+
+body.au-theme-enabled main.au-theme-site-section,
+body.au-theme-enabled astro-island.au-theme-site-section {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+body.au-theme-enabled .au-theme-site-section h1,
+body.au-theme-enabled .au-theme-site-section h2,
+body.au-theme-enabled .au-theme-site-section h3,
+body.au-theme-enabled .au-theme-site-section h4 {
+  color: var(--auo-text) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section [class*="text-[#913FE2]"]:not([class*="hover:text-"]),
+body.au-theme-enabled .au-theme-site-section [class*="text-[#8E3FDD]"]:not([class*="hover:text-"]),
+body.au-theme-enabled .au-theme-site-section [class*="text-purple-"]:not([class*="hover:text-"]),
+body.au-theme-enabled .au-theme-site-section [class*="text-violet-"]:not([class*="hover:text-"]),
+body.au-theme-enabled .au-theme-site-section [class*="text-fuchsia-"]:not([class*="hover:text-"]) {
+  color: var(--auo-accent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section [class*="hover:text-[#913FE2]"]:hover,
+body.au-theme-enabled .au-theme-site-section [class*="hover:text-[#8E3FDD]"]:hover,
+body.au-theme-enabled .au-theme-site-section [class*="hover:text-purple-"]:hover,
+body.au-theme-enabled .au-theme-site-section [class*="hover:text-violet-"]:hover,
+body.au-theme-enabled .au-theme-site-section [class*="hover:text-fuchsia-"]:hover {
+  color: var(--auo-accent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section [class*="bg-[#913FE2]/"]:not([class*="hover:bg-"]),
+body.au-theme-enabled .au-theme-site-section [class*="bg-purple-"][class*="/"]:not([class*="hover:bg-"]) {
+  background-color: color-mix(in srgb, var(--auo-accent) 18%, transparent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section [class*="hover:bg-[#913FE2]/"]:hover,
+body.au-theme-enabled .au-theme-site-section [class*="hover:bg-purple-"][class*="/"]:hover {
+  background-color: color-mix(in srgb, var(--auo-accent) 18%, transparent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section svg[fill="#913FE2"],
+body.au-theme-enabled .au-theme-site-section svg [fill="#913FE2"] {
+  fill: var(--auo-accent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section svg[stroke="#913FE2"],
+body.au-theme-enabled .au-theme-site-section svg [stroke="#913FE2"] {
+  stroke: var(--auo-accent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-muted-gradient {
+  background-image: linear-gradient(
+    270deg,
+    color-mix(in srgb, var(--auo-accent) 14%, var(--auo-surface)),
+    color-mix(in srgb, var(--auo-accent) 7%, var(--auo-surface)) 42%,
+    transparent 88%
+  ) !important;
+}
+
+/* The pinned/resumed row has its own animated highlight on the live site. */
+body.au-theme-enabled .au-theme-site-section .pinned-glow.au-theme-muted-gradient {
+  position: relative;
+  overflow: hidden;
+  background-image: linear-gradient(
+    270deg,
+    color-mix(in srgb, var(--auo-accent) 16%, var(--auo-surface)),
+    color-mix(in srgb, var(--auo-accent) 8%, var(--auo-surface)) 40%,
+    transparent 85%
+  ) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .pinned-glow.au-theme-muted-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+      105deg,
+      transparent 20%,
+      color-mix(in srgb, var(--auo-accent) 5%, transparent) 35%,
+      color-mix(in srgb, var(--auo-accent) 11%, transparent) 42%,
+      transparent 50%,
+      transparent 70%,
+      color-mix(in srgb, var(--auo-accent) 6%, transparent) 80%,
+      transparent 90%
+    )
+    0 0 / 250% 100%;
+  animation: au-pinned-shimmer 8s ease-in-out infinite;
+}
+
+@keyframes au-pinned-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -50% 0; }
+}
+
+body.au-theme-enabled .au-theme-site-section time,
+body.au-theme-enabled .au-theme-site-section [class*="text-zinc-400"],
+body.au-theme-enabled .au-theme-site-section [class*="text-zinc-500"],
+body.au-theme-enabled .au-theme-site-section [class*="text-gray-400"],
+body.au-theme-enabled .au-theme-site-section [class*="text-gray-500"] {
+  color: var(--auo-text-dim) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section [class*="bg-[#913FE2]"]:not([class*="/"]):not([class*="hover:bg-"]),
+body.au-theme-enabled .au-theme-site-section [class*="bg-[#6F2598]"]:not([class*="/"]):not([class*="hover:bg-"]) {
+  background-color: var(--auo-accent) !important;
+  color: var(--auo-on-accent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section [class*="hover:bg-[#7c35c2]"]:not([class*="/"]):hover,
+body.au-theme-enabled .au-theme-site-section [class*="hover:bg-[#5a1f78]"]:not([class*="/"]):hover,
+body.au-theme-enabled .au-theme-site-section [class*="hover:bg-purple-"]:not([class*="/"]):hover,
+body.au-theme-enabled .au-theme-site-section [class*="hover:bg-violet-"]:not([class*="/"]):hover,
+body.au-theme-enabled .au-theme-site-section [class*="hover:bg-fuchsia-"]:not([class*="/"]):hover {
+  background-color: var(--auo-accent-strong) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section [class*="border-zinc-700"],
+body.au-theme-enabled .au-theme-site-section [class*="border-zinc-800"],
+body.au-theme-enabled .au-theme-site-section [class*="divide-zinc-800"] {
+  border-color: var(--auo-border) !important;
+}
+
+/* Token-aware roles added by PageController; these support base + hover on one node. */
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-text {
+  color: var(--auo-accent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-text-hover:hover {
+  color: var(--auo-link) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .group:hover .au-theme-accent-text-group-hover {
+  color: var(--auo-accent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-bg {
+  background-color: var(--auo-accent) !important;
+  color: var(--auo-on-accent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-bg-soft {
+  background-color: color-mix(in srgb, var(--auo-accent) 18%, transparent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-bg-hover:hover {
+  background-color: var(--auo-accent-strong) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-bg-soft-hover:hover {
+  background-color: color-mix(in srgb, var(--auo-accent) 26%, transparent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-card-surface {
+  background-color: var(--auo-surface) !important;
+  border-color: var(--auo-border) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-control-surface {
+  background-color: var(--auo-card-alt-bg) !important;
+  border-color: var(--auo-border) !important;
+  color: var(--auo-text) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-control-surface:hover {
+  background-color: var(--auo-surface-hover) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-ring-hover:hover {
+  --tw-ring-color: var(--auo-accent) !important;
+  box-shadow: 0 0 0 2px var(--auo-accent),
+    0 10px 24px color-mix(in srgb, var(--auo-accent) 14%, transparent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-ring-focus:focus {
+  --tw-ring-color: color-mix(in srgb, var(--auo-accent) 55%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--auo-accent) 55%, transparent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-shadow {
+  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--auo-accent) 20%, transparent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-shadow-hover:hover {
+  box-shadow: 0 10px 24px -7px color-mix(in srgb, var(--auo-accent) 30%, transparent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-focus-border:focus-within {
+  border-color: var(--auo-accent) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-gradient {
+  background-image: linear-gradient(90deg, var(--auo-accent), var(--auo-accent-strong)) !important;
+  color: var(--auo-on-accent) !important;
+}
+
+body.au-theme-enabled footer [class*="bg-[#913FE2]"] {
+  background-color: var(--auo-accent) !important;
+}
+
+body.au-theme-enabled footer [class*="from-[#913FE2]"] {
+  background-image: linear-gradient(90deg, var(--auo-accent), var(--auo-link)) !important;
+}
+
+/* Login uses a separate, non-utility stylesheet. */
+body.au-page-auth {
+  background: var(--auo-bg) !important;
+  color: var(--auo-text) !important;
+}
+
+body.au-page-auth .particle { background: var(--auo-accent) !important; }
+body.au-page-auth .corner { border-color: color-mix(in srgb, var(--auo-accent) 22%, transparent) !important; }
+body.au-page-auth .logo-circle {
+  background: color-mix(in srgb, var(--auo-accent) 12%, transparent) !important;
+  border-color: color-mix(in srgb, var(--auo-accent) 52%, transparent) !important;
+}
+body.au-page-auth .logo-glow {
+  background: radial-gradient(circle, color-mix(in srgb, var(--auo-accent) 22%, transparent), transparent 68%) !important;
+}
+body.au-page-auth .divider {
+  background: linear-gradient(90deg, transparent, var(--auo-accent), transparent) !important;
+}
+body.au-page-auth .login-card {
+  background: color-mix(in srgb, var(--auo-surface) 72%, transparent) !important;
+  border-color: var(--auo-border) !important;
+}
+body.au-page-auth .input-field {
+  background: color-mix(in srgb, var(--auo-surface-hover) 44%, transparent) !important;
+  border-color: var(--auo-border) !important;
+  color: var(--auo-text) !important;
+}
+body.au-page-auth .input-field:focus { border-color: var(--auo-accent) !important; }
+body.au-page-auth a[href*="forgot"],
+body.au-page-auth .toggle-link { color: var(--auo-accent) !important; }
+body.au-page-auth .submit-btn {
+  background: linear-gradient(90deg, var(--auo-accent), var(--auo-accent-strong)) !important;
+  color: var(--auo-on-accent) !important;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--auo-accent) 24%, transparent) !important;
+}

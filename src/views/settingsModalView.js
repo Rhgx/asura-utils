@@ -11,6 +11,7 @@ const APP_VERSION = packageJson.version;
 
 const SETTING_TOOLTIPS = {
   adBlock: "Hides common ad containers and promo close buttons.",
+  colorTimestamps: "Highlights chapter update dates and relative times.",
   hideSlider: "Removes the large featured slider on the home page.",
   hideToraka: "Hides Toraka promotion sections when detected.",
   hideComments: "Hides comment-related sections on supported pages.",
@@ -39,17 +40,19 @@ export class SettingsModalView {
 
   createHeaderButton() {
     const profileLinks = document.querySelectorAll(
-      'header a[href*="/login"], header a[href*="/dashboard"]'
+      'header a[href*="/login"], header a[href*="/dashboard"], header a[href*="/account"], header a[href*="/user/"]'
     );
     if (profileLinks.length === 0) return;
 
     const targetAnchor =
       Array.from(profileLinks).find((el) => el.offsetParent !== null) ||
       profileLinks[0];
-    const container =
-      targetAnchor.closest('div[style*="width: auto"]') ||
-      targetAnchor.parentElement;
-    if (!container || !container.parentNode) return;
+    const insertionTarget =
+      targetAnchor.closest(".mobile-menu-hide") ||
+      targetAnchor.closest(".profile-menu-hide") ||
+      targetAnchor.closest("astro-island") ||
+      targetAnchor;
+    if (!insertionTarget || !insertionTarget.parentNode) return;
 
     let btn = document.getElementById("au-settings-btn-main");
     if (!btn) {
@@ -62,8 +65,12 @@ export class SettingsModalView {
         e.preventDefault();
         this.toggleModal();
       };
+    }
 
-      container.parentNode.insertBefore(btn, container);
+    if (btn.parentNode !== insertionTarget.parentNode) {
+      insertionTarget.parentNode.insertBefore(btn, insertionTarget);
+    } else if (btn.nextSibling !== insertionTarget) {
+      insertionTarget.parentNode.insertBefore(btn, insertionTarget);
     }
   }
 
@@ -93,6 +100,7 @@ export class SettingsModalView {
         title: "General",
         toggles: [
           ["adBlock", "Ad Blocker"],
+          ["colorTimestamps", "Color Chapter Timestamps"],
           ["hideSlider", "Hide Home Slider"],
           ["hideToraka", "Hide Toraka Promo"],
           ["hideComments", "Hide Comments Section"],
@@ -225,7 +233,9 @@ export class SettingsModalView {
       <div id="au-modal">
         <div class="au-modal-header">
           <span class="au-modal-title">Asura Utils Settings</span>
-          <span class="au-close-btn">&times;</span>
+          <button type="button" class="au-close-btn" aria-label="Close settings">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+          </button>
         </div>
         <div class="au-tab-bar" role="tablist">
           ${tabButtonsHtml}

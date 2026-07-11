@@ -11,8 +11,8 @@ export default defineConfig({
         description:
           "Reader enhancement with a single left dock, auto-scroll, image resizing, keyboard shortcuts, ad block, progress bar, layout customization, and UI cleanup.",
         author: "Rocks",
-        match: ["https://asuracomic.net/*"],
-        icon: "https://asuracomic.net/images/logo.webp",
+        match: ["https://asurascans.com/*"],
+        icon: "https://asurascans.com/images/logo.webp",
         "run-at": "document-start",
         grant: ["GM_getValue", "GM_setValue"],
       },

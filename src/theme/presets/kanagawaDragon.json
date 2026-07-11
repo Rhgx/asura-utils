@@ -1,0 +1,12 @@
+{
+  "label": "Kanagawa Dragon",
+  "order": 4,
+  "tokens": {
+    "--au-accent": "#8ba4b0", "--au-accent-strong": "#658594", "--au-accent-glow": "rgba(139,164,176,.2)",
+    "--au-bg-soft": "rgba(24,23,23,.96)", "--au-bg-panel": "#181717", "--au-bg-control": "#282727", "--au-border": "rgba(139,164,176,.24)", "--au-border-soft": "rgba(114,113,105,.3)",
+    "--au-text": "#c5c9c5", "--au-text-dim": "#727169", "--au-shadow": "0 18px 44px rgba(5,5,5,.66)", "--au-settings-btn-bg": "#658594", "--au-settings-btn-hover": "#7696a4",
+    "--au-modal-overlay": "rgba(5,5,5,.9)", "--au-input-bg": "#12120f", "--au-input-border": "#393836", "--au-toggle-bg": "#393836", "--au-progress-end": "#c4b28a",
+    "--au-dock-btn-border": "rgba(139,164,176,.3)", "--au-dock-btn-hover-bg": "#2d2c2c", "--au-dock-btn-hover-border": "#8ba4b0", "--au-dock-input-bg": "#12120f",
+    "--auo-accent": "#8ba4b0", "--auo-accent-strong": "#658594", "--auo-surface": "#1d1c1c", "--auo-surface-hover": "#282727", "--auo-text": "#c5c9c5", "--auo-text-dim": "#727169", "--auo-border": "rgba(114,113,105,.3)", "--auo-bg": "#12120f", "--auo-card-alt-bg": "#181717", "--auo-link": "#c4b28a", "--auo-auth-hover-bg": "#7696a4", "--auo-on-accent": "#12120f", "--au-logo-filter": "hue-rotate(-76deg) saturate(.3) brightness(.98)"
+  }
+}
