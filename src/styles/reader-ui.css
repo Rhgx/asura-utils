@@ -6,15 +6,18 @@
   height: 4px;
   background: var(--au-progress-track);
   z-index: 99997;
+  cursor: pointer;
+  transition: height 0.15s ease;
 }
+#au-progress-bar:hover { height: 9px; }
 #au-progress-bar-fill {
   height: 100%;
   width: 0;
   background: linear-gradient(90deg, var(--au-accent-strong), var(--au-accent), var(--au-progress-end));
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--auo-accent) 45%, transparent);
   transition: width 0.1s ease-out;
-  cursor: pointer;
 }
-#au-progress-bar-fill:hover { height: 8px; margin-top: -2px; }
 
 #au-reader-dock-shell {
   position: fixed;
@@ -133,6 +136,19 @@
   font-size: 12px;
   padding: 0 4px;
 }
+.au-dock-range {
+  width: 92px;
+  accent-color: var(--auo-accent);
+  cursor: pointer;
+}
+.au-dock-range:disabled { opacity: 0.45; cursor: not-allowed; }
+.au-dock-range-val {
+  min-width: 38px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--au-text-dim);
+  font-variant-numeric: tabular-nums;
+}
 .au-dock-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .au-dock-nav-btn { padding: 7px 9px; font-size: 12px; text-align: center; }
 .au-dock-footer { margin-top: 8px; color: var(--au-dock-footer); font-size: 10px; line-height: 1.5; text-align: left; }
@@ -166,3 +182,108 @@
   transition: opacity 0.2s;
 }
 .au-shortcut-hint.visible { opacity: 1; }
+
+/* Current Asura reader UI alignment */
+#au-reader-dock-shell { right: 10px; gap: 10px; }
+
+/* Tall grip handle: barely-there until hovered or the dock is open. */
+#au-reader-dock-handle {
+  align-self: center;
+  width: 30px;
+  min-width: 30px;
+  height: 148px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--auo-surface) 55%, transparent);
+  color: var(--auo-text-dim);
+  opacity: 0.5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(6px);
+  transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease;
+}
+#au-reader-dock-handle:hover {
+  opacity: 1;
+  background: var(--auo-surface);
+  border-color: color-mix(in srgb, var(--auo-accent) 70%, transparent);
+  color: var(--auo-text);
+  transform: none;
+}
+#au-reader-dock-shell:not(.is-collapsed) #au-reader-dock-handle {
+  opacity: 1;
+  background: var(--auo-surface);
+  border-color: color-mix(in srgb, var(--auo-accent) 55%, transparent);
+  color: var(--auo-accent);
+}
+
+#au-reader-dock {
+  width: 292px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 12px;
+  background: var(--auo-surface);
+  color: var(--auo-text);
+  box-shadow: 0 18px 50px rgba(0,0,0,.48);
+  backdrop-filter: none;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.au-dock-content { min-width: 292px; padding: 16px; }
+.au-dock-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
+.au-dock-title { color: var(--auo-text); font-size: 14px; font-weight: 600; letter-spacing: 0; }
+.au-dock-progress {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--auo-accent) 16%, transparent);
+  color: var(--auo-accent);
+  font-weight: 600;
+}
+.au-dock-section { border-bottom-color: rgba(255, 255, 255, 0.06); }
+.au-dock-section-label { color: var(--auo-text-dim); font-weight: 600; }
+.au-dock-row { color: var(--auo-text); }
+.au-dock-btn,
+.au-dock-nav-btn,
+.au-dock-step {
+  border-color: rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  background: var(--auo-card-alt-bg);
+  color: var(--auo-text);
+  font-family: inherit;
+}
+.au-dock-btn:hover,
+.au-dock-nav-btn:hover,
+.au-dock-step:hover {
+  background: var(--auo-surface-hover);
+  border-color: color-mix(in srgb, var(--auo-accent) 60%, transparent);
+}
+.au-dock-btn.active { background: var(--auo-accent); border-color: var(--auo-accent); color: var(--auo-on-accent); box-shadow: none; }
+.au-dock-num {
+  border-color: rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  background: var(--auo-bg);
+  color: var(--auo-text);
+  font-family: inherit;
+}
+.au-dock-num:focus {
+  outline: none;
+  border-color: var(--auo-accent);
+}
+.au-dock-footer { color: var(--auo-text-dim); opacity: 0.75; }
+
+/* Hint toast: bottom-center pill, matching the site's toast placement. */
+.au-shortcut-hint {
+  top: auto;
+  bottom: 26px;
+  left: 50%;
+  transform: translate(-50%, 8px);
+  padding: 10px 18px;
+  border: 1px solid color-mix(in srgb, var(--auo-accent) 38%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--auo-surface) 94%, transparent);
+  color: var(--auo-text);
+  box-shadow: 0 12px 32px rgba(0,0,0,.42);
+  backdrop-filter: blur(8px);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.au-shortcut-hint.visible { opacity: 1; transform: translate(-50%, 0); }

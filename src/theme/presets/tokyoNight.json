@@ -1,0 +1,12 @@
+{
+  "label": "Tokyo Night",
+  "order": 3,
+  "tokens": {
+    "--au-accent": "#7aa2f7", "--au-accent-strong": "#3d59a1", "--au-accent-glow": "rgba(122,162,247,.22)",
+    "--au-bg-soft": "rgba(26,27,38,.96)", "--au-bg-panel": "#1a1b26", "--au-bg-control": "#24283b", "--au-border": "rgba(122,162,247,.26)", "--au-border-soft": "rgba(86,95,137,.34)",
+    "--au-text": "#c0caf5", "--au-text-dim": "#787c99", "--au-shadow": "0 18px 44px rgba(7,8,14,.62)", "--au-settings-btn-bg": "#3d59a1", "--au-settings-btn-hover": "#4e68b1",
+    "--au-modal-overlay": "rgba(7,8,14,.9)", "--au-input-bg": "#16161e", "--au-input-border": "#3b4261", "--au-toggle-bg": "#414868", "--au-progress-end": "#7dcfff",
+    "--au-dock-btn-border": "rgba(122,162,247,.3)", "--au-dock-btn-hover-bg": "#292e42", "--au-dock-btn-hover-border": "#7aa2f7", "--au-dock-input-bg": "#16161e",
+    "--auo-accent": "#7aa2f7", "--auo-accent-strong": "#3d59a1", "--auo-surface": "#1f2335", "--auo-surface-hover": "#292e42", "--auo-text": "#c0caf5", "--auo-text-dim": "#787c99", "--auo-border": "rgba(86,95,137,.34)", "--auo-bg": "#16161e", "--auo-card-alt-bg": "#1a1b26", "--auo-link": "#7dcfff", "--auo-auth-hover-bg": "#4e68b1", "--auo-on-accent": "#16161e", "--au-logo-filter": "hue-rotate(-74deg) saturate(.72) brightness(1.12)"
+  }
+}
