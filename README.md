@@ -1,101 +1,111 @@
 # Asura Utils
 
-A Tampermonkey userscript for asurascans.com. The script adds reader tools, reading history, themes, and cleanup options.
+[![Release](https://img.shields.io/github/v/release/Rhgx/asura-utils?label=release)](https://github.com/Rhgx/asura-utils/releases/latest)
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 
-Current version: 1.0.0
-
-## Features
-
-### Reader tools
-
-- Auto scroll with adjustable speed
-- Image width control and fit-width mode
-- Image brightness slider for night reading
-- Previous, next, series, and top navigation buttons
-- Reading progress bar at the top of chapter pages. Click the bar to jump to a position
-- Chapter end action: open the next chapter, return to the series page, or stop auto scroll
-- Premium lock detection. The script checks the next chapter before navigation and skips locked chapters
-
-### Reading history
-
-- The script remembers your last chapter and reading progress per series
-- Series pages show a Continue Reading button with your chapter and progress
-- Your current chapter gets a marker in chapter lists. Finished chapters appear dimmed
-- Reopening an unfinished chapter restores your scroll position
-
-### Themes
-
-- 7 presets: Asura Classic, Asura Ocean, Tokyo Night, Rosé Pine Moon, Kanagawa Dragon, Gruvbox Material, Everforest Dark
-- Custom accent color with live preview. Works with every preset, including the default
-- Themes recolor the full site. A dynamic engine finds hardcoded site colors and remaps them to your theme
-
-### Cleanup and layout
-
-- Ad and promo banner blocking
-- Hide the home slider, Toraka promos, comments, or popular sections
-- Hide the site back-to-top button
-- Compact sidebar
-- Colored chapter timestamps
-
-### Shortcuts
-
-- Rebind every shortcut in the settings window
-- Defaults: S auto scroll, Q and E speed, A and D chapters, B series page, W fit width, C search, L chapter list
-- Double-click a chapter page to toggle auto scroll
-
-### Settings
-
-- Gear button in the site header opens the settings window
-- Export your settings as JSON to the clipboard
-- Import settings from a paste prompt
-- Reset all settings to defaults
-- Clear reading history
+A Tampermonkey userscript that makes reading on [Asura Scans](https://asurascans.com/) cleaner and more convenient. It adds a reader dock, auto-scroll, reading history, themes, keyboard shortcuts, layout controls, and page cleanup.
 
 ## Install
 
-1. Install the Tampermonkey extension in your browser.
-2. Build the script or take `dist/asura-utils.user.js` from a release.
-3. Open the file in your browser. Tampermonkey shows an install prompt.
-4. Visit asurascans.com.
+### From a release
 
-## Usage
+1. Install [Tampermonkey](https://www.tampermonkey.net/) in your browser.
+2. Open the [latest userscript](https://github.com/Rhgx/asura-utils/releases/latest/download/asura-utils.user.js).
+3. Approve the installation in Tampermonkey.
+4. Visit [asurascans.com](https://asurascans.com/).
 
-- Open a chapter page. A slim handle appears on the right edge. Click the handle to open the reader dock.
-- Click the gear button next to the profile button in the header to open settings.
-- Set a chapter end action in the Reader tab for hands-free reading.
+Once a release build is installed, Tampermonkey can discover later releases automatically. See [Updates](#updates) for details.
 
-## Privacy
-
-Settings and reading history stay in Tampermonkey storage on your machine. The script sends no data anywhere.
-
-## Build from source
-
-Requires Node.js and pnpm.
+### From source
 
 ```sh
 pnpm install
 pnpm build
 ```
 
-Build output:
+Open `dist/asura-utils.user.js` in your browser and approve the Tampermonkey installation.
 
-- `dist/asura-utils.user.js`: the installable script
-- `dist/asura-utils.meta.js`: update metadata
+## Highlights
 
-Run `pnpm test` to typecheck, build, and verify the output.
+| Area | What it adds |
+| --- | --- |
+| Reader | Collapsible reader dock, auto-scroll, adjustable speed, image width and brightness controls |
+| Navigation | Previous and next chapter controls, series navigation, chapter-end actions, premium-lock handling |
+| Progress | Reading progress bar, per-series history, continue-reading links, and position restoration |
+| Appearance | Seven theme presets, custom accent colors, and full-site color remapping |
+| Cleanup | Ad and promotion blocking, optional section hiding, compact sidebar, and layout overhaul |
+| Controls | Rebindable shortcuts plus double-click auto-scroll |
+| Data | Settings export/import, reset controls, and local reading-history management |
 
-## Release
+## Default shortcuts
 
-1. Bump `version` in `package.json`.
-2. Run `pnpm build`.
-3. Distribute `dist/asura-utils.user.js`.
+Shortcuts can be rebound or cleared from **Settings → Shortcuts**.
 
-## Source layout
+| Key | Action | Context |
+| :---: | --- | --- |
+| `S` | Toggle auto-scroll | Reader |
+| `Q` / `E` | Decrease / increase scroll speed | Reader |
+| `A` / `D` | Previous / next chapter | Reader |
+| `B` | Return to the series page | Reader |
+| `W` | Toggle fit-width mode | Reader |
+| `C` | Focus search | Series page |
+| `L` | Jump to the chapter list | Series page |
 
-- `src/main.ts`: entry point
-- `src/config/`: defaults, keybinds, settings sections
-- `src/store/`: config and reading history storage
-- `src/theme/`: theme presets and theme engine
-- `src/controllers/`: page, reader, history, and cleanup logic
-- `src/views/`: settings modal, reader dock, progress bar
-- `src/styles/`: CSS and the dynamic color remap engine
+Auto-scroll can also be toggled by double-clicking a chapter page when that option is enabled.
+
+## Quick start
+
+1. Open a chapter page.
+2. Select the slim handle on the right edge to expand the reader dock.
+3. Adjust scrolling, image width, brightness, or navigation from the dock.
+4. Select the gear button in the site header to configure appearance, reader behavior, layout, shortcuts, and saved data.
+
+The default chapter-end action intelligently opens the next available chapter. It checks for premium locks before navigating.
+
+## Themes
+
+| Preset | Preset | Preset |
+| --- | --- | --- |
+| Asura Classic | Asura Ocean | Tokyo Night |
+| Rosé Pine Moon | Kanagawa Dragon | Gruvbox Material |
+| Everforest Dark |  |  |
+
+Every preset supports an optional custom accent color with live preview.
+
+## Updates
+
+Release builds include Tampermonkey `@updateURL` and `@downloadURL` metadata. Tampermonkey checks the lightweight metadata asset from the latest GitHub release and installs the full userscript when it finds a newer version.
+
+Users who installed a build from before automatic updates were introduced must install a current release once. Update frequency is controlled by Tampermonkey's own settings.
+
+## Privacy
+
+Settings and reading history remain in Tampermonkey storage on your device. Asura Utils does not send that data anywhere.
+
+## Documentation
+
+| Guide | Contents |
+| --- | --- |
+| [Documentation index](.docs/README.md) | Overview of all project guides |
+| [Usage guide](.docs/USAGE.md) | Reader controls, shortcuts, history, themes, and data tools |
+| [Configuration reference](.docs/CONFIGURATION.md) | Every setting, default value, and valid range |
+| [Development guide](.docs/DEVELOPMENT.md) | Local setup, scripts, build artifacts, and source layout |
+| [Release guide](.docs/RELEASING.md) | Versioning, tagged releases, CI, and automatic updates |
+
+## Development
+
+Requires Node.js 22 and `pnpm`.
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm dev` | Start Vite in userscript development mode |
+| `pnpm typecheck` | Check TypeScript without emitting files |
+| `pnpm build` | Build the userscript and metadata files into `dist/` |
+| `pnpm test` | Typecheck, build, and verify both release artifacts |
+| `pnpm preview` | Start the Vite preview server |
+
+See the [development guide](.docs/DEVELOPMENT.md) for the complete project layout and workflow.
+
+## License
+
+Asura Utils is licensed under the [GNU General Public License v3.0 only](LICENSE).

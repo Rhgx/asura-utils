@@ -1,33 +1,89 @@
 # Releasing Asura Utils
 
-Releases are built by GitHub Actions from tags whose names start with `v`.
+GitHub Actions builds and publishes releases from tags beginning with `v`. The tag version must exactly match the version in `package.json` after removing the leading `v`.
 
-1. Update the version in `package.json`.
-2. Run `pnpm test` locally.
-3. Commit the version change.
-4. Create and push a matching tag, for example:
+## Release checklist
 
-   ```sh
-   git tag v1.0.0
-   git push origin v1.0.0
-   ```
+| Step | Check |
+| :---: | --- |
+| 1 | Decide the next semantic version |
+| 2 | Update `version` in `package.json` |
+| 3 | Update release-facing documentation when behavior changed |
+| 4 | Run `pnpm test` locally |
+| 5 | Commit and push the release changes |
+| 6 | Create and push the matching tag |
+| 7 | Confirm the GitHub Actions run and both release assets |
 
-The release workflow verifies that the tag matches the version in
-`package.json`, runs the test and build checks, and creates a GitHub release
-containing:
+## Versioning
 
-- `asura-utils.user.js`
-- `asura-utils.meta.js`
+Use semantic versions in `major.minor.patch` form:
 
-The workflow can also be run manually to verify and download a build artifact.
-Manual runs do not create a GitHub release.
+| Change | Increment | Example |
+| --- | --- | --- |
+| Backward-compatible fix | Patch | `1.0.0` → `1.0.1` |
+| Backward-compatible feature | Minor | `1.0.1` → `1.1.0` |
+| Breaking behavior or configuration change | Major | `1.1.0` → `2.0.0` |
 
-## Automatic updates
+Tampermonkey compares the generated `@version` value when checking for updates. Always increase the version for a public update; republishing different code under the same version will not reliably update existing installations.
 
-The built userscript tells Tampermonkey to check the metadata file attached to
-the latest GitHub release. When its `@version` is newer than the installed
-version, Tampermonkey downloads the matching full userscript release asset.
+## Create the release
 
-Anyone who installed a build from before automatic updates were added must
-install a current release once. Later tagged releases will then be discovered
-automatically according to their Tampermonkey update-check settings.
+After the release commit is on `main`, create an annotated matching tag:
+
+```sh
+git tag -a v1.0.1 -m "Asura Utils v1.0.1"
+git push origin v1.0.1
+```
+
+Do not reuse or move a published version tag. If a release needs correction, publish a new patch version.
+
+## What CI verifies
+
+The `Release build` workflow performs these steps:
+
+1. Checks out the tagged commit.
+2. Installs pnpm and Node.js 22.
+3. Installs dependencies with `pnpm install --frozen-lockfile`.
+4. Compares the tag with `package.json`.
+5. Runs `pnpm test`.
+6. Uploads the generated files as a workflow artifact.
+7. Creates a GitHub release and attaches both userscript assets.
+
+| Release asset | Role |
+| --- | --- |
+| `asura-utils.user.js` | Full script installed and executed by Tampermonkey |
+| `asura-utils.meta.js` | Small metadata file checked for newer versions |
+
+The workflow can also be started manually. Manual runs perform the build and upload a workflow artifact, but do not create a GitHub release.
+
+## Automatic-update flow
+
+```text
+Tampermonkey checks latest asura-utils.meta.js
+                    ↓
+       compares installed @version
+                    ↓
+     newer version available?
+          ├─ no  → no change
+          └─ yes → download asura-utils.user.js
+```
+
+Both URLs use GitHub's stable latest-release asset path:
+
+```text
+https://github.com/Rhgx/asura-utils/releases/latest/download/asura-utils.meta.js
+https://github.com/Rhgx/asura-utils/releases/latest/download/asura-utils.user.js
+```
+
+Anyone who installed a build from before these metadata fields were added must install a current release once. Later releases are discovered according to their Tampermonkey update-check settings.
+
+## Post-release checks
+
+After the workflow succeeds:
+
+1. Open the GitHub release and confirm it is neither a draft nor a prerelease.
+2. Confirm both assets are attached.
+3. Open the `asura-utils.meta.js` asset and verify the expected `@version`, `@updateURL`, and `@downloadURL`.
+4. Install the `asura-utils.user.js` asset in Tampermonkey when the release changes installation or metadata behavior.
+
+If the workflow fails, fix the underlying source or configuration, increment to a new version if the failed release was already published, and push a new tag.
