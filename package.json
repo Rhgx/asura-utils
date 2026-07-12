@@ -1,9 +1,10 @@
 {
   "name": "asura-utils",
   "private": true,
-  "version": "6.2.0",
+  "version": "1.0.0",
   "description": "Reader enhancement with a single left dock, auto-scroll, image resizing, keyboard shortcuts, ad block, progress bar, layout customization, and UI cleanup.",
   "author": "Rocks",
+  "license": "GPL-3.0-only",
   "type": "module",
   "packageManager": "pnpm@11.3.0",
   "scripts": {

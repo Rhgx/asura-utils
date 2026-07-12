@@ -39,7 +39,7 @@ function verifyHeader(content: string, filePath: string): void {
 }
 
 function verifyMeta(meta: Metadata, filePath: string): void {
-  const requiredKeys = ["name", "namespace", "match", "run-at"];
+  const requiredKeys = ["name", "namespace", "license", "match", "run-at"];
   for (const key of requiredKeys) {
     assert(meta.has(key), `Missing @${key} in ${filePath}`);
   }
@@ -48,6 +48,10 @@ function verifyMeta(meta: Metadata, filePath: string): void {
   assert(
     meta.get("namespace")?.includes("http://tampermonkey.net/"),
     `Unexpected @namespace in ${filePath}`
+  );
+  assert(
+    meta.get("license")?.includes("GPL-3.0-only"),
+    `Unexpected @license in ${filePath}`
   );
   assert(
     meta.get("match")?.includes("https://asurascans.com/*"),
@@ -65,6 +69,21 @@ function verifyGrants(meta: Metadata, filePath: string): void {
   assert(grants.includes("GM_setValue"), `Missing @grant GM_setValue in ${filePath}`);
 }
 
+function verifyUpdates(meta: Metadata, filePath: string): void {
+  assert(
+    meta.get("updateURL")?.includes(
+      "https://github.com/Rhgx/asura-utils/releases/latest/download/asura-utils.meta.js"
+    ),
+    `Unexpected @updateURL in ${filePath}`
+  );
+  assert(
+    meta.get("downloadURL")?.includes(
+      "https://github.com/Rhgx/asura-utils/releases/latest/download/asura-utils.user.js"
+    ),
+    `Unexpected @downloadURL in ${filePath}`
+  );
+}
+
 const userJs = readFileSafe(userFile);
 const metaJs = readFileSafe(metaFile);
 
@@ -78,5 +97,7 @@ verifyMeta(userMeta, userFile);
 verifyMeta(metaMeta, metaFile);
 verifyGrants(userMeta, userFile);
 verifyGrants(metaMeta, metaFile);
+verifyUpdates(userMeta, userFile);
+verifyUpdates(metaMeta, metaFile);
 
 console.log("Build verification passed.");

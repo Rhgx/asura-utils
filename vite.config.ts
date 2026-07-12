@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 import monkey from "vite-plugin-monkey";
 
+const latestReleaseAssetUrl =
+  "https://github.com/Rhgx/asura-utils/releases/latest/download";
+
 export default defineConfig({
   plugins: [
     monkey({
@@ -13,6 +16,8 @@ export default defineConfig({
         author: "Rocks",
         match: ["https://asurascans.com/*"],
         icon: "https://asurascans.com/images/logo.webp",
+        updateURL: `${latestReleaseAssetUrl}/asura-utils.meta.js`,
+        downloadURL: `${latestReleaseAssetUrl}/asura-utils.user.js`,
         "run-at": "document-start",
         grant: ["GM_getValue", "GM_setValue"],
       },
