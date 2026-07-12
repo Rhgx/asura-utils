@@ -25,6 +25,8 @@ export interface PageControllerContext {
   reader: ReaderController;
   observer: MutationObserver | null;
   debounceTimer: number | undefined;
+  viewportFrameId: number;
+  resizePending: boolean;
   hintTimer: number | undefined;
   globalListenersBound: boolean;
   readerMounted: boolean;
@@ -34,6 +36,7 @@ export interface PageControllerContext {
   endActionHintTs: number;
   historyWriteTs: number;
   historyWrittenChapterKey: string;
+  historyWrittenProgress: number | null;
   resumeAttemptedKey: string;
   chapterAccessCache: Map<string, ChapterAccessResult>;
   pageContext: PageContext;
@@ -86,6 +89,7 @@ export interface PageControllerContext {
   mountReaderUI(): void;
   unmountReaderUI(): void;
   syncReaderState(state?: ReaderStateSnapshot): void;
+  scheduleViewportUpdate(resize?: boolean): void;
   applyBodyClasses(): void;
   handleConfigChanged(key: ConfigKey): void;
   handleKeyDown(event: KeyboardEvent): void;

@@ -6,6 +6,11 @@ export class ReaderController {
   readonly onStateChange: (state: ReaderStateSnapshot) => void;
   readonly onHint: (message: string) => void;
   readonly state: ReaderState;
+  private chapterImages: HTMLImageElement[] | null = null;
+  private chapterBounds: ChapterBounds | null | undefined;
+  private navTargets = new Map<ChapterDirection, HTMLAnchorElement | null>();
+  private seriesLink: HTMLAnchorElement | { href: string } | null | undefined;
+  private imageResizeObserver: ResizeObserver | null = null;
 
   constructor(
     onStateChange: (state: ReaderStateSnapshot) => void,
@@ -23,6 +28,7 @@ export class ReaderController {
   }
 
   start() {
+    this.invalidateDocumentCache();
     this.state.speed = ConfigStore.get("autoScrollSpeed");
     this.state.width = ConfigStore.get("imageWidth");
     this.applyWidth();
@@ -32,6 +38,8 @@ export class ReaderController {
   stop() {
     this.stopScroll();
     this.state.accumulatedScroll = 0;
+    this.imageResizeObserver?.disconnect();
+    this.imageResizeObserver = null;
     this.emitState();
   }
 
@@ -104,10 +112,23 @@ export class ReaderController {
       "--comic-width",
       `${this.state.width}px`
     );
+    this.invalidateGeometry();
   }
 
-  getProgress(): number {
-    const chapterBounds = this.getChapterContentBounds();
+  invalidateGeometry(): void {
+    this.chapterBounds = undefined;
+  }
+
+  invalidateDocumentCache(): void {
+    this.imageResizeObserver?.disconnect();
+    this.imageResizeObserver = null;
+    this.chapterImages = null;
+    this.chapterBounds = undefined;
+    this.navTargets.clear();
+    this.seriesLink = undefined;
+  }
+
+  getProgress(chapterBounds = this.getChapterContentBounds()): number {
     if (chapterBounds) {
       const viewportBottom = window.scrollY + window.innerHeight;
       const travel = Math.max(
@@ -125,8 +146,23 @@ export class ReaderController {
   }
 
   getChapterContentBounds(): ChapterBounds | null {
-    const images = Array.from(document.querySelectorAll<HTMLImageElement>(CHAPTER_IMAGE_SELECTOR));
-    if (images.length === 0) return null;
+    if (this.chapterBounds !== undefined) return this.chapterBounds;
+    const images = this.chapterImages ?? Array.from(
+      document.querySelectorAll<HTMLImageElement>(CHAPTER_IMAGE_SELECTOR)
+    );
+    this.chapterImages = images;
+    if (
+      !this.imageResizeObserver &&
+      typeof ResizeObserver === "function" &&
+      images.length > 0
+    ) {
+      this.imageResizeObserver = new ResizeObserver(() => this.invalidateGeometry());
+      images.forEach((image) => this.imageResizeObserver?.observe(image));
+    }
+    if (images.length === 0) {
+      this.chapterBounds = null;
+      return null;
+    }
 
     let minTop = Number.POSITIVE_INFINITY;
     let maxBottom = 0;
@@ -140,11 +176,15 @@ export class ReaderController {
       maxBottom = Math.max(maxBottom, absBottom);
     });
 
-    if (!Number.isFinite(minTop) || maxBottom <= minTop) return null;
-    return {
+    if (!Number.isFinite(minTop) || maxBottom <= minTop) {
+      this.chapterBounds = null;
+      return null;
+    }
+    this.chapterBounds = {
       startY: minTop,
       endY: maxBottom,
     };
+    return this.chapterBounds;
   }
 
   getChapterContentEndY(): number | null {
@@ -153,18 +193,26 @@ export class ReaderController {
   }
 
   findSeriesLink(): HTMLAnchorElement | { href: string } | null {
+    if (this.seriesLink !== undefined) return this.seriesLink;
     const directLink = document.querySelector<HTMLAnchorElement>(
       'a[href*="/comics/"]:not([href*="/chapter/"]), a[href*="/series/"]:not([href*="/chapter/"])'
     );
-    if (directLink) return directLink;
+    if (directLink) {
+      this.seriesLink = directLink;
+      return directLink;
+    }
 
     const path = window.location.pathname || "";
     const match = path.match(/^\/(comics|series)\/([^/]+)\/chapter\/[^/]+/);
-    if (!match) return null;
+    if (!match) {
+      this.seriesLink = null;
+      return null;
+    }
 
-    return {
+    this.seriesLink = {
       href: `${window.location.origin}/${match[1]}/${match[2]}`,
     };
+    return this.seriesLink;
   }
 
   hasSeriesLink() {
@@ -172,6 +220,7 @@ export class ReaderController {
   }
 
   getChapterNavTarget(direction: ChapterDirection): HTMLAnchorElement | null {
+    if (this.navTargets.has(direction)) return this.navTargets.get(direction) ?? null;
     const keyword = direction === "next" ? "next" : "prev";
     const links = Array.from(document.querySelectorAll<HTMLAnchorElement>("a"));
 
@@ -180,13 +229,18 @@ export class ReaderController {
       const txt = (a.textContent || "").trim().toLowerCase();
       return txt.includes(keyword);
     });
-    if (direct) return direct;
+    if (direct) {
+      this.navTargets.set(direction, direct);
+      return direct;
+    }
 
     const fallback = links.find((a) => {
       const txt = (a.textContent || "").trim().toLowerCase();
       return txt.includes(keyword);
     });
-    return fallback || null;
+    const target = fallback || null;
+    this.navTargets.set(direction, target);
+    return target;
   }
 
   canNavigate(direction: ChapterDirection): boolean {
@@ -225,14 +279,14 @@ export class ReaderController {
     return next;
   }
 
-  getStateSnapshot(): ReaderStateSnapshot {
+  getStateSnapshot(progress = this.getProgress()): ReaderStateSnapshot {
     return {
       isScrolling: this.state.isScrolling,
       speed: this.state.speed,
       width: this.state.width,
       fitWidth: ConfigStore.get("fitWidthMode"),
       brightness: ConfigStore.get("readerBrightness"),
-      progress: this.getProgress(),
+      progress,
       canPrev: this.canNavigate("prev"),
       canNext: this.canNavigate("next"),
       hasSeries: this.hasSeriesLink(),

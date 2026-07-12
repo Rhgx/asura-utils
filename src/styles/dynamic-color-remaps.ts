@@ -50,6 +50,11 @@ const VARIANT_SELECTOR_SUFFIX: Readonly<Record<string, string>> = {
 
 let dynamicRemapObserver: MutationObserver | null = null;
 let dynamicRemapTimer = 0;
+let dynamicRemapSignature = "";
+let dynamicTokens: Set<string> | null = null;
+const dynamicFillTokens = new Set<string>();
+const dynamicStrokeTokens = new Set<string>();
+const pendingRemapRoots = new Set<Element>();
 
 interface Rgb { r: number; g: number; b: number }
 interface Hsl { hue: number; saturation: number; lightness: number }
@@ -288,10 +293,16 @@ function collectSeedTokens(): Set<string> {
   return tokens;
 }
 
-function collectDomTokens(tokenSet: Set<string>): void {
-  const candidates = document.querySelectorAll(
+function collectDomTokens(root: Document | Element, tokenSet: Set<string>): void {
+  const candidates = Array.from(root.querySelectorAll(
     "[class*='#'],[class*='purple'],[class*='violet'],[class*='fuchsia']"
-  );
+  ));
+  if (
+    root instanceof Element &&
+    root.matches("[class*='#'],[class*='purple'],[class*='violet'],[class*='fuchsia']")
+  ) {
+    candidates.unshift(root);
+  }
   candidates.forEach((node) => {
     if (!node || !node.classList) return;
     node.classList.forEach((classToken) => {
@@ -301,27 +312,30 @@ function collectDomTokens(tokenSet: Set<string>): void {
   });
 }
 
-function buildSvgAttributeRemapCss(): string {
-  const fillTokens = new Set<string>();
-  const strokeTokens = new Set<string>();
-  const svgNodes = document.querySelectorAll(
+function collectSvgAttributeTokens(root: Document | Element): void {
+  const svgNodes = Array.from(root.querySelectorAll(
     "svg[fill],svg[stroke],svg [fill],svg [stroke]"
-  );
+  ));
+  if (root instanceof Element && root.matches("svg[fill],svg[stroke]")) {
+    svgNodes.unshift(root);
+  }
   svgNodes.forEach((node) => {
     if (!node || !node.getAttribute) return;
     const fillValue = normalizeHexToken(node.getAttribute("fill"));
-    if (fillValue && isPurpleHex(fillValue)) fillTokens.add(fillValue);
+    if (fillValue && isPurpleHex(fillValue)) dynamicFillTokens.add(fillValue);
     const strokeValue = normalizeHexToken(node.getAttribute("stroke"));
-    if (strokeValue && isPurpleHex(strokeValue)) strokeTokens.add(strokeValue);
+    if (strokeValue && isPurpleHex(strokeValue)) dynamicStrokeTokens.add(strokeValue);
   });
+}
 
-  const fillSelectors = Array.from(fillTokens).flatMap((token) =>
+function buildSvgAttributeRemapCss(): string {
+  const fillSelectors = Array.from(dynamicFillTokens).flatMap((token) =>
     caseVariants(token).flatMap((variant) => [
       `${THEME_SCOPE} svg[fill="${variant}"]`,
       `${THEME_SCOPE} svg [fill="${variant}"]`,
     ])
   );
-  const strokeSelectors = Array.from(strokeTokens).flatMap((token) =>
+  const strokeSelectors = Array.from(dynamicStrokeTokens).flatMap((token) =>
     caseVariants(token).flatMap((variant) => [
       `${THEME_SCOPE} svg[stroke="${variant}"]`,
       `${THEME_SCOPE} svg [stroke="${variant}"]`,
@@ -333,9 +347,13 @@ function buildSvgAttributeRemapCss(): string {
   ].join("");
 }
 
-function buildDynamicRemapCss(): string {
-  const tokenSet = collectSeedTokens();
-  collectDomTokens(tokenSet);
+function buildDynamicRemapCss(roots: readonly (Document | Element)[]): string {
+  const tokenSet = dynamicTokens ?? collectSeedTokens();
+  dynamicTokens = tokenSet;
+  roots.forEach((root) => {
+    collectDomTokens(root, tokenSet);
+    collectSvgAttributeTokens(root);
+  });
 
   const classRules = Array.from(tokenSet)
     .map((classToken) => buildRuleForClassToken(classToken))
@@ -361,15 +379,28 @@ function injectStyle(cssText: string): void {
   if (style.textContent !== cssText) style.textContent = cssText;
 }
 
-function applyDynamicColorRemaps(): void {
+function applyDynamicColorRemaps(roots: readonly Element[] = []): void {
   const root = document.documentElement;
   const activeTheme = root?.getAttribute("data-au-theme") || NATIVE_THEME_KEY;
   const hasCustomAccent = root?.hasAttribute("data-au-custom-accent");
   if (activeTheme === NATIVE_THEME_KEY && !hasCustomAccent) {
+    dynamicRemapSignature = "";
+    dynamicTokens = null;
+    dynamicFillTokens.clear();
+    dynamicStrokeTokens.clear();
     injectStyle("");
     return;
   }
-  injectStyle(buildDynamicRemapCss());
+  const signature = `${activeTheme}|${hasCustomAccent ? "custom" : "preset"}`;
+  const scanRoots: (Document | Element)[] = roots.length > 0 ? [...roots] : [document];
+  if (signature !== dynamicRemapSignature) {
+    dynamicRemapSignature = signature;
+    dynamicTokens = null;
+    dynamicFillTokens.clear();
+    dynamicStrokeTokens.clear();
+    scanRoots.splice(0, scanRoots.length, document);
+  }
+  injectStyle(buildDynamicRemapCss(scanRoots));
 }
 
 function hasRelevantRemapMutation(mutations: readonly MutationRecord[]): boolean {
@@ -380,7 +411,21 @@ function hasRelevantRemapMutation(mutations: readonly MutationRecord[]): boolean
         mutation.attributeName === "data-au-theme" ||
         mutation.attributeName === "data-au-custom-accent")
     ) {
-      return !(mutation.target instanceof Element) || mutation.target.id !== STYLE_ID;
+      if (!(mutation.target instanceof Element)) return true;
+      if (mutation.target.id === STYLE_ID) return false;
+      if (mutation.attributeName !== "class") return true;
+      const siteClasses = (value: string | null) =>
+        new Set(
+          (value || "")
+            .split(/\s+/)
+            .filter((token) => token && !token.startsWith("au-"))
+        );
+      const before = siteClasses(mutation.oldValue);
+      const after = siteClasses(mutation.target.getAttribute("class"));
+      return (
+        before.size !== after.size ||
+        Array.from(before).some((token) => !after.has(token))
+      );
     }
     if (mutation.type !== "childList") return false;
     const nodes = [
@@ -391,6 +436,7 @@ function hasRelevantRemapMutation(mutations: readonly MutationRecord[]): boolean
       if (!node || node.nodeType !== 1) return false;
       const element = node as Element;
       if (element.id === STYLE_ID || element.closest(`#${STYLE_ID}`)) return false;
+      if (element.id.startsWith("au-") || element.closest("[id^='au-']")) return false;
       if (element.hasAttribute("class")) return true;
       return !!element.querySelector("[class]");
     });
@@ -402,13 +448,27 @@ export function installDynamicColorRemaps(): void {
   if (dynamicRemapObserver || !document.documentElement) return;
   dynamicRemapObserver = new MutationObserver((mutations) => {
     if (!hasRelevantRemapMutation(mutations)) return;
+    mutations.forEach((mutation) => {
+      if (mutation.type === "attributes" && mutation.target instanceof Element) {
+        pendingRemapRoots.add(mutation.target);
+      }
+      mutation.addedNodes.forEach((node) => {
+        if (node instanceof Element) pendingRemapRoots.add(node);
+      });
+    });
     if (dynamicRemapTimer) window.clearTimeout(dynamicRemapTimer);
-    dynamicRemapTimer = window.setTimeout(() => applyDynamicColorRemaps(), 180);
+    dynamicRemapTimer = window.setTimeout(() => {
+      const roots = Array.from(pendingRemapRoots).filter((root) => root.isConnected);
+      pendingRemapRoots.clear();
+      if (roots.length === 0) return;
+      applyDynamicColorRemaps(roots);
+    }, 180);
   });
   dynamicRemapObserver.observe(document.documentElement, {
     childList: true,
     subtree: true,
     attributes: true,
+    attributeOldValue: true,
     attributeFilter: ["class", "data-au-theme", "data-au-custom-accent"],
   });
 }

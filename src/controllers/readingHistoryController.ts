@@ -37,18 +37,26 @@ export const readingHistoryController = {
     // writes are throttled.
     const chapterKey = this.getReaderChapterKey();
     const now = Date.now();
+    const normalizedProgress = progress === null
+      ? null
+      : Math.max(0, Math.min(100, Math.round(Number(progress) || 0)));
+    if (chapterKey !== this.historyWrittenChapterKey) {
+      this.historyWrittenProgress = null;
+    }
     if (chapterKey === this.historyWrittenChapterKey) {
       if (progress === null) return;
-      if (now - this.historyWriteTs < 1200) return;
+      if (normalizedProgress === this.historyWrittenProgress) return;
+      if (now - this.historyWriteTs < 3000) return;
     }
     this.historyWriteTs = now;
     this.historyWrittenChapterKey = chapterKey;
+    this.historyWrittenProgress = normalizedProgress;
 
     HistoryStore.recordVisit({
       ...parsed,
       href: window.location.pathname,
       title: this.getSeriesTitleFromReader(),
-      progress,
+      progress: normalizedProgress,
     });
   },
 

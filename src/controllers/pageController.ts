@@ -32,6 +32,8 @@ export const PageController = {
   ),
   observer: null as MutationObserver | null,
   debounceTimer: undefined as number | undefined,
+  viewportFrameId: 0,
+  resizePending: false,
   hintTimer: undefined as number | undefined,
   globalListenersBound: false,
   readerMounted: false,
@@ -41,6 +43,7 @@ export const PageController = {
   endActionHintTs: 0,
   historyWriteTs: 0,
   historyWrittenChapterKey: "",
+  historyWrittenProgress: null as number | null,
   resumeAttemptedKey: "",
   chapterAccessCache: new Map<string, { allowed: boolean; reason: string }>(),
   pageContext: {
@@ -65,7 +68,29 @@ export const PageController = {
 
   observeMutations() {
     if (this.observer || !document.body) return;
-    this.observer = new MutationObserver(() => {
+    this.observer = new MutationObserver((mutations) => {
+      const siteChanged = mutations.some((mutation) => {
+        const target = mutation.target;
+        if (
+          target instanceof Element &&
+          (target.id.startsWith("au-") || target.closest("[id^='au-']"))
+        ) {
+          return false;
+        }
+        const changedNodes = [
+          ...Array.from(mutation.addedNodes),
+          ...Array.from(mutation.removedNodes),
+        ];
+        return changedNodes.some((node) => {
+          if (!(node instanceof Element)) return node.nodeType === Node.TEXT_NODE;
+          if (node.id.startsWith("au-") || node.closest("[id^='au-']")) return false;
+          return true;
+        });
+      });
+      if (!siteChanged) return;
+      if (this.pageContext.isReader) {
+        this.reader.invalidateDocumentCache();
+      }
       window.clearTimeout(this.debounceTimer);
       this.debounceTimer = window.setTimeout(() => this.run(), 250);
     });
@@ -126,6 +151,13 @@ export const PageController = {
   },
 
   mountReaderUI() {
+    if (this.readerMounted && this.dockView.isMounted()) {
+      if (ConfigStore.get("showProgressBar")) this.progressBarView.mount();
+      else this.progressBarView.unmount();
+      return;
+    }
+
+    this.readerMounted = false;
     this.reader.start();
 
     this.dockView.mount({
@@ -280,18 +312,30 @@ export const PageController = {
 
   handleScroll() {
     if (!this.pageContext.isReader) return;
-    this.maybeRunChapterEndAction();
-    if (this.reader) this.recordReaderVisit(this.reader.getProgress());
-    if (!this.readerMounted) return;
-    this.syncReaderState();
+    this.scheduleViewportUpdate();
   },
 
   handleResize() {
-    this.cleanupCompactSidebar();
-    if (!this.pageContext.isReader) return;
-    this.maybeRunChapterEndAction();
-    if (!this.readerMounted) return;
-    this.syncReaderState();
+    this.scheduleViewportUpdate(true);
+  },
+
+  scheduleViewportUpdate(resize = false) {
+    this.resizePending ||= resize;
+    if (this.viewportFrameId) return;
+    this.viewportFrameId = window.requestAnimationFrame(() => {
+      this.viewportFrameId = 0;
+      if (this.resizePending) {
+        this.resizePending = false;
+        this.cleanupCompactSidebar();
+        this.reader.invalidateGeometry();
+      }
+      if (!this.pageContext.isReader) return;
+      this.maybeRunChapterEndAction();
+      const progress = this.reader.getProgress();
+      this.recordReaderVisit(progress);
+      if (!this.readerMounted) return;
+      this.syncReaderState(this.reader.getStateSnapshot(progress));
+    });
   },
 
   handleKeyDown(e: KeyboardEvent): void {
