@@ -229,6 +229,14 @@ body.au-theme-enabled .au-theme-site-section .au-theme-accent-text {
   color: var(--auo-accent) !important;
 }
 
+body.au-theme-enabled .au-theme-site-section .au-theme-link-text {
+  color: var(--auo-link) !important;
+}
+
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-border-left {
+  border-left-color: var(--auo-accent) !important;
+}
+
 body.au-theme-enabled .au-theme-site-section .au-theme-accent-text-hover:hover {
   color: var(--auo-link) !important;
 }
@@ -307,7 +315,17 @@ body.au-theme-enabled footer [class*="bg-[#913FE2]"] {
 }
 
 body.au-theme-enabled footer [class*="from-[#913FE2]"] {
-  background-image: linear-gradient(90deg, var(--auo-accent), var(--auo-link)) !important;
+  background-image: linear-gradient(90deg, var(--auo-accent), #fff) !important;
+}
+
+body.au-theme-enabled footer .au-theme-footer-brand-text {
+  background-color: transparent !important;
+  background-image: linear-gradient(
+    90deg,
+    var(--auo-accent),
+    #fff
+  ) !important;
+  color: transparent !important;
 }
 
 /* Login uses a separate, non-utility stylesheet. */

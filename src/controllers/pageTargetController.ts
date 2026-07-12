@@ -57,6 +57,9 @@ export const pageTargetController = {
       "au-series-comments",
       "au-series-related",
       "au-theme-site-section",
+      "au-theme-footer-brand-text",
+      "au-theme-link-text",
+      "au-theme-accent-border-left",
       "au-theme-muted-gradient",
       "au-theme-accent-text",
       "au-theme-accent-text-hover",
@@ -147,9 +150,19 @@ export const pageTargetController = {
 
     const themeRoots = Array.from(document.querySelectorAll(selector));
     const footer = document.querySelector("footer");
-    if (footer) themeRoots.push(footer);
+    if (footer) {
+      themeRoots.push(footer);
+      const brandText = footer.querySelector(
+        'a[href="/"] span[class*="bg-gradient"], a[href="/"] span[class*="from-[#913FE2]"]'
+      );
+      if (brandText) brandText.classList.add("au-theme-footer-brand-text");
+    }
     const path = window.location.pathname || "/";
-    if (/^\/(series-ranking|leaderboard)(\/|$)/.test(path)) {
+    const usesMainThemeScope =
+      /^\/(series-ranking|leaderboard)(\/|$)/.test(path) ||
+      /^\/404\/?$/.test(path) ||
+      /^\/announcement\/discord-notifications\/?$/.test(path);
+    if (usesMainThemeScope) {
       const main = document.querySelector("main");
       if (main) themeRoots.push(main);
     }
@@ -245,7 +258,12 @@ export const pageTargetController = {
           if (tokens.some((token) => /^focus-within:border-/.test(token) && isAccentToken(token))) {
             el.classList.add("au-theme-accent-focus-border");
           }
-          if (tokens.some((token) => /^(?:from|via|to)-/.test(token) && isAccentToken(token))) {
+          if (
+            !el.classList.contains("au-theme-footer-brand-text") &&
+            tokens.some(
+              (token) => /^(?:from|via|to)-/.test(token) && isAccentToken(token)
+            )
+          ) {
             el.classList.add("au-theme-accent-gradient");
           }
         });
@@ -270,6 +288,23 @@ export const pageTargetController = {
               )
             ) {
               control.classList.add("au-theme-control-surface");
+            }
+          });
+        }
+        if (/^\/announcement\/discord-notifications\/?$/.test(path)) {
+          target.querySelectorAll('a[href^="/user/"]').forEach((link) => {
+            link.classList.add("au-theme-accent-text");
+          });
+          target.querySelectorAll<HTMLElement>("[style]").forEach((element) => {
+            const inlineStyle = (element.getAttribute("style") || "").toLowerCase();
+            if (/color\s*:\s*#c9c4ff\b/.test(inlineStyle)) {
+              element.classList.add("au-theme-link-text");
+            }
+            if (/color\s*:\s*#7c6ef0\b/.test(inlineStyle)) {
+              element.classList.add("au-theme-accent-text");
+            }
+            if (/border-left(?:-color)?\s*:[^;]*#7c6ef0\b/.test(inlineStyle)) {
+              element.classList.add("au-theme-accent-border-left");
             }
           });
         }
