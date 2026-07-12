@@ -1,16 +1,29 @@
 export class ProgressBarView {
   boundClick: ((event: MouseEvent) => void) | null;
+  bar: HTMLDivElement | null;
+  fill: HTMLDivElement | null;
+  lastProgress: number | null;
 
   constructor() {
     this.boundClick = null;
+    this.bar = null;
+    this.fill = null;
+    this.lastProgress = null;
   }
 
   mount() {
-    if (document.getElementById("au-progress-bar")) return;
+    const existing = document.getElementById("au-progress-bar") as HTMLDivElement | null;
+    if (existing) {
+      this.bar = existing;
+      this.fill = existing.querySelector("#au-progress-bar-fill");
+      return;
+    }
     const bar = document.createElement("div");
     bar.id = "au-progress-bar";
     bar.innerHTML = '<div id="au-progress-bar-fill"></div>';
     document.body.appendChild(bar);
+    this.bar = bar;
+    this.fill = bar.querySelector("#au-progress-bar-fill");
 
     this.boundClick = (e: MouseEvent) => {
       const rect = bar.getBoundingClientRect();
@@ -23,17 +36,25 @@ export class ProgressBarView {
   }
 
   update(progressPct: unknown): void {
-    const fill = document.getElementById("au-progress-bar-fill");
+    const fill = this.fill?.isConnected
+      ? this.fill
+      : document.getElementById("au-progress-bar-fill") as HTMLDivElement | null;
     if (!fill) return;
+    this.fill = fill;
     const pct = Math.max(0, Math.min(100, Number(progressPct) || 0));
+    if (pct === this.lastProgress) return;
+    this.lastProgress = pct;
     (fill as HTMLElement).style.width = `${pct}%`;
   }
 
   unmount() {
-    const bar = document.getElementById("au-progress-bar");
+    const bar = this.bar?.isConnected ? this.bar : document.getElementById("au-progress-bar");
     if (!bar) return;
     if (this.boundClick) bar.removeEventListener("click", this.boundClick);
     bar.remove();
     this.boundClick = null;
+    this.bar = null;
+    this.fill = null;
+    this.lastProgress = null;
   }
 }

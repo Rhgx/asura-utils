@@ -8,6 +8,8 @@ import type {
 
 type ConfigValue<K extends ConfigKey> = AppConfig[K];
 
+const cache = new Map<ConfigKey, AppConfig[ConfigKey]>();
+
 export const ConfigStore = {
   sanitize<K extends ConfigKey>(key: K, value: unknown): ConfigValue<K> {
     const fallback = DEFAULTS[key];
@@ -45,12 +47,16 @@ export const ConfigStore = {
   },
 
   get<K extends ConfigKey>(key: K): ConfigValue<K> {
+    if (cache.has(key)) return cache.get(key) as ConfigValue<K>;
     const raw = GM_getValue(key, DEFAULTS[key]);
-    return this.sanitize(key, raw);
+    const clean = this.sanitize(key, raw);
+    cache.set(key, clean);
+    return clean;
   },
 
   set<K extends ConfigKey>(key: K, value: unknown): ConfigValue<K> {
     const clean = this.sanitize(key, value);
+    cache.set(key, clean);
     GM_setValue(key, clean);
     return clean;
   },

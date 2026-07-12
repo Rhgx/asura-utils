@@ -1,5 +1,4 @@
 import { CONSTANTS } from "../config/defaults.js";
-import { ConfigStore } from "../store/configStore.js";
 import type { ChapterDirection, ReaderStateSnapshot } from "../controllers/readerController.js";
 
 export interface ReaderDockActions {
@@ -22,6 +21,8 @@ export class ReaderDockView {
   backdrop: HTMLDivElement | null;
   collapsed: boolean;
   actions: ReaderDockActions | null;
+  controls: Map<string, HTMLElement>;
+  lastState: ReaderStateSnapshot | null;
   readonly onResize: () => void;
 
   constructor(onCollapsedChange: (collapsed: boolean) => void) {
@@ -31,6 +32,8 @@ export class ReaderDockView {
     this.backdrop = null;
     this.collapsed = true;
     this.actions = null;
+    this.controls = new Map();
+    this.lastState = null;
     this.onResize = this.handleResize.bind(this);
   }
 
@@ -52,6 +55,8 @@ export class ReaderDockView {
       return;
     }
 
+    this.controls.clear();
+    this.lastState = null;
     const shell = document.createElement("div");
     shell.id = "au-reader-dock-shell";
     shell.className = "is-collapsed";
@@ -199,11 +204,22 @@ export class ReaderDockView {
   }
 
   setCollapsed(value: boolean, persist: boolean): void {
-    this.collapsed = !!value;
+    const next = !!value;
+    const changed = this.collapsed !== next;
+    this.collapsed = next;
     if (this.shell) this.shell.classList.toggle("is-collapsed", this.collapsed);
     this.updateBackdropState();
-    if (persist) ConfigStore.set("readerDockCollapsed", this.collapsed);
-    if (this.onCollapsedChange) this.onCollapsedChange(this.collapsed);
+    if (persist && changed && this.onCollapsedChange) {
+      this.onCollapsedChange(this.collapsed);
+    }
+  }
+
+  getControl<T extends HTMLElement = HTMLElement>(id: string): T | null {
+    const cached = this.controls.get(id);
+    if (cached?.isConnected) return cached as T;
+    const control = this.shell?.querySelector<T>(`#${id}`) ?? null;
+    if (control) this.controls.set(id, control);
+    return control;
   }
 
   updateBackdropState() {
@@ -214,8 +230,9 @@ export class ReaderDockView {
 
   sync(state: ReaderStateSnapshot): void {
     if (!this.shell) return;
+    const previous = this.lastState;
 
-    const byId = <T extends HTMLElement = HTMLElement>(id: string) => this.shell!.querySelector<T>(`#${id}`);
+    const byId = <T extends HTMLElement = HTMLElement>(id: string) => this.getControl<T>(id);
     const progress = byId("au-dock-progress");
     const scrollBtn = byId("au-dock-scroll-btn");
     const speedInput = byId<HTMLInputElement>("au-dock-speed-input");
@@ -227,33 +244,46 @@ export class ReaderDockView {
     const widthDec = byId<HTMLButtonElement>("au-dock-width-dec");
     const widthInc = byId<HTMLButtonElement>("au-dock-width-inc");
 
-    if (progress) progress.textContent = `${state.progress}%`;
-    if (scrollBtn) {
+    if (progress && previous?.progress !== state.progress) {
+      progress.textContent = `${state.progress}%`;
+    }
+    if (scrollBtn && previous?.isScrolling !== state.isScrolling) {
       scrollBtn.textContent = state.isScrolling ? "Stop (S)" : "Start (S)";
       scrollBtn.classList.toggle("active", state.isScrolling);
     }
-    if (speedInput) speedInput.value = String(state.speed);
-    if (widthInput) widthInput.value = String(state.width);
+    if (speedInput && previous?.speed !== state.speed) speedInput.value = String(state.speed);
+    if (widthInput && previous?.width !== state.width) widthInput.value = String(state.width);
 
     const brightness = byId<HTMLInputElement>("au-dock-brightness");
     const brightnessVal = byId("au-dock-brightness-val");
-    if (brightness && document.activeElement !== brightness) {
+    if (
+      brightness &&
+      previous?.brightness !== state.brightness &&
+      document.activeElement !== brightness
+    ) {
       brightness.value = String(state.brightness);
     }
-    if (brightnessVal) brightnessVal.textContent = `${state.brightness}%`;
-    if (fitBtn) {
+    if (brightnessVal && previous?.brightness !== state.brightness) {
+      brightnessVal.textContent = `${state.brightness}%`;
+    }
+    if (fitBtn && previous?.fitWidth !== state.fitWidth) {
       fitBtn.textContent = state.fitWidth ? "On (W)" : "Off (W)";
       fitBtn.classList.toggle("active", state.fitWidth);
     }
 
     const widthDisabled = !!state.fitWidth;
-    if (widthInput) widthInput.disabled = widthDisabled;
-    if (widthDec) widthDec.disabled = widthDisabled;
-    if (widthInc) widthInc.disabled = widthDisabled;
-    if (prevBtn) prevBtn.disabled = !state.canPrev;
-    if (nextBtn) nextBtn.disabled = !state.canNext;
-    if (seriesBtn) seriesBtn.disabled = !state.hasSeries;
-    if (this.shell) this.shell.classList.toggle("is-scrolling", !!state.isScrolling);
+    if (previous?.fitWidth !== state.fitWidth) {
+      if (widthInput) widthInput.disabled = widthDisabled;
+      if (widthDec) widthDec.disabled = widthDisabled;
+      if (widthInc) widthInc.disabled = widthDisabled;
+    }
+    if (prevBtn && previous?.canPrev !== state.canPrev) prevBtn.disabled = !state.canPrev;
+    if (nextBtn && previous?.canNext !== state.canNext) nextBtn.disabled = !state.canNext;
+    if (seriesBtn && previous?.hasSeries !== state.hasSeries) seriesBtn.disabled = !state.hasSeries;
+    if (previous?.isScrolling !== state.isScrolling) {
+      this.shell.classList.toggle("is-scrolling", !!state.isScrolling);
+    }
+    this.lastState = { ...state };
   }
 
   unmount() {
@@ -263,6 +293,8 @@ export class ReaderDockView {
     this.panel = null;
     this.backdrop = null;
     this.actions = null;
+    this.controls.clear();
+    this.lastState = null;
     window.removeEventListener("resize", this.onResize);
   }
 }
