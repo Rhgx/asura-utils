@@ -17,8 +17,8 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 12px;
-  background: var(--au-bg-panel);
-  color: var(--au-text);
+  background: var(--auo-surface);
+  color: var(--auo-text);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 14px;
@@ -44,12 +44,12 @@
 .au-close-btn:hover { color: white; background: rgba(255,255,255,.07); transform: none; }
 .au-tab-bar {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
   gap: 4px;
   margin: 0;
   padding: 10px 12px;
   border-bottom: 1px solid rgba(255,255,255,.08);
-  background: var(--au-input-bg);
+  background: var(--auo-bg);
 }
 .au-tab-btn {
   min-width: 0;
@@ -68,7 +68,15 @@
   padding: 18px;
   max-height: calc(min(760px, 100vh - 32px) - 126px);
   overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--auo-text-dim) 45%, transparent) transparent;
 }
+.au-tab-panels::-webkit-scrollbar { width: 8px; }
+.au-tab-panels::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--auo-text-dim) 45%, transparent);
+  border-radius: 999px;
+}
+.au-tab-panels::-webkit-scrollbar-track { background: transparent; }
 .au-section { margin: 0; }
 .au-section-title { color: #a1a1aa; font-size: 12px; font-weight: 600; letter-spacing: .08em; }
 .au-control-row {
@@ -80,23 +88,36 @@
 }
 .au-input-num,
 .au-input-select {
-  border: 1px solid #3f3a49;
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 6px;
-  background: var(--au-bg-control);
-  color: var(--au-text);
+  background: var(--auo-bg);
+  color: var(--auo-text);
   font: inherit;
 }
 .au-input-num { padding: 7px 8px; }
 .au-input-select { padding: 7px 30px 7px 10px; }
 .au-toggle { width: 40px; height: 22px; }
 .au-slider { background: #3f3f46; }
+input:checked + .au-slider { background: var(--auo-accent); }
 .au-slider::before { width: 18px; height: 18px; left: 3px; bottom: 2px; }
 input:checked + .au-slider::before { transform: translateX(16px); }
 .au-shortcut-intro,
-.au-shortcut-card { border-color: rgba(255,255,255,.08); background: var(--au-bg-control); box-shadow: none; }
-.au-shortcut-row { border-color: rgba(255,255,255,.07); background: var(--au-input-bg); }
+.au-shortcut-card { border-color: rgba(255,255,255,.08); background: var(--auo-card-alt-bg); box-shadow: none; }
+.au-shortcut-row { border-color: rgba(255,255,255,.07); background: var(--auo-bg); }
 .au-shortcut-bind-btn,
-.au-shortcut-reset-btn { border-color: #3f3a49; border-radius: 6px; background: var(--au-bg-control); font-family: inherit; }
+.au-shortcut-reset-btn,
+.au-data-btn { border-color: rgba(255,255,255,.09); border-radius: 6px; background: var(--auo-card-alt-bg); font-family: inherit; }
+.au-shortcut-bind-btn:hover,
+.au-shortcut-reset-btn:hover,
+.au-data-btn:hover {
+  background: var(--auo-surface-hover);
+  border-color: color-mix(in srgb, var(--auo-accent) 60%, transparent);
+}
+.au-data-btn-danger { background: var(--auo-card-alt-bg); }
+.au-data-btn-danger:hover {
+  background: color-mix(in srgb, #f87171 14%, var(--auo-card-alt-bg));
+  border-color: #f87171;
+}
 .au-modal-signature { margin: 14px 0 0; }
 
 body.au-theme-enabled #au-modal .au-modal-signature {

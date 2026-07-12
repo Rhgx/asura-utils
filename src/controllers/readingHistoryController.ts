@@ -12,10 +12,12 @@ export const readingHistoryController = {
 
   getSeriesTitleFromReader() {
     const seriesLink = this.reader ? this.reader.findSeriesLink() : null;
-    const linkText =
+    const rawLinkText =
       seriesLink instanceof HTMLAnchorElement && typeof seriesLink.textContent === "string"
         ? seriesLink.textContent.trim()
         : "";
+    // Breadcrumb anchors concatenate the chapter label onto the series name.
+    const linkText = rawLinkText.replace(/Chapter\s+[\d.\-]+.*$/i, "").trim();
     if (linkText && linkText.length <= 90) return linkText;
     return (document.title || "")
       .replace(/\s*\|\s*Asura Scans.*$/i, "")

@@ -6,41 +6,41 @@
   --au-bg-panel: #1a1725;
   --au-bg-control: rgba(34, 29, 49, 0.92);
   --au-border: rgba(145, 63, 226, 0.34);
-  --au-border-soft: rgba(201, 166, 243, 0.24);
+  --au-border-soft: color-mix(in srgb, var(--au-text-dim) 30%, transparent);
   --au-text: #f5eeff;
   --au-text-dim: #bcabd4;
   --au-shadow: 0 18px 40px rgba(11, 8, 20, 0.55);
   --au-settings-btn-bg: #6f2598;
   --au-settings-btn-hover: #5a1f78;
   --au-modal-overlay: rgba(7, 5, 13, 0.86);
-  --au-modal-bg: linear-gradient(160deg, #1b1629 0%, #121019 100%);
-  --au-modal-title: #f5eeff;
-  --au-section-title: #af95cc;
+  --au-modal-bg: linear-gradient(160deg, var(--au-bg-panel) 0%, color-mix(in srgb, var(--au-bg-panel) 70%, black) 100%);
+  --au-modal-title: var(--au-text);
+  --au-section-title: color-mix(in srgb, var(--au-accent) 28%, var(--au-text-dim));
   --au-input-bg: #130f1f;
-  --au-input-border: rgba(165, 130, 208, 0.32);
-  --au-toggle-bg: #3b3150;
+  --au-input-border: color-mix(in srgb, var(--au-text-dim) 40%, transparent);
+  --au-toggle-bg: color-mix(in srgb, var(--au-text-dim) 22%, var(--au-bg-panel));
   --au-progress-track: rgba(9, 7, 14, 0.6);
-  --au-progress-end: #b67dff;
+  --au-progress-end: color-mix(in srgb, var(--au-accent) 60%, white);
   --au-dock-handle-bg: linear-gradient(165deg, rgba(31, 24, 46, 0.96), rgba(19, 15, 30, 0.96));
   --au-dock-handle-hover-bg: rgba(48, 35, 72, 0.96);
   --au-dock-handle-hover-border: rgba(179, 138, 234, 0.62);
   --au-dock-panel-bg: linear-gradient(160deg, rgba(26, 22, 39, 0.96), rgba(18, 15, 29, 0.96));
-  --au-dock-section-border: rgba(188, 159, 226, 0.2);
-  --au-dock-title: #efe4ff;
-  --au-dock-btn-border: rgba(166, 133, 212, 0.38);
-  --au-dock-btn-hover-bg: rgba(66, 51, 96, 0.92);
-  --au-dock-btn-hover-border: rgba(195, 152, 248, 0.64);
-  --au-dock-btn-active-border: rgba(229, 203, 255, 0.4);
-  --au-dock-btn-active-inset: rgba(145, 63, 226, 0.25);
+  --au-dock-section-border: color-mix(in srgb, var(--au-border-soft) 80%, transparent);
+  --au-dock-title: var(--au-text);
+  --au-dock-btn-border: color-mix(in srgb, var(--au-text-dim) 45%, transparent);
+  --au-dock-btn-hover-bg: color-mix(in srgb, var(--au-accent) 24%, var(--au-bg-panel));
+  --au-dock-btn-hover-border: color-mix(in srgb, var(--au-accent) 55%, var(--au-text));
+  --au-dock-btn-active-border: color-mix(in srgb, var(--au-text) 40%, transparent);
+  --au-dock-btn-active-inset: color-mix(in srgb, var(--au-accent) 25%, transparent);
   --au-dock-input-bg: #140f20;
-  --au-dock-footer: #9f8dbc;
+  --au-dock-footer: color-mix(in srgb, var(--au-text-dim) 82%, var(--au-bg-panel));
   --au-reader-backdrop: rgba(8, 5, 16, 0.56);
   --au-shortcut-bg: rgba(20, 15, 32, 0.95);
   --au-shortcut-border: rgba(185, 147, 235, 0.45);
   --au-shortcut-shadow: 0 12px 30px rgba(21, 11, 39, 0.55);
   --au-shortcut-text: #fff;
-  --au-shortcuts-copy: #b8a6d3;
-  --au-signature-text: #907cab;
+  --au-shortcuts-copy: var(--au-text-dim);
+  --au-signature-text: color-mix(in srgb, var(--au-text-dim) 72%, var(--au-bg-panel));
   --auo-accent: #913fe2;
   --auo-accent-strong: #6f2598;
   --auo-surface: #222222;
@@ -134,3 +134,40 @@ body.au-page-reader.au-fit-width img[data-loaded-src*="/asura-images/chapters/"]
   max-width: 100% !important;
   width: auto !important;
 }
+
+/* Reader image brightness, driven by the dock slider / settings. */
+body.au-page-reader .w-full.mx-auto.center img,
+body.au-page-reader img[src*="/asura-images/chapters/"],
+body.au-page-reader img[data-src*="/asura-images/chapters/"],
+body.au-page-reader img[data-loaded-src*="/asura-images/chapters/"] {
+  filter: brightness(calc(var(--au-reader-brightness, 100) * 1%));
+}
+
+/* Reading history: series-page continue pill and chapter read marks. */
+#au-continue-reading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--auo-accent);
+  color: var(--auo-on-accent) !important;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+#au-continue-reading:hover {
+  background: var(--auo-accent-strong);
+  transform: translateY(-1px);
+}
+#au-continue-reading .au-continue-meta {
+  margin-left: auto;
+  font-weight: 500;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+a.au-chapter-read { opacity: 0.55; }
+a.au-chapter-read:hover { opacity: 0.85; }
+a.au-chapter-current { box-shadow: inset 3px 0 0 var(--auo-accent); }

@@ -6,7 +6,7 @@ import {
 } from "../config/keybinds.js";
 import { ConfigStore } from "../store/configStore.js";
 import { HistoryStore } from "../store/historyStore.js";
-import { isConfigKey } from "../config/defaults.js";
+import { DEFAULTS, isConfigKey } from "../config/defaults.js";
 import type { AppConfig, ConfigKey } from "../config/defaults.js";
 import packageJson from "../../package.json";
 import {
@@ -141,6 +141,11 @@ export class SettingsModalView {
         key: "shortcuts",
         title: "Shortcuts",
         render: () => renderShortcutsEditor(cfg),
+      },
+      {
+        key: "data",
+        title: "Data",
+        render: () => this.dataSectionHTML(),
       },
     ];
 
@@ -423,9 +428,22 @@ export class SettingsModalView {
             }
           }
 
+          if (key === "customAccentEnabled") {
+            const accentInput = overlay.querySelector<HTMLInputElement>("#inp-customAccent");
+            if (accentInput) {
+              accentInput.disabled = !value;
+              accentInput.style.opacity = value ? "1" : "0.5";
+            }
+          }
+
           syncPanelMinHeight();
         };
       });
+
+    overlay.querySelectorAll<HTMLButtonElement>("[data-au-action]").forEach((button) => {
+      button.onclick = () =>
+        this.handleDataAction(button.getAttribute("data-au-action"), button);
+    });
     overlay.querySelectorAll<HTMLButtonElement>("[data-shortcut-capture]").forEach((button) => {
       button.onclick = () => {
         startShortcutCapture(button.getAttribute("data-shortcut-capture"));
@@ -452,6 +470,17 @@ export class SettingsModalView {
         if (!isConfigKey(key)) return;
         const value = ConfigStore.set(key, target.value);
         target.value = String(value);
+        this.onConfigChanged(key, value);
+      };
+    });
+
+    overlay.querySelectorAll<HTMLInputElement>(".au-input-color[data-key]").forEach((input) => {
+      // "input" fires while the picker is open, giving a live preview.
+      input.oninput = (e) => {
+        const target = e.currentTarget as HTMLInputElement;
+        const key = target.getAttribute("data-key");
+        if (!isConfigKey(key)) return;
+        const value = ConfigStore.set(key, target.value);
         this.onConfigChanged(key, value);
       };
     });
@@ -501,4 +530,95 @@ export class SettingsModalView {
     `;
   }
 
+  dataSectionHTML(): string {
+    return `
+      <div class="au-data-note">
+        Export copies your settings as JSON to the clipboard. Import applies
+        JSON from a paste prompt. Reading history stores your last-read
+        chapter per series.
+      </div>
+      <div class="au-data-actions">
+        <button type="button" class="au-data-btn" data-au-action="export">Export Settings</button>
+        <button type="button" class="au-data-btn" data-au-action="import">Import Settings</button>
+        <button type="button" class="au-data-btn" data-au-action="reset">Reset to Defaults</button>
+        <button type="button" class="au-data-btn au-data-btn-danger" data-au-action="clear-history">Clear Reading History</button>
+      </div>
+    `;
+  }
+
+  buttonFeedback(button: HTMLButtonElement, text: string): void {
+    const original = button.dataset["auLabel"] || button.textContent || "";
+    button.dataset["auLabel"] = original;
+    button.textContent = text;
+    window.setTimeout(() => {
+      button.textContent = original;
+    }, 1400);
+  }
+
+  reopenModal(): void {
+    if (typeof this.modalCleanup === "function") this.modalCleanup();
+    window.setTimeout(() => {
+      this.renderModal();
+      this.modalOpen = true;
+    }, 200);
+  }
+
+  applyImportedConfig(parsed: Record<string, unknown>): void {
+    Object.keys(DEFAULTS).forEach((key) => {
+      if (!isConfigKey(key)) return;
+      if (!(key in parsed)) return;
+      ConfigStore.set(key, parsed[key]);
+    });
+    this.onConfigChanged("themePreset", ConfigStore.get("themePreset"));
+  }
+
+  handleDataAction(action: string | null, button: HTMLButtonElement): void {
+    if (action === "export") {
+      const json = JSON.stringify(ConfigStore.getAll(), null, 2);
+      const clipboard = navigator.clipboard;
+      if (clipboard && typeof clipboard.writeText === "function") {
+        clipboard
+          .writeText(json)
+          .then(() => this.buttonFeedback(button, "Copied!"))
+          .catch(() => window.prompt("Copy settings JSON:", json));
+      } else {
+        window.prompt("Copy settings JSON:", json);
+      }
+      return;
+    }
+
+    if (action === "import") {
+      const raw = window.prompt("Paste settings JSON to import:");
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          throw new Error("not an object");
+        }
+        this.applyImportedConfig(parsed as Record<string, unknown>);
+        this.buttonFeedback(button, "Imported!");
+        this.reopenModal();
+      } catch {
+        this.buttonFeedback(button, "Invalid JSON");
+      }
+      return;
+    }
+
+    if (action === "reset") {
+      if (!window.confirm("Reset all Asura Utils settings to defaults?")) return;
+      Object.keys(DEFAULTS).forEach((key) => {
+        if (!isConfigKey(key)) return;
+        ConfigStore.set(key, DEFAULTS[key]);
+      });
+      this.onConfigChanged("themePreset", ConfigStore.get("themePreset"));
+      this.reopenModal();
+      return;
+    }
+
+    if (action === "clear-history") {
+      if (!window.confirm("Clear all saved reading history?")) return;
+      HistoryStore.clear();
+      this.buttonFeedback(button, "Cleared!");
+    }
+  }
 }
