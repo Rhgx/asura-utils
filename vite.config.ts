@@ -12,7 +12,7 @@ export default defineConfig({
         name: "Asura Utils",
         namespace: "http://tampermonkey.net/",
         description:
-          "Reader enhancement with a single left dock, auto-scroll, image resizing, keyboard shortcuts, ad block, progress bar, layout customization, and UI cleanup.",
+          "A cleaner way to read on Asura Scans with auto-scroll, reader dock, themes, reading history, keyboard shortcuts, ad blocking, and layout controls.",
         author: "Rocks",
         match: ["https://asurascans.com/*"],
         icon: "https://asurascans.com/images/logo.webp",
