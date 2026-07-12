@@ -18,7 +18,8 @@ const APP_VERSION = packageJson.version;
 
 const SETTING_TOOLTIPS: Partial<Record<ConfigKey, string>> = {
   adBlock: "Hides common ad containers and promo close buttons.",
-  colorTimestamps: "Highlights chapter update dates and relative times.",
+  colorTimestamps:
+    "Colors and weights chapter timestamps by recency; newer updates appear brighter and bolder.",
   hideSlider: "Removes the large featured slider on the home page.",
   hideToraka: "Hides Toraka promotion sections when detected.",
   hideComments: "Hides comment-related sections on supported pages.",

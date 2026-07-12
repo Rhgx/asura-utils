@@ -7,11 +7,24 @@ Open the gear button in the Asura Scans header to change these options. Settings
 | Setting | Default | Description |
 | --- | :---: | --- |
 | Ad Blocker | On | Hides common ad containers and promotional close buttons |
-| Colored Chapter Timestamps | On | Adds visual color treatment to chapter timestamps |
+| Colored Chapter Timestamps | On | Varies timestamp color and weight by recency so newer updates stand out |
 | Hide Home Slider | Off | Removes the large featured slider from the home page |
 | Hide Toraka Promo | On | Hides detected Toraka promotion sections |
 | Hide Comments Section | Off | Hides comment-related sections on supported pages |
 | Hide Default Back-to-Top | On | Removes the site's own back-to-top control |
+
+### Timestamp recency levels
+
+When **Colored Chapter Timestamps** is enabled, only the timestamp's text color
+and font weight change. No badge, background, border, or layout styling is
+added.
+
+| Timestamp age | Emphasis |
+| --- | --- |
+| Up to 6 hours | Brightest theme accent and boldest weight |
+| 6–24 hours | Strong accent blend and semibold weight |
+| 1–7 days | Muted accent blend and semibold weight |
+| Older than 7 days | Dim theme text and regular weight |
 
 ## Appearance
 

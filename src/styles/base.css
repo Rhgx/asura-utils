@@ -88,8 +88,20 @@ body.au-hide-comments .comments-section,
 body.au-hide-comments [class*="comment"],
 body.au-hide-comments [id*="comment"],
 body.au-hide-popular .au-hide-popular-target { display: none !important; }
-body.au-color-timestamps .au-chapter-timestamp:not([class*="text-yellow"]):not([class*="text-amber"]) {
-  color: color-mix(in srgb, var(--auo-accent) 52%, var(--auo-text-dim)) !important;
+body.au-color-timestamps .au-timestamp-fresh:not([class*="text-yellow"]):not([class*="text-amber"]) {
+  color: var(--auo-accent) !important;
+  font-weight: 700;
+}
+body.au-color-timestamps .au-timestamp-recent:not([class*="text-yellow"]):not([class*="text-amber"]) {
+  color: color-mix(in srgb, var(--auo-accent) 72%, var(--auo-text)) !important;
+  font-weight: 600;
+}
+body.au-color-timestamps .au-timestamp-week:not([class*="text-yellow"]):not([class*="text-amber"]) {
+  color: color-mix(in srgb, var(--auo-accent) 42%, var(--auo-text-dim)) !important;
+  font-weight: 600;
+}
+body.au-color-timestamps .au-timestamp-old:not([class*="text-yellow"]):not([class*="text-amber"]) {
+  color: var(--auo-text-dim) !important;
   font-weight: 500;
 }
 body.au-hide-btt .au-hide-btt-target,
