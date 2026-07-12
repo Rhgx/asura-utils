@@ -59,7 +59,7 @@ jobs:
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body: Release build of Asura Utils.
           files: |
             dist/asura-utils.user.js
             dist/asura-utils.meta.js
