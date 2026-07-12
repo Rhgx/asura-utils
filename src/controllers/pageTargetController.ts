@@ -131,6 +131,7 @@ export const pageTargetController = {
       "au-theme-site-section",
       "au-theme-footer-brand-text",
       "au-theme-link-text",
+      "au-theme-accent-border",
       "au-theme-accent-border-left",
       "au-theme-muted-gradient",
       "au-theme-accent-text",
@@ -147,6 +148,10 @@ export const pageTargetController = {
       "au-theme-accent-gradient",
       "au-theme-card-surface",
       "au-theme-control-surface",
+      "au-theme-dropdown-option",
+      "au-theme-dropdown-option-active",
+      "au-theme-filter-segment",
+      "au-theme-text-input",
       "au-theme-accent-shadow",
       "au-theme-accent-shadow-hover",
     ];
@@ -265,8 +270,16 @@ export const pageTargetController = {
               token
             );
 
-          if (tokens.some((token) => /^text-/.test(token) && isAccentToken(token))) {
-            el.classList.add("au-theme-accent-text");
+          const textAccentTokens = tokens.filter(
+            (token) => /^text-/.test(token) && isAccentToken(token)
+          );
+          if (textAccentTokens.length) {
+            const usesLightAccent = textAccentTokens.some((token) =>
+              /\[#(?:a78bfa|c084fc)\]/i.test(token)
+            );
+            el.classList.add(
+              usesLightAccent ? "au-theme-link-text" : "au-theme-accent-text"
+            );
           }
           if (tokens.some((token) => /^hover:text-/.test(token) && isAccentToken(token))) {
             el.classList.add("au-theme-accent-text-hover");
@@ -349,6 +362,48 @@ export const pageTargetController = {
             )
             .forEach((control) => {
               control.classList.add("au-theme-control-surface");
+            });
+          target
+            .querySelectorAll<HTMLInputElement>('input[type="text"]')
+            .forEach((input) => {
+              input.classList.add("au-theme-text-input");
+              input.closest("label")?.classList.add("au-theme-control-surface");
+            });
+          target
+            .querySelectorAll(
+              'div[class*="absolute"][class*="top-full"][class*="bg-[#1f1a2e]"]'
+            )
+            .forEach((dropdown) => {
+              dropdown.classList.add("au-theme-dropdown-surface");
+              dropdown
+                .querySelectorAll('button, div[class*="cursor-pointer"]')
+                .forEach((option) => {
+                  option.classList.add("au-theme-dropdown-option");
+                  const inlineStyle = option.getAttribute("style") || "";
+                  if (
+                    option.classList.contains("bg-[#2a1f3d]") ||
+                    inlineStyle.includes("border-color: rgb(145, 63, 226)")
+                  ) {
+                    option.classList.add("au-theme-dropdown-option-active");
+                  }
+                  option.querySelectorAll<HTMLElement>("[style]").forEach((child) => {
+                    const childStyle = child.getAttribute("style") || "";
+                    if (childStyle.includes("background-color: rgb(145, 63, 226)")) {
+                      child.classList.add("au-theme-accent-bg");
+                    }
+                    if (childStyle.includes("border-color: rgb(145, 63, 226)")) {
+                      child.classList.add("au-theme-accent-border");
+                    }
+                  });
+                });
+            });
+          target
+            .querySelectorAll('div[class*="bg-[#150f20]"]')
+            .forEach((segment) => {
+              segment.classList.add("au-theme-filter-segment");
+              segment.querySelectorAll("button").forEach((option) => {
+                option.classList.add("au-theme-dropdown-option");
+              });
             });
         }
         if (componentUrl.includes("ChapterListReact")) {

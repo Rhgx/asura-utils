@@ -199,7 +199,7 @@ function declarationsFor(prefix: UtilityPrefix, parsed: ParsedUtility, { isHover
       if (opacity !== null) return `background-color:${accentMix(opacity)}!important`;
       const bg =
         isStrong || isHover ? "var(--auo-accent-strong)" : "var(--auo-accent)";
-      return `background-color:${bg}!important;color:var(--auo-on-accent)!important`;
+      return `background-color:${bg}!important`;
     }
     case "border": {
       const color = opacity !== null ? accentMix(opacity) : "var(--auo-accent)";
