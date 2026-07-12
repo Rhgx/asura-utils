@@ -164,6 +164,7 @@ body.au-theme-enabled .au-theme-site-section .au-theme-muted-gradient {
 body.au-theme-enabled .au-theme-site-section .pinned-glow.au-theme-muted-gradient {
   position: relative;
   overflow: hidden;
+  border-radius: 0.5rem;
   background-image: linear-gradient(
     270deg,
     color-mix(in srgb, var(--auo-accent) 16%, var(--auo-surface)),
@@ -175,9 +176,10 @@ body.au-theme-enabled .au-theme-site-section .pinned-glow.au-theme-muted-gradien
 body.au-theme-enabled .au-theme-site-section .pinned-glow.au-theme-muted-gradient::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: 0 auto 0 0;
+  width: 200%;
   pointer-events: none;
-  background: linear-gradient(
+  background-image: linear-gradient(
       105deg,
       transparent 20%,
       color-mix(in srgb, var(--auo-accent) 5%, transparent) 35%,
@@ -186,14 +188,28 @@ body.au-theme-enabled .au-theme-site-section .pinned-glow.au-theme-muted-gradien
       transparent 70%,
       color-mix(in srgb, var(--auo-accent) 6%, transparent) 80%,
       transparent 90%
-    )
-    0 0 / 250% 100%;
-  animation: au-pinned-shimmer 8s ease-in-out infinite;
+    ),
+    linear-gradient(
+      105deg,
+      transparent 20%,
+      color-mix(in srgb, var(--auo-accent) 5%, transparent) 35%,
+      color-mix(in srgb, var(--auo-accent) 11%, transparent) 42%,
+      transparent 50%,
+      transparent 70%,
+      color-mix(in srgb, var(--auo-accent) 6%, transparent) 80%,
+      transparent 90%
+    );
+  background-position: 0 0, 100% 0;
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  border-radius: inherit;
+  animation: au-pinned-shimmer 8s linear infinite;
+  will-change: transform;
 }
 
 @keyframes au-pinned-shimmer {
-  from { background-position: 200% 0; }
-  to { background-position: -50% 0; }
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
 }
 
 body.au-theme-enabled .au-theme-site-section time,
