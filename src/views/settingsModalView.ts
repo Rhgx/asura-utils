@@ -326,6 +326,8 @@ export class SettingsModalView {
       const wrapWidth = panelsWrap.clientWidth || 1;
       let maxHeight = 0;
 
+      // Measure every tab at the current width, including hidden tabs, so the
+      // modal does not jump in height when the user changes tabs.
       tabPanels.forEach((panel) => {
         const previousStyle = panel.getAttribute("style");
 

@@ -61,6 +61,8 @@ export const ThemeController = {
     }
 
     if (this.bodyThemeObserver || !document.documentElement) return;
+    // The script can start before <body> exists. Stop watching as soon as the
+    // body appears and receives the theme markers.
     this.bodyThemeObserver = new MutationObserver(() => {
       if (this.applyThemeToBody(themeKey) && this.bodyThemeObserver) {
         this.bodyThemeObserver.disconnect();

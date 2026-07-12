@@ -69,6 +69,7 @@ export const PageController = {
   observeMutations() {
     if (this.observer || !document.body) return;
     this.observer = new MutationObserver((mutations) => {
+      // Ignore our own UI updates so a controller run cannot recursively schedule itself.
       const siteChanged = mutations.some((mutation) => {
         const target = mutation.target;
         if (
@@ -89,6 +90,7 @@ export const PageController = {
       });
       if (!siteChanged) return;
       if (this.pageContext.isReader) {
+        // Chapter images are hydrated lazily, so any site mutation can stale the cached bounds.
         this.reader.invalidateDocumentCache();
       }
       window.clearTimeout(this.debounceTimer);
@@ -322,6 +324,7 @@ export const PageController = {
   scheduleViewportUpdate(resize = false) {
     this.resizePending ||= resize;
     if (this.viewportFrameId) return;
+    // Group rapid scroll and resize events into one update per animation frame.
     this.viewportFrameId = window.requestAnimationFrame(() => {
       this.viewportFrameId = 0;
       if (this.resizePending) {

@@ -68,6 +68,7 @@ export class ReaderController {
   scrollLoop() {
     if (!this.state.isScrolling) return;
 
+    // Keep fractional movement between frames so low speeds still scroll smoothly.
     const scale = this.state.width / CONSTANTS.BASE_WIDTH;
     this.state.accumulatedScroll += (this.state.speed / 2) * scale;
     const step = Math.floor(this.state.accumulatedScroll);
@@ -156,6 +157,7 @@ export class ReaderController {
       typeof ResizeObserver === "function" &&
       images.length > 0
     ) {
+      // Lazy-loaded images change the page height after their initial DOM insertion.
       this.imageResizeObserver = new ResizeObserver(() => this.invalidateGeometry());
       images.forEach((image) => this.imageResizeObserver?.observe(image));
     }
@@ -203,6 +205,7 @@ export class ReaderController {
     }
 
     const path = window.location.pathname || "";
+    // Some reader layouts omit the breadcrumb, so rebuild the series URL from the path.
     const match = path.match(/^\/(comics|series)\/([^/]+)\/chapter\/[^/]+/);
     if (!match) {
       this.seriesLink = null;
@@ -234,6 +237,7 @@ export class ReaderController {
       return direct;
     }
 
+    // Older layouts label navigation links but do not include /chapter/ in the URL.
     const fallback = links.find((a) => {
       const txt = (a.textContent || "").trim().toLowerCase();
       return txt.includes(keyword);

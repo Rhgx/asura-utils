@@ -88,6 +88,7 @@ export const pageCleanupController = {
       return true;
     };
 
+    // Search common carousel wrappers first to avoid matching an unrelated poster grid.
     const overflowCandidates = Array.from(
       document.querySelectorAll("div.overflow-hidden")
     ).filter(
@@ -168,6 +169,7 @@ export const pageCleanupController = {
   },
 
   findBetaBannerPromos() {
+    // Component names are the safest match; link and text checks cover older layouts.
     const explicitBanners = Array.from(
       document.querySelectorAll(
         'astro-island[component-url*="MigrationBanner"],astro-island[component-url*="MonthlySubBanner"],astro-island[component-url*="ChargebackBanner"],astro-island[component-url*="RelinkBanner"],astro-island[component-url*="AnnouncementBanner"],astro-island[component-url*="PromoBanner"]'

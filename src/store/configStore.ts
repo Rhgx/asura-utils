@@ -26,6 +26,8 @@ export const ConfigStore = {
 
       const step = Number(meta.step);
       if (Number.isFinite(step) && step > 0) {
+        // Match the setting's decimal precision so repeated edits do not store
+        // floating-point values such as 0.30000000000000004.
         const decimals = (String(step).split(".")[1] || "").length;
         const factor = Math.pow(10, decimals);
         n = Math.round(n * factor) / factor;
@@ -47,6 +49,8 @@ export const ConfigStore = {
   },
 
   get<K extends ConfigKey>(key: K): ConfigValue<K> {
+    // Userscript storage reads are synchronous, so keep sanitized values in
+    // memory after the first access.
     if (cache.has(key)) return cache.get(key) as ConfigValue<K>;
     const raw = GM_getValue(key, DEFAULTS[key]);
     const clean = this.sanitize(key, raw);

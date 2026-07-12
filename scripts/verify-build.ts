@@ -33,6 +33,7 @@ function parseMeta(content: string): Metadata {
 }
 
 function verifyHeader(content: string, filePath: string): void {
+  // Check the whole file for the footer because the bundled script sits between both markers.
   const top = content.slice(0, 400);
   assert(top.includes("// ==UserScript=="), `Missing userscript header in ${filePath}`);
   assert(content.includes("// ==/UserScript=="), `Missing userscript footer in ${filePath}`);
@@ -64,6 +65,7 @@ function verifyMeta(meta: Metadata, filePath: string): void {
 }
 
 function verifyGrants(meta: Metadata, filePath: string): void {
+  // Both files must request the same storage access or update installs can lose permissions.
   const grants = meta.get("grant") || [];
   assert(grants.includes("GM_getValue"), `Missing @grant GM_getValue in ${filePath}`);
   assert(grants.includes("GM_setValue"), `Missing @grant GM_setValue in ${filePath}`);

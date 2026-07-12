@@ -134,6 +134,8 @@ export const chapterEndController = {
         signal: controller.signal,
       });
       if (!response.ok) {
+        // A transient probe failure must not make a publicly accessible chapter
+        // look premium-locked; only explicit lock signals block navigation.
         result = { allowed: true, reason: "request_failed_allow" };
       } else {
         const html = await response.text();
@@ -150,6 +152,7 @@ export const chapterEndController = {
         }
       }
     } catch (_error) {
+      // Fail open for timeouts and network errors for the same reason as non-2xx responses.
       result = { allowed: true, reason: "request_error_allow" };
     } finally {
       window.clearTimeout(timeout);

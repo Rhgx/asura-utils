@@ -261,6 +261,7 @@ export class ReaderDockView {
       previous?.brightness !== state.brightness &&
       document.activeElement !== brightness
     ) {
+      // Do not move the slider under the pointer while the user is dragging it.
       brightness.value = String(state.brightness);
     }
     if (brightnessVal && previous?.brightness !== state.brightness) {

@@ -129,6 +129,7 @@ body.au-compact-sidebar .au-compact-sidebar-target > div {
   margin: 0 5px !important;
 }
 
+/* Auto-scroll sets positions frame by frame, so native smooth scrolling would fight it. */
 html { scroll-behavior: auto !important; }
 body.au-page-reader .w-full.mx-auto.center img,
 body.au-page-reader img[src*="/asura-images/chapters/"],

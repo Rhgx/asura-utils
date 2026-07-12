@@ -448,6 +448,8 @@ export function installDynamicColorRemaps(): void {
   if (dynamicRemapObserver || !document.documentElement) return;
   dynamicRemapObserver = new MutationObserver((mutations) => {
     if (!hasRelevantRemapMutation(mutations)) return;
+    // Group rapid hydration updates and rescan only the affected sections; recoloring
+    // the full page after every class change is noticeably slow on chapter pages.
     mutations.forEach((mutation) => {
       if (mutation.type === "attributes" && mutation.target instanceof Element) {
         pendingRemapRoots.add(mutation.target);

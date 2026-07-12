@@ -68,6 +68,7 @@ export const pageTargetController = {
           } else if (!/^(?:today|just\s+now)$/.test(normalized)) {
             const parsedDate = new Date(value);
             if (!Number.isNaN(parsedDate.getTime())) {
+              // Dates without a year that land in the future refer to the previous year.
               if (!/\b\d{4}\b/.test(value) && parsedDate.getTime() > Date.now()) {
                 parsedDate.setFullYear(parsedDate.getFullYear() - 1);
               }

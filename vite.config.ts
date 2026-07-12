@@ -18,6 +18,7 @@ export default defineConfig({
         icon: "https://asurascans.com/images/logo.webp",
         updateURL: `${latestReleaseAssetUrl}/asura-utils.meta.js`,
         downloadURL: `${latestReleaseAssetUrl}/asura-utils.user.js`,
+        // Start before the site renders so cleanup and theme fixes can avoid a visible flash.
         "run-at": "document-start",
         grant: ["GM_getValue", "GM_setValue"],
       },
@@ -27,6 +28,7 @@ export default defineConfig({
       build: {
         fileName: "asura-utils.user.js",
         metaFileName: "asura-utils.meta.js",
+        // Keep grants explicit above; automatic detection can change the published header.
         autoGrant: false,
       },
     }),

@@ -146,6 +146,8 @@ function matchesBinding(event: KeyboardEvent | null | undefined, binding: unknow
   const target = normalizeBinding(binding);
   if (!target || !event) return false;
   if (event.code === target) return true;
+  // Some browsers or synthetic events omit `code`; convert the older `key`
+  // value to the same physical-key format used by saved bindings.
   const fallback = normalizeKeyToCode(event.key);
   return !!fallback && fallback === target;
 }

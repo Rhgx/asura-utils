@@ -1,4 +1,4 @@
-/* Current Asura UI alignment */
+/* These rules refine settings-modal.css to match the current Asura UI. Keep them loaded after it. */
 .au-settings-btn {
   width: 2.5rem;
   height: 2.5rem;
