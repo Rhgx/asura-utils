@@ -1,6 +1,8 @@
 import { THEME_PRESETS } from "../theme/themePresets.js";
 import { KEYBIND_DEFAULTS, KEYBIND_FIELDS } from "./keybinds.js";
 
+export type ChapterEndAction = "off" | "nextChapter" | "seriesPage" | "stopScroll";
+
 const DEFAULTS = {
   hideSlider: false,
   colorTimestamps: true,
@@ -19,7 +21,7 @@ const DEFAULTS = {
   menuSeriesOverhaul: false,
   readerDockCollapsed: true,
   readerDockSection: "all",
-  chapterEndAction: "nextChapter",
+  chapterEndAction: "nextChapter" as ChapterEndAction,
   hasPremiumAccess: false,
   themePreset: "asuraClassic",
   trackReadingHistory: true,
@@ -30,12 +32,31 @@ const DEFAULTS = {
   ...KEYBIND_DEFAULTS,
 };
 
+export type AppConfig = typeof DEFAULTS;
+export type ConfigKey = keyof AppConfig;
+export type BooleanConfigKey = {
+  [K in ConfigKey]: AppConfig[K] extends boolean ? K : never;
+}[ConfigKey];
+const CONFIG_KEYS = new Set<string>(Object.keys(DEFAULTS));
+
+function isConfigKey(value: string | null): value is ConfigKey {
+  return value !== null && CONFIG_KEYS.has(value);
+}
+
+export interface ConfigMeta {
+  type?: "boolean" | "number" | "string";
+  min?: number;
+  max?: number;
+  step?: number;
+  options?: readonly string[];
+}
+
 const CONSTANTS = {
   BASE_WIDTH: 800,
   SPEED_STEP: 0.5,
 };
 
-const CONFIG_META = {
+const CONFIG_META: Partial<Record<ConfigKey, ConfigMeta>> = {
   autoScrollSpeed: { type: "number", min: 0.1, max: 15.0, step: 0.1 },
   imageWidth: { type: "number", min: 400, max: 3000, step: 1 },
   menuSeriesOverhaul: { type: "boolean" },
@@ -55,4 +76,4 @@ const CONFIG_META = {
   themePreset: { type: "string", options: Object.keys(THEME_PRESETS) },
 };
 
-export { DEFAULTS, CONSTANTS, CONFIG_META };
+export { DEFAULTS, CONSTANTS, CONFIG_META, isConfigKey };

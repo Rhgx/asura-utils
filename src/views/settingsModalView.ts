@@ -1,17 +1,22 @@
 import { APPEARANCE_MODAL_SECTION, READER_MODAL_SECTION } from "../config/modalSections.js";
+import type { ModalSection } from "../config/modalSections.js";
 import {
   KEYBIND_FIELDS,
   normalizeEventToBinding,
 } from "../config/keybinds.js";
 import { ConfigStore } from "../store/configStore.js";
 import { HistoryStore } from "../store/historyStore.js";
-import { DEFAULTS } from "../config/defaults.js";
+import { isConfigKey } from "../config/defaults.js";
+import type { AppConfig, ConfigKey } from "../config/defaults.js";
 import packageJson from "../../package.json";
-import { shortcutsEditorHTML, setShortcutListeningState, stopShortcutCapture } from "./settingsShortcuts.js";
+import {
+  renderShortcutsEditor,
+  setShortcutListeningState,
+} from "./settingsShortcuts.js";
 
 const APP_VERSION = packageJson.version;
 
-const SETTING_TOOLTIPS = {
+const SETTING_TOOLTIPS: Partial<Record<ConfigKey, string>> = {
   adBlock: "Hides common ad containers and promo close buttons.",
   colorTimestamps: "Highlights chapter update dates and relative times.",
   hideSlider: "Removes the large featured slider on the home page.",
@@ -40,7 +45,12 @@ const SETTING_TOOLTIPS = {
 };
 
 export class SettingsModalView {
-  constructor(onConfigChanged) {
+  readonly onConfigChanged: (key: ConfigKey, value: AppConfig[ConfigKey]) => void;
+  modalOpen: boolean;
+  activeTabKey: string;
+  modalCleanup: (() => void) | null;
+
+  constructor(onConfigChanged: (key: ConfigKey, value: AppConfig[ConfigKey]) => void) {
     this.onConfigChanged = onConfigChanged;
     this.modalOpen = false;
     this.activeTabKey = "general";
@@ -48,14 +58,14 @@ export class SettingsModalView {
   }
 
   createHeaderButton() {
-    const profileLinks = document.querySelectorAll(
+    const profileLinks = document.querySelectorAll<HTMLElement>(
       'header a[href*="/login"], header a[href*="/dashboard"], header a[href*="/account"], header a[href*="/user/"]'
     );
     if (profileLinks.length === 0) return;
 
     const targetAnchor =
       Array.from(profileLinks).find((el) => el.offsetParent !== null) ||
-      profileLinks[0];
+      profileLinks[0]!;
     const insertionTarget =
       targetAnchor.closest(".mobile-menu-hide") ||
       targetAnchor.closest(".profile-menu-hide") ||
@@ -103,7 +113,7 @@ export class SettingsModalView {
     const overlay = document.createElement("div");
     overlay.id = "au-modal-overlay";
 
-    const sections = [
+    const sections: ModalSection[] = [
       {
         key: "general",
         title: "General",
@@ -130,7 +140,7 @@ export class SettingsModalView {
       {
         key: "shortcuts",
         title: "Shortcuts",
-        render: () => this.shortcutsEditorHTML(cfg),
+        render: () => renderShortcutsEditor(cfg),
       },
     ];
 
@@ -261,7 +271,7 @@ export class SettingsModalView {
 
     document.body.appendChild(overlay);
 
-    let resizeHandler = null;
+    let resizeHandler: (() => void) | null = null;
     let listeningShortcutKey = "";
     let isClosing = false;
     let closeTimer = 0;
@@ -281,7 +291,7 @@ export class SettingsModalView {
       if (isClosing) return;
       isClosing = true;
 
-      this.stopShortcutCapture(overlay, listeningShortcutKey);
+      setShortcutListeningState(overlay, listeningShortcutKey, false);
       listeningShortcutKey = "";
       document.removeEventListener("keydown", captureShortcutKeydown, true);
       if (resizeHandler) {
@@ -294,16 +304,16 @@ export class SettingsModalView {
     };
     this.modalCleanup = close;
 
-    const closeBtn = overlay.querySelector(".au-close-btn");
+    const closeBtn = overlay.querySelector<HTMLButtonElement>(".au-close-btn");
     if (closeBtn) closeBtn.onclick = close;
 
     overlay.onclick = (e) => {
       if (e.target === overlay) close();
     };
 
-    const tabButtons = Array.from(overlay.querySelectorAll(".au-tab-btn"));
-    const tabPanels = Array.from(overlay.querySelectorAll(".au-tab-panel"));
-    const panelsWrap = overlay.querySelector(".au-tab-panels");
+    const tabButtons = Array.from(overlay.querySelectorAll<HTMLButtonElement>(".au-tab-btn"));
+    const tabPanels = Array.from(overlay.querySelectorAll<HTMLElement>(".au-tab-panel"));
+    const panelsWrap = overlay.querySelector<HTMLElement>(".au-tab-panels");
 
     const syncPanelMinHeight = () => {
       if (!panelsWrap || tabPanels.length === 0) return;
@@ -334,27 +344,27 @@ export class SettingsModalView {
         panelsWrap.style.minHeight = `${Math.ceil(maxHeight)}px`;
       }
     };
-    const startShortcutCapture = (fieldKey) => {
+    const startShortcutCapture = (fieldKey: string | null) => {
       if (!fieldKey) return;
       if (listeningShortcutKey && listeningShortcutKey !== fieldKey) {
-        this.stopShortcutCapture(overlay, listeningShortcutKey);
+        setShortcutListeningState(overlay, listeningShortcutKey, false);
       }
       if (listeningShortcutKey === fieldKey) {
-        this.stopShortcutCapture(overlay, fieldKey);
+        setShortcutListeningState(overlay, fieldKey, false);
         listeningShortcutKey = "";
         return;
       }
       listeningShortcutKey = fieldKey;
-      this.setShortcutListeningState(overlay, fieldKey, true, "Press a key...");
+      setShortcutListeningState(overlay, fieldKey, true, "Press a key...");
     };
 
-    const captureShortcutKeydown = (event) => {
+    const captureShortcutKeydown = (event: KeyboardEvent) => {
       if (!listeningShortcutKey) return;
       event.preventDefault();
       event.stopPropagation();
 
       if (event.key === "Escape") {
-        this.stopShortcutCapture(overlay, listeningShortcutKey);
+        setShortcutListeningState(overlay, listeningShortcutKey, false);
         listeningShortcutKey = "";
         return;
       }
@@ -363,13 +373,14 @@ export class SettingsModalView {
       const binding = isClearKey ? "" : normalizeEventToBinding(event);
       if (!isClearKey && !binding) return;
 
+      if (!isConfigKey(listeningShortcutKey)) return;
       const value = ConfigStore.set(listeningShortcutKey, binding);
       this.onConfigChanged(listeningShortcutKey, value);
-      this.stopShortcutCapture(overlay, listeningShortcutKey);
+      setShortcutListeningState(overlay, listeningShortcutKey, false);
       listeningShortcutKey = "";
     };
 
-    const setActiveTab = (tabKey) => {
+    const setActiveTab = (tabKey: string | null | undefined) => {
       if (!tabKey) return;
       this.activeTabKey = tabKey;
 
@@ -395,15 +406,17 @@ export class SettingsModalView {
     window.addEventListener("resize", resizeHandler, { passive: true });
     document.addEventListener("keydown", captureShortcutKeydown, true);
 
-    overlay.querySelectorAll(".au-toggle input").forEach((input) => {
+    overlay.querySelectorAll<HTMLInputElement>(".au-toggle input").forEach((input) => {
       input.onchange = (e) => {
-        const key = e.target.getAttribute("data-key");
-        const value = !!e.target.checked;
+        const target = e.currentTarget as HTMLInputElement;
+        const key = target.getAttribute("data-key");
+        if (!isConfigKey(key)) return;
+        const value = target.checked;
         ConfigStore.set(key, value);
         this.onConfigChanged(key, value);
 
           if (key === "fitWidthMode") {
-            const widthInput = overlay.querySelector("#inp-imageWidth");
+            const widthInput = overlay.querySelector<HTMLInputElement>("#inp-imageWidth");
             if (widthInput) {
               widthInput.disabled = value;
               widthInput.style.opacity = value ? "0.5" : "1";
@@ -413,44 +426,49 @@ export class SettingsModalView {
           syncPanelMinHeight();
         };
       });
-    overlay.querySelectorAll("[data-shortcut-capture]").forEach((button) => {
+    overlay.querySelectorAll<HTMLButtonElement>("[data-shortcut-capture]").forEach((button) => {
       button.onclick = () => {
         startShortcutCapture(button.getAttribute("data-shortcut-capture"));
       };
     });
 
-    overlay.querySelectorAll("[data-shortcut-reset]").forEach((button) => {
+    overlay.querySelectorAll<HTMLButtonElement>("[data-shortcut-reset]").forEach((button) => {
       button.onclick = () => {
         const key = button.getAttribute("data-shortcut-reset");
-        const field = keybindFieldMap.get(key);
+        if (!isConfigKey(key)) return;
+        const field = keybindFieldMap.get(key as typeof KEYBIND_FIELDS[number]["key"]);
         if (!field) return;
         const value = ConfigStore.set(key, field.defaultBinding);
         this.onConfigChanged(key, value);
-        this.setShortcutListeningState(overlay, key, false);
+        setShortcutListeningState(overlay, key, false);
         if (listeningShortcutKey === key) listeningShortcutKey = "";
       };
     });
 
-    overlay.querySelectorAll(".au-input-num[data-key]").forEach((input) => {
+    overlay.querySelectorAll<HTMLInputElement>(".au-input-num[data-key]").forEach((input) => {
       input.onchange = (e) => {
-        const key = e.target.getAttribute("data-key");
-        const value = ConfigStore.set(key, e.target.value);
-        e.target.value = String(value);
+        const target = e.currentTarget as HTMLInputElement;
+        const key = target.getAttribute("data-key");
+        if (!isConfigKey(key)) return;
+        const value = ConfigStore.set(key, target.value);
+        target.value = String(value);
         this.onConfigChanged(key, value);
       };
     });
 
-    overlay.querySelectorAll(".au-input-select[data-key]").forEach((select) => {
+    overlay.querySelectorAll<HTMLSelectElement>(".au-input-select[data-key]").forEach((select) => {
       select.onchange = (e) => {
-        const key = e.target.getAttribute("data-key");
-        const value = ConfigStore.set(key, e.target.value);
-        e.target.value = String(value);
+        const target = e.currentTarget as HTMLSelectElement;
+        const key = target.getAttribute("data-key");
+        if (!isConfigKey(key)) return;
+        const value = ConfigStore.set(key, target.value);
+        target.value = String(value);
         this.onConfigChanged(key, value);
       };
     });
   }
 
-  escapeHtml(value) {
+  escapeHtml(value: unknown): string {
     return String(value)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -459,7 +477,7 @@ export class SettingsModalView {
       .replace(/'/g, "&#39;");
   }
 
-  controlLabelHTML(label, tooltip) {
+  controlLabelHTML(label: string, tooltip: string): string {
     const safeLabel = this.escapeHtml(label);
     if (!tooltip) return `<span>${safeLabel}</span>`;
     const safeTip = this.escapeHtml(tooltip);
@@ -471,7 +489,7 @@ export class SettingsModalView {
     `;
   }
 
-  toggleHTML(key, label, checked, tooltip = "") {
+  toggleHTML(key: ConfigKey, label: string, checked: AppConfig[ConfigKey], tooltip = ""): string {
     return `
       <div class="au-control-row">
         ${this.controlLabelHTML(label, tooltip)}
@@ -483,15 +501,4 @@ export class SettingsModalView {
     `;
   }
 
-  shortcutsEditorHTML(cfg) {
-    return shortcutsEditorHTML(this, cfg);
-  }
-
-  setShortcutListeningState(...args) {
-    return setShortcutListeningState(...args);
-  }
-
-  stopShortcutCapture(...args) {
-    return stopShortcutCapture(this, ...args);
-  }
 }

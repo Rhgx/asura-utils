@@ -1,4 +1,5 @@
 import { ConfigStore } from "../store/configStore.js";
+import type { PageControllerContext } from "./types.js";
 
 export const pageTargetController = {
   tagChapterTimestamps() {
@@ -174,7 +175,7 @@ export const pageTargetController = {
         target.classList.add("au-theme-site-section");
         Array.from(target.querySelectorAll("[class]")).forEach((el) => {
           const tokens = Array.from(el.classList);
-          const isAccentToken = (token) =>
+          const isAccentToken = (token: string) =>
             /(?:\[#(?:913fe2|8e3fdd|7c35c2|7c3aed|7b35c1|7b2fd1|6f2598|5a1f78|a78bfa|c084fc)\]|(?:purple|violet|fuchsia)-)/i.test(
               token
             );
@@ -285,7 +286,7 @@ export const pageTargetController = {
   },
 
   tagSeriesOverhaulTargets() {
-    const textOf = (el) => (el.textContent || "").trim().toLowerCase();
+    const textOf = (el: Element) => (el.textContent || "").trim().toLowerCase();
     const chapterAnchors = this.getChapterAnchors(document);
     const chapterRows = chapterAnchors.filter((anchor) => {
       const txt = textOf(anchor);
@@ -363,8 +364,8 @@ export const pageTargetController = {
     );
     const chapterContainer =
       chapterListIsland?.closest("div.mt-4") ||
-      this.findAncestor(chapterRows[0], (el) => this.getChapterAnchors(el).length >= 6) ||
-      this.findAncestor(chapterAnchors[0], (el) => this.getChapterAnchors(el).length >= 6);
+      (chapterRows[0] ? this.findAncestor(chapterRows[0], (el) => this.getChapterAnchors(el).length >= 6) : null) ||
+      (chapterAnchors[0] ? this.findAncestor(chapterAnchors[0], (el) => this.getChapterAnchors(el).length >= 6) : null);
     if (chapterContainer) chapterContainer.classList.add("au-series-chapters");
 
     chapterAnchors
@@ -388,4 +389,4 @@ export const pageTargetController = {
       : null;
     if (relatedContainer) relatedContainer.classList.add("au-series-related");
   },
-};
+} satisfies ThisType<PageControllerContext>;

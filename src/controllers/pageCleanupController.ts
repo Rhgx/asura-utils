@@ -1,9 +1,10 @@
 import { ConfigStore } from "../store/configStore.js";
+import type { PageControllerContext } from "./types.js";
 
 export const pageCleanupController = {
-  findHomeSlider() {
-    const normalizeSliderTarget = (node) => {
-      if (!node || !node.querySelector) return node || null;
+  findHomeSlider(): Element | null {
+    const normalizeSliderTarget = (node: Element | null): Element | null => {
+      if (!node) return null;
       if (node.tagName === "ASTRO-ISLAND") {
         const islandHero =
           node.querySelector(".hero-section-embla, .embla-hero") || node.firstElementChild;
@@ -62,15 +63,15 @@ export const pageCleanupController = {
       }
     }
 
-    const hasManyPosters = (el) =>
+    const hasManyPosters = (el: Element) =>
       el.querySelectorAll(
         'img[alt="poster"], img[src*="thumb"], img[src*="storage/media"], img[src*="/asura-images/covers/"], img[src*="/asura-images/banners/"]'
       ).length >= 3;
-    const hasManySeriesLinks = (el) => {
+    const hasManySeriesLinks = (el: Element) => {
       const count = this.getSeriesAnchors(el).length;
       return count >= 4 && count <= 24;
     };
-    const isReasonableSliderContainer = (el) => {
+    const isReasonableSliderContainer = (el: Element) => {
       if (!el || el === document.body || el === document.documentElement) return false;
       if (el.closest("header") || el.closest("footer")) return false;
 
@@ -113,7 +114,7 @@ export const pageCleanupController = {
     });
     const pool = nearTop.length > 0 ? nearTop : candidates;
 
-    const best = pool.reduce((acc, el) => {
+    const best = pool.reduce<Element | null>((acc, el) => {
       if (!acc) return el;
       const aRect = acc.getBoundingClientRect();
       const eRect = el.getBoundingClientRect();
@@ -129,7 +130,7 @@ export const pageCleanupController = {
       document.querySelectorAll('img[src*="toraka"], img[alt*="Toraka"]')
     );
     const nodes = anchors.concat(images);
-    const targets = new Set();
+    const targets = new Set<Element>();
 
     explicitBadges.forEach((badge) => {
       targets.add(badge.closest("div") || badge);
@@ -175,7 +176,7 @@ export const pageCleanupController = {
     const anchors = Array.from(
       document.querySelectorAll('a[href*="beta.asurascans.com"], a[href*="/announcement/"]')
     );
-    const targets = new Set();
+    const targets = new Set<Element>();
 
     explicitBanners.forEach((node) => {
       targets.add(node);
@@ -212,14 +213,14 @@ export const pageCleanupController = {
   },
 
   findPopularSections() {
-    const targets = new Set();
+    const targets = new Set<Element>();
     const titlePattern =
       /\b(popular|trending|hot|most\s+(read|popular)|top\s+series)\b/i;
     const headings = Array.from(
       document.querySelectorAll("h1, h2, h3, h4, h5, strong, span, p")
     );
 
-    const maybeAddSectionForNode = (node) => {
+    const maybeAddSectionForNode = (node: Element) => {
       const txt = (node.textContent || "").trim().toLowerCase();
       if (!txt || txt.length > 120 || !titlePattern.test(txt)) return;
       const container = this.findAncestor(
@@ -249,13 +250,14 @@ export const pageCleanupController = {
     return this.normalizeSectionTargets(Array.from(targets));
   },
 
-  normalizeSectionTargets(nodes) {
-    return nodes.filter(
-      (el) => !nodes.some((other) => other !== el && other.contains(el))
+  normalizeSectionTargets(nodes: Iterable<Element>): Element[] {
+    const list = Array.from(nodes);
+    return list.filter(
+      (el) => !list.some((other) => other !== el && other.contains(el))
     );
   },
 
-  isLikelySeriesSection(el, options = {}) {
+  isLikelySeriesSection(el: Element, options: { minLinks?: number; maxLinks?: number } = {}): boolean {
     const { minLinks = 3, maxLinks = 120 } = options;
     if (!el || !el.querySelectorAll) return false;
     if (el === document.body || el === document.documentElement) return false;
@@ -269,7 +271,7 @@ export const pageCleanupController = {
     return true;
   },
 
-  isLikelySidebarColumn(el) {
+  isLikelySidebarColumn(el: Element): boolean {
     if (!el || !el.isConnected || !el.querySelectorAll) return false;
     if (el === document.body || el === document.documentElement) return false;
     if (el.closest("header") || el.closest("footer")) return false;
@@ -292,7 +294,7 @@ export const pageCleanupController = {
   },
 
   findCompactSidebarTargets() {
-    const targets = new Set();
+    const targets = new Set<Element>();
 
     const explicitCandidates = Array.from(
       document.querySelectorAll(
@@ -324,7 +326,7 @@ export const pageCleanupController = {
     });
   },
 
-  isLikelyBackToTopControl(el, allowNonFloating = false) {
+  isLikelyBackToTopControl(el: Element, allowNonFloating = false): boolean {
     if (!el || !el.isConnected) return false;
     if (el.closest("#au-reader-dock-shell")) return false;
     if (el.closest("#au-modal-overlay")) return false;
@@ -440,8 +442,8 @@ export const pageCleanupController = {
       .querySelectorAll(".au-hide-beta-banner-target")
       .forEach((el) => {
         el.classList.remove("au-hide-beta-banner-target");
-        el.style.removeProperty("display");
-        el.style.removeProperty("pointer-events");
+        (el as HTMLElement).style.removeProperty("display");
+        (el as HTMLElement).style.removeProperty("pointer-events");
       });
 
     const adBlockEnabled = ConfigStore.get("adBlock");
@@ -450,8 +452,8 @@ export const pageCleanupController = {
     const targets = this.findBetaBannerPromos();
     targets.forEach((el) => {
       el.classList.add("au-hide-beta-banner-target");
-      el.style.setProperty("display", "none", "important");
-      el.style.setProperty("pointer-events", "none", "important");
+      (el as HTMLElement).style.setProperty("display", "none", "important");
+      (el as HTMLElement).style.setProperty("pointer-events", "none", "important");
     });
   },
 
@@ -485,4 +487,4 @@ export const pageCleanupController = {
       if (slider) slider.classList.add("au-hide-slider-target");
     }
   },
-};
+} satisfies ThisType<PageControllerContext>;

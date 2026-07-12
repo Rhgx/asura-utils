@@ -1,14 +1,7 @@
 import { ConfigStore } from "../store/configStore.js";
-
-const CHAPTER_IMAGE_SELECTOR = [
-  ".w-full.mx-auto.center img",
-  'img[src*="/asura-images/chapters/"]',
-  'img[data-src*="/asura-images/chapters/"]',
-  'img[data-loaded-src*="/asura-images/chapters/"]',
-  'img[srcset*="/asura-images/chapters/"]',
-  'img[src*="/storage/media/"]',
-  'img[src*="/storage/comics/"]',
-].join(",");
+import type { ChapterEndAction } from "../config/defaults.js";
+import type { ChapterAccessResult, PageControllerContext } from "./types.js";
+import { CHAPTER_IMAGE_SELECTOR } from "./readerConstants.js";
 
 export const chapterEndController = {
   getReaderChapterKey() {
@@ -27,7 +20,7 @@ export const chapterEndController = {
     const contentEndY = this.reader && this.reader.getChapterContentEndY
       ? this.reader.getChapterContentEndY()
       : null;
-    if (Number.isFinite(contentEndY) && contentEndY > 0) {
+    if (typeof contentEndY === "number" && Number.isFinite(contentEndY) && contentEndY > 0) {
       const viewportBottom = window.scrollY + window.innerHeight;
       const threshold = Math.max(160, Math.round(window.innerHeight * 0.12));
       return viewportBottom >= contentEndY - threshold;
@@ -88,7 +81,7 @@ export const chapterEndController = {
     return this.hasPremiumLockSignals(document);
   },
 
-  showEndActionHint(message) {
+  showEndActionHint(message: string): void {
     const now = Date.now();
     if (now - this.endActionHintTs < 2400) return;
     this.endActionHintTs = now;
@@ -120,7 +113,7 @@ export const chapterEndController = {
     }
   },
 
-  async probeChapterAccess(url) {
+  async probeChapterAccess(url: unknown): Promise<ChapterAccessResult> {
     if (ConfigStore.get("hasPremiumAccess")) {
       return { allowed: true, reason: "has_premium_access" };
     }
@@ -128,14 +121,13 @@ export const chapterEndController = {
     const targetUrl = String(url || "").trim();
     if (!targetUrl) return { allowed: false, reason: "missing_url" };
 
-    if (this.chapterAccessCache.has(targetUrl)) {
-      return this.chapterAccessCache.get(targetUrl);
-    }
+    const cached = this.chapterAccessCache.get(targetUrl);
+    if (cached) return cached;
 
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 4500);
 
-    let result;
+    let result: ChapterAccessResult;
     try {
       const response = await fetch(targetUrl, {
         credentials: "include",
@@ -168,7 +160,7 @@ export const chapterEndController = {
   },
 
   async tryNavigateNextChapterWithPremiumCheck() {
-    const nextTarget = this.reader.getChapterNavTarget("next");
+    const nextTarget = this.reader?.getChapterNavTarget("next");
     if (!nextTarget || !nextTarget.href) return false;
 
     const access = await this.probeChapterAccess(nextTarget.href);
@@ -189,7 +181,9 @@ export const chapterEndController = {
     return true;
   },
 
-  async performSmartEndAction(actionMode) {
+  async performSmartEndAction(actionMode: ChapterEndAction): Promise<boolean> {
+    const reader = this.reader;
+    if (!reader) return false;
     if (actionMode === "stopScroll") {
       const stopped = this.stopReaderAutoScrollForEndAction();
       if (!stopped) return false;
@@ -198,7 +192,7 @@ export const chapterEndController = {
     }
 
     if (actionMode === "seriesPage") {
-      if (this.reader.goSeries()) {
+      if (reader.goSeries()) {
         return true;
       }
       if (await this.tryNavigateNextChapterWithPremiumCheck()) {
@@ -213,7 +207,7 @@ export const chapterEndController = {
       if (await this.tryNavigateNextChapterWithPremiumCheck()) {
         return true;
       }
-      if (this.reader.goSeries()) {
+      if (reader.goSeries()) {
         this.showEndActionHint("End Action: Falling back to series page");
         return true;
       }
@@ -224,4 +218,4 @@ export const chapterEndController = {
 
     return false;
   },
-};
+} satisfies ThisType<PageControllerContext>;

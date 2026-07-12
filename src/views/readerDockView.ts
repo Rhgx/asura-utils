@@ -1,8 +1,30 @@
 import { CONSTANTS } from "../config/defaults.js";
 import { ConfigStore } from "../store/configStore.js";
+import type { ChapterDirection, ReaderStateSnapshot } from "../controllers/readerController.js";
+
+export interface ReaderDockActions {
+  toggleScroll(): void;
+  setSpeed(value: unknown): number;
+  stepSpeed(delta: number): number;
+  setWidth(value: unknown): number;
+  stepWidth(delta: number): number;
+  toggleFitWidth(): boolean;
+  setBrightness(value: unknown): void;
+  navigate(direction: ChapterDirection): boolean;
+  goSeries(): boolean;
+  goTop(): void;
+}
 
 export class ReaderDockView {
-  constructor(onCollapsedChange) {
+  readonly onCollapsedChange: (collapsed: boolean) => void;
+  shell: HTMLDivElement | null;
+  panel: HTMLElement | null;
+  backdrop: HTMLDivElement | null;
+  collapsed: boolean;
+  actions: ReaderDockActions | null;
+  readonly onResize: () => void;
+
+  constructor(onCollapsedChange: (collapsed: boolean) => void) {
     this.onCollapsedChange = onCollapsedChange;
     this.shell = null;
     this.panel = null;
@@ -20,13 +42,13 @@ export class ReaderDockView {
     return window.matchMedia("(max-width: 900px)").matches;
   }
 
-  mount(actions) {
+  mount(actions: ReaderDockActions): void {
     this.actions = actions;
 
     if (this.isMounted()) {
-      this.shell = document.getElementById("au-reader-dock-shell");
+      this.shell = document.getElementById("au-reader-dock-shell") as HTMLDivElement | null;
       this.panel = document.getElementById("au-reader-dock");
-      this.backdrop = document.getElementById("au-reader-dock-backdrop");
+      this.backdrop = document.getElementById("au-reader-dock-backdrop") as HTMLDivElement | null;
       return;
     }
 
@@ -120,16 +142,17 @@ export class ReaderDockView {
 
   bindEvents() {
     if (!this.shell || !this.actions) return;
+    const actions = this.actions;
 
-    const byId = (id) => this.shell.querySelector(`#${id}`);
+    const byId = <T extends HTMLElement = HTMLElement>(id: string) => this.shell!.querySelector<T>(`#${id}`);
     const handle = byId("au-reader-dock-handle");
     const scrollBtn = byId("au-dock-scroll-btn");
     const speedDec = byId("au-dock-speed-dec");
     const speedInc = byId("au-dock-speed-inc");
-    const speedInput = byId("au-dock-speed-input");
+    const speedInput = byId<HTMLInputElement>("au-dock-speed-input");
     const widthDec = byId("au-dock-width-dec");
     const widthInc = byId("au-dock-width-inc");
-    const widthInput = byId("au-dock-width-input");
+    const widthInput = byId<HTMLInputElement>("au-dock-width-input");
     const fitBtn = byId("au-dock-fit-btn");
     const prevBtn = byId("au-dock-prev");
     const nextBtn = byId("au-dock-next");
@@ -137,36 +160,36 @@ export class ReaderDockView {
     const topBtn = byId("au-dock-top");
 
     if (handle) handle.onclick = () => this.setCollapsed(!this.collapsed, true);
-    if (scrollBtn) scrollBtn.onclick = () => this.actions.toggleScroll();
-    if (speedDec) speedDec.onclick = () => this.actions.stepSpeed(-CONSTANTS.SPEED_STEP);
-    if (speedInc) speedInc.onclick = () => this.actions.stepSpeed(CONSTANTS.SPEED_STEP);
+    if (scrollBtn) scrollBtn.onclick = () => actions.toggleScroll();
+    if (speedDec) speedDec.onclick = () => actions.stepSpeed(-CONSTANTS.SPEED_STEP);
+    if (speedInc) speedInc.onclick = () => actions.stepSpeed(CONSTANTS.SPEED_STEP);
 
     if (speedInput) {
       speedInput.onkeydown = (e) => e.stopPropagation();
-      speedInput.onchange = (e) => this.actions.setSpeed(e.target.value);
+      speedInput.onchange = (e) => actions.setSpeed((e.currentTarget as HTMLInputElement).value);
     }
 
-    if (widthDec) widthDec.onclick = () => this.actions.stepWidth(-100);
-    if (widthInc) widthInc.onclick = () => this.actions.stepWidth(100);
+    if (widthDec) widthDec.onclick = () => actions.stepWidth(-100);
+    if (widthInc) widthInc.onclick = () => actions.stepWidth(100);
     if (widthInput) {
       widthInput.onkeydown = (e) => e.stopPropagation();
-      widthInput.onchange = (e) => this.actions.setWidth(e.target.value);
+      widthInput.onchange = (e) => actions.setWidth((e.currentTarget as HTMLInputElement).value);
     }
-    if (fitBtn) fitBtn.onclick = () => this.actions.toggleFitWidth();
+    if (fitBtn) fitBtn.onclick = () => actions.toggleFitWidth();
 
-    const brightness = byId("au-dock-brightness");
+    const brightness = byId<HTMLInputElement>("au-dock-brightness");
     if (brightness) {
       brightness.onkeydown = (e) => e.stopPropagation();
-      brightness.oninput = (e) => this.actions.setBrightness(e.target.value);
+      brightness.oninput = (e) => actions.setBrightness((e.currentTarget as HTMLInputElement).value);
     }
 
     const mobileClose = () => {
       if (this.isMobile()) this.setCollapsed(true, true);
     };
-    if (prevBtn) prevBtn.onclick = () => { this.actions.navigate("prev"); mobileClose(); };
-    if (nextBtn) nextBtn.onclick = () => { this.actions.navigate("next"); mobileClose(); };
-    if (seriesBtn) seriesBtn.onclick = () => { this.actions.goSeries(); mobileClose(); };
-    if (topBtn) topBtn.onclick = () => { this.actions.goTop(); mobileClose(); };
+    if (prevBtn) prevBtn.onclick = () => { actions.navigate("prev"); mobileClose(); };
+    if (nextBtn) nextBtn.onclick = () => { actions.navigate("next"); mobileClose(); };
+    if (seriesBtn) seriesBtn.onclick = () => { actions.goSeries(); mobileClose(); };
+    if (topBtn) topBtn.onclick = () => { actions.goTop(); mobileClose(); };
     if (this.backdrop) this.backdrop.onclick = () => this.setCollapsed(true, true);
   }
 
@@ -174,7 +197,7 @@ export class ReaderDockView {
     this.updateBackdropState();
   }
 
-  setCollapsed(value, persist) {
+  setCollapsed(value: boolean, persist: boolean): void {
     this.collapsed = !!value;
     if (this.shell) this.shell.classList.toggle("is-collapsed", this.collapsed);
     this.updateBackdropState();
@@ -188,20 +211,20 @@ export class ReaderDockView {
     this.backdrop.classList.toggle("visible", show);
   }
 
-  sync(state) {
+  sync(state: ReaderStateSnapshot): void {
     if (!this.shell) return;
 
-    const byId = (id) => this.shell.querySelector(`#${id}`);
+    const byId = <T extends HTMLElement = HTMLElement>(id: string) => this.shell!.querySelector<T>(`#${id}`);
     const progress = byId("au-dock-progress");
     const scrollBtn = byId("au-dock-scroll-btn");
-    const speedInput = byId("au-dock-speed-input");
-    const widthInput = byId("au-dock-width-input");
+    const speedInput = byId<HTMLInputElement>("au-dock-speed-input");
+    const widthInput = byId<HTMLInputElement>("au-dock-width-input");
     const fitBtn = byId("au-dock-fit-btn");
-    const prevBtn = byId("au-dock-prev");
-    const nextBtn = byId("au-dock-next");
-    const seriesBtn = byId("au-dock-series");
-    const widthDec = byId("au-dock-width-dec");
-    const widthInc = byId("au-dock-width-inc");
+    const prevBtn = byId<HTMLButtonElement>("au-dock-prev");
+    const nextBtn = byId<HTMLButtonElement>("au-dock-next");
+    const seriesBtn = byId<HTMLButtonElement>("au-dock-series");
+    const widthDec = byId<HTMLButtonElement>("au-dock-width-dec");
+    const widthInc = byId<HTMLButtonElement>("au-dock-width-inc");
 
     if (progress) progress.textContent = `${state.progress}%`;
     if (scrollBtn) {
@@ -211,7 +234,7 @@ export class ReaderDockView {
     if (speedInput) speedInput.value = String(state.speed);
     if (widthInput) widthInput.value = String(state.width);
 
-    const brightness = byId("au-dock-brightness");
+    const brightness = byId<HTMLInputElement>("au-dock-brightness");
     const brightnessVal = byId("au-dock-brightness-val");
     if (brightness && document.activeElement !== brightness) {
       brightness.value = String(state.brightness);

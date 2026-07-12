@@ -1,18 +1,16 @@
 import { CONSTANTS } from "../config/defaults.js";
 import { ConfigStore } from "../store/configStore.js";
-
-const CHAPTER_IMAGE_SELECTOR = [
-  ".w-full.mx-auto.center img",
-  'img[src*="/asura-images/chapters/"]',
-  'img[data-src*="/asura-images/chapters/"]',
-  'img[data-loaded-src*="/asura-images/chapters/"]',
-  'img[srcset*="/asura-images/chapters/"]',
-  'img[src*="/storage/media/"]',
-  'img[src*="/storage/comics/"]',
-].join(",");
+import { CHAPTER_IMAGE_SELECTOR } from "./readerConstants.js";
 
 export class ReaderController {
-  constructor(onStateChange, onHint) {
+  readonly onStateChange: (state: ReaderStateSnapshot) => void;
+  readonly onHint: (message: string) => void;
+  readonly state: ReaderState;
+
+  constructor(
+    onStateChange: (state: ReaderStateSnapshot) => void,
+    onHint: (message: string) => void,
+  ) {
     this.onStateChange = onStateChange;
     this.onHint = onHint;
     this.state = {
@@ -74,18 +72,18 @@ export class ReaderController {
     this.state.rafId = requestAnimationFrame(() => this.scrollLoop());
   }
 
-  setSpeed(value) {
+  setSpeed(value: unknown): number {
     const speed = ConfigStore.set("autoScrollSpeed", value);
     this.state.speed = speed;
     this.emitState();
     return speed;
   }
 
-  stepSpeed(delta) {
+  stepSpeed(delta: number): number {
     return this.setSpeed(this.state.speed + delta);
   }
 
-  setWidth(value) {
+  setWidth(value: unknown): number {
     if (ConfigStore.get("fitWidthMode")) {
       this.emitState();
       return this.state.width;
@@ -97,7 +95,7 @@ export class ReaderController {
     return width;
   }
 
-  stepWidth(delta) {
+  stepWidth(delta: number): number {
     return this.setWidth(this.state.width + delta);
   }
 
@@ -108,7 +106,7 @@ export class ReaderController {
     );
   }
 
-  getProgress() {
+  getProgress(): number {
     const chapterBounds = this.getChapterContentBounds();
     if (chapterBounds) {
       const viewportBottom = window.scrollY + window.innerHeight;
@@ -126,8 +124,8 @@ export class ReaderController {
     return Math.max(0, Math.min(100, pct));
   }
 
-  getChapterContentBounds() {
-    const images = Array.from(document.querySelectorAll(CHAPTER_IMAGE_SELECTOR));
+  getChapterContentBounds(): ChapterBounds | null {
+    const images = Array.from(document.querySelectorAll<HTMLImageElement>(CHAPTER_IMAGE_SELECTOR));
     if (images.length === 0) return null;
 
     let minTop = Number.POSITIVE_INFINITY;
@@ -149,13 +147,13 @@ export class ReaderController {
     };
   }
 
-  getChapterContentEndY() {
+  getChapterContentEndY(): number | null {
     const bounds = this.getChapterContentBounds();
     return bounds ? bounds.endY : null;
   }
 
-  findSeriesLink() {
-    const directLink = document.querySelector(
+  findSeriesLink(): HTMLAnchorElement | { href: string } | null {
+    const directLink = document.querySelector<HTMLAnchorElement>(
       'a[href*="/comics/"]:not([href*="/chapter/"]), a[href*="/series/"]:not([href*="/chapter/"])'
     );
     if (directLink) return directLink;
@@ -173,9 +171,9 @@ export class ReaderController {
     return !!this.findSeriesLink();
   }
 
-  getChapterNavTarget(direction) {
+  getChapterNavTarget(direction: ChapterDirection): HTMLAnchorElement | null {
     const keyword = direction === "next" ? "next" : "prev";
-    const links = Array.from(document.querySelectorAll("a"));
+    const links = Array.from(document.querySelectorAll<HTMLAnchorElement>("a"));
 
     const direct = links.find((a) => {
       if (!a.href || !a.href.includes("/chapter/")) return false;
@@ -191,11 +189,11 @@ export class ReaderController {
     return fallback || null;
   }
 
-  canNavigate(direction) {
+  canNavigate(direction: ChapterDirection): boolean {
     return !!this.getChapterNavTarget(direction);
   }
 
-  navigate(direction) {
+  navigate(direction: ChapterDirection): boolean {
     const target = this.getChapterNavTarget(direction);
     if (!target) {
       this.emitState();
@@ -227,7 +225,7 @@ export class ReaderController {
     return next;
   }
 
-  getStateSnapshot() {
+  getStateSnapshot(): ReaderStateSnapshot {
     return {
       isScrolling: this.state.isScrolling,
       speed: this.state.speed,
@@ -244,4 +242,31 @@ export class ReaderController {
   emitState() {
     if (this.onStateChange) this.onStateChange(this.getStateSnapshot());
   }
+}
+
+export type ChapterDirection = "prev" | "next";
+
+interface ReaderState {
+  isScrolling: boolean;
+  accumulatedScroll: number;
+  rafId: number;
+  speed: number;
+  width: number;
+}
+
+export interface ChapterBounds {
+  startY: number;
+  endY: number;
+}
+
+export interface ReaderStateSnapshot {
+  isScrolling: boolean;
+  speed: number;
+  width: number;
+  fitWidth: boolean;
+  brightness: number;
+  progress: number;
+  canPrev: boolean;
+  canNext: boolean;
+  hasSeries: boolean;
 }

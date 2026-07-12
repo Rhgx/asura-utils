@@ -40,7 +40,7 @@ const UTILITY_REGEX = /^(bg|text|border|ring|stroke|fill|from|via|to|shadow)-(.+
 // Tailwind variants we can translate to CSS selectors. Unknown variants
 // (responsive prefixes, data-[...] states) are skipped entirely so we never
 // turn a conditional style into an always-on one.
-const VARIANT_SELECTOR_SUFFIX = {
+const VARIANT_SELECTOR_SUFFIX: Readonly<Record<string, string>> = {
   hover: ":hover",
   focus: ":focus",
   "focus-visible": ":focus-visible",
@@ -48,23 +48,28 @@ const VARIANT_SELECTOR_SUFFIX = {
   active: ":active",
 };
 
-let dynamicRemapObserver = null;
+let dynamicRemapObserver: MutationObserver | null = null;
 let dynamicRemapTimer = 0;
 
-function unique(values) {
+interface Rgb { r: number; g: number; b: number }
+interface Hsl { hue: number; saturation: number; lightness: number }
+interface ParsedUtility { lightness: number; opacity: number | null }
+type UtilityPrefix = "bg" | "text" | "border" | "ring" | "stroke" | "fill" | "from" | "via" | "to" | "shadow";
+
+function unique<T>(values: Iterable<T>): T[] {
   return Array.from(new Set(values));
 }
 
-function caseVariants(token) {
+function caseVariants(token: string): string[] {
   return unique([token, token.toLowerCase(), token.toUpperCase()]);
 }
 
-function buildRule(selectors, declarations) {
+function buildRule(selectors: readonly string[], declarations: string): string {
   if (!selectors.length) return "";
   return `${selectors.join(",")}{${declarations}}`;
 }
 
-function normalizeHexToken(hex) {
+function normalizeHexToken(hex: unknown): string {
   const raw = String(hex || "").trim().replace(/^#/, "");
   if (/^[0-9a-f]{3}$/i.test(raw)) {
     return `#${raw
@@ -77,7 +82,7 @@ function normalizeHexToken(hex) {
   return "";
 }
 
-function hexToRgb(hex) {
+function hexToRgb(hex: unknown): Rgb | null {
   const normalized = normalizeHexToken(hex);
   if (!normalized) return null;
   const value = normalized.slice(1);
@@ -88,7 +93,7 @@ function hexToRgb(hex) {
   };
 }
 
-function rgbToHsl(r, g, b) {
+function rgbToHsl(r: number, g: number, b: number): Hsl {
   const rn = r / 255;
   const gn = g / 255;
   const bn = b / 255;
@@ -115,13 +120,13 @@ function rgbToHsl(r, g, b) {
   };
 }
 
-function hexLightness(hex) {
+function hexLightness(hex: unknown): number {
   const rgb = hexToRgb(hex);
   if (!rgb) return 50;
   return rgbToHsl(rgb.r, rgb.g, rgb.b).lightness;
 }
 
-function isPurpleHex(hex) {
+function isPurpleHex(hex: unknown): boolean {
   const rgb = hexToRgb(hex);
   if (!rgb) return false;
   const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
@@ -133,12 +138,12 @@ function isPurpleHex(hex) {
   );
 }
 
-function extractHexes(input) {
+function extractHexes(input: unknown): string[] {
   const matches = String(input || "").match(/#[0-9a-fA-F]{3,8}/g) || [];
   return unique(matches.map((hex) => normalizeHexToken(hex)).filter(Boolean));
 }
 
-function escapeClassToken(token) {
+function escapeClassToken(token: string): string {
   if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
     return CSS.escape(token);
   }
@@ -147,10 +152,10 @@ function escapeClassToken(token) {
 
 // Parses the utility value ("[#913FE2]/15", "purple-600") into the source
 // color and optional opacity percentage. Returns null for non-purple values.
-function parseUtilityValue(value) {
+function parseUtilityValue(value: string): ParsedUtility | null {
   const hexMatch = value.match(/^\[(#[0-9a-fA-F]{3,8})\](?:\/(\d{1,3}))?$/);
   if (hexMatch) {
-    const hex = normalizeHexToken(hexMatch[1]);
+    const hex = normalizeHexToken(hexMatch[1]!);
     if (!hex || !isPurpleHex(hex)) return null;
     return {
       lightness: hexLightness(hex),
@@ -173,11 +178,11 @@ function parseUtilityValue(value) {
   return null;
 }
 
-function accentMix(opacityPercent) {
+function accentMix(opacityPercent: number): string {
   return `color-mix(in srgb,var(--auo-accent) ${opacityPercent}%,transparent)`;
 }
 
-function declarationsFor(prefix, parsed, { isHover }) {
+function declarationsFor(prefix: UtilityPrefix, parsed: ParsedUtility, { isHover }: { isHover: boolean }): string {
   const { lightness, opacity } = parsed;
   const isSoft = lightness > 64;
   const isStrong = lightness < 38;
@@ -220,14 +225,17 @@ function declarationsFor(prefix, parsed, { isHover }) {
   }
 }
 
-function buildRuleForClassToken(classToken) {
+function buildRuleForClassToken(classToken: string): string {
   const segments = String(classToken).split(":");
   const utility = segments.pop();
   const variants = segments;
 
+  if (!utility) return "";
   const utilityMatch = utility.match(UTILITY_REGEX);
   if (!utilityMatch) return "";
-  const [, prefix, value] = utilityMatch;
+  const prefix = utilityMatch[1] as UtilityPrefix | undefined;
+  const value = utilityMatch[2];
+  if (!prefix || !value) return "";
 
   const parsed = parseUtilityValue(value);
   if (!parsed) return "";
@@ -258,7 +266,7 @@ function buildRuleForClassToken(classToken) {
   return buildRule([`${THEME_SCOPE} ${selector}`], declarations);
 }
 
-function isPurpleUtilityCandidate(classToken) {
+function isPurpleUtilityCandidate(classToken: string): boolean {
   if (classToken.includes("[#")) {
     const hexes = extractHexes(classToken);
     return hexes.length > 0 && hexes.some((hex) => isPurpleHex(hex));
@@ -268,8 +276,8 @@ function isPurpleUtilityCandidate(classToken) {
   );
 }
 
-function collectSeedTokens() {
-  const tokens = new Set();
+function collectSeedTokens(): Set<string> {
+  const tokens = new Set<string>();
   KNOWN_PURPLE_HEXES.forEach((hex) => {
     caseVariants(hex).forEach((variant) => {
       SEED_UTILITY_TEMPLATES.forEach((template) => {
@@ -280,7 +288,7 @@ function collectSeedTokens() {
   return tokens;
 }
 
-function collectDomTokens(tokenSet) {
+function collectDomTokens(tokenSet: Set<string>): void {
   const candidates = document.querySelectorAll(
     "[class*='#'],[class*='purple'],[class*='violet'],[class*='fuchsia']"
   );
@@ -293,9 +301,9 @@ function collectDomTokens(tokenSet) {
   });
 }
 
-function buildSvgAttributeRemapCss() {
-  const fillTokens = new Set();
-  const strokeTokens = new Set();
+function buildSvgAttributeRemapCss(): string {
+  const fillTokens = new Set<string>();
+  const strokeTokens = new Set<string>();
   const svgNodes = document.querySelectorAll(
     "svg[fill],svg[stroke],svg [fill],svg [stroke]"
   );
@@ -325,7 +333,7 @@ function buildSvgAttributeRemapCss() {
   ].join("");
 }
 
-function buildDynamicRemapCss() {
+function buildDynamicRemapCss(): string {
   const tokenSet = collectSeedTokens();
   collectDomTokens(tokenSet);
 
@@ -342,8 +350,8 @@ function buildDynamicRemapCss() {
   return `${classRules}${buildSvgAttributeRemapCss()}${mentionRule}`;
 }
 
-function injectStyle(cssText) {
-  let style = document.getElementById(STYLE_ID);
+function injectStyle(cssText: string): void {
+  let style = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
   if (!cssText && !style) return;
   if (!style) {
     style = document.createElement("style");
@@ -353,7 +361,7 @@ function injectStyle(cssText) {
   if (style.textContent !== cssText) style.textContent = cssText;
 }
 
-function applyDynamicColorRemaps() {
+function applyDynamicColorRemaps(): void {
   const root = document.documentElement;
   const activeTheme = root?.getAttribute("data-au-theme") || NATIVE_THEME_KEY;
   const hasCustomAccent = root?.hasAttribute("data-au-custom-accent");
@@ -364,7 +372,7 @@ function applyDynamicColorRemaps() {
   injectStyle(buildDynamicRemapCss());
 }
 
-function hasRelevantRemapMutation(mutations) {
+function hasRelevantRemapMutation(mutations: readonly MutationRecord[]): boolean {
   return mutations.some((mutation) => {
     if (
       mutation.type === "attributes" &&
@@ -372,7 +380,7 @@ function hasRelevantRemapMutation(mutations) {
         mutation.attributeName === "data-au-theme" ||
         mutation.attributeName === "data-au-custom-accent")
     ) {
-      return mutation.target?.id !== STYLE_ID;
+      return !(mutation.target instanceof Element) || mutation.target.id !== STYLE_ID;
     }
     if (mutation.type !== "childList") return false;
     const nodes = [
@@ -381,15 +389,15 @@ function hasRelevantRemapMutation(mutations) {
     ];
     return nodes.some((node) => {
       if (!node || node.nodeType !== 1) return false;
-      const element = /** @type {Element} */ (node);
-      if (element.id === STYLE_ID || element.closest?.(`#${STYLE_ID}`)) return false;
-      if (element.hasAttribute?.("class")) return true;
-      return !!element.querySelector?.("[class]");
+      const element = node as Element;
+      if (element.id === STYLE_ID || element.closest(`#${STYLE_ID}`)) return false;
+      if (element.hasAttribute("class")) return true;
+      return !!element.querySelector("[class]");
     });
   });
 }
 
-export function installDynamicColorRemaps() {
+export function installDynamicColorRemaps(): void {
   applyDynamicColorRemaps();
   if (dynamicRemapObserver || !document.documentElement) return;
   dynamicRemapObserver = new MutationObserver((mutations) => {

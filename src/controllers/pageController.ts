@@ -7,6 +7,12 @@ import { chapterEndController } from "./chapterEndController.js";
 import { pageCleanupController } from "./pageCleanupController.js";
 import { pageTargetController } from "./pageTargetController.js";
 import { readingHistoryController } from "./readingHistoryController.js";
+import { ConfigStore } from "../store/configStore.js";
+import { CONSTANTS } from "../config/defaults.js";
+import type { ConfigKey } from "../config/defaults.js";
+import { matchesBinding } from "../config/keybinds.js";
+import type { PageContext, PageControllerContext, QueryRoot } from "./types.js";
+import type { ReaderStateSnapshot } from "./readerController.js";
 
 const SERIES_LINK_SELECTOR = 'a[href*="/comics/"],a[href*="/series/"]';
 const CHAPTER_LINK_SELECTOR = 'a[href*="/chapter/"]';
@@ -15,13 +21,18 @@ export const PageController = {
   ...pageTargetController,
   ...chapterEndController,
   ...pageCleanupController,
-  settingsView: null,
-  progressBarView: null,
-  dockView: null,
-  reader: null,
-  observer: null,
-  debounceTimer: null,
-  hintTimer: null,
+  settingsView: new SettingsModalView((key) => PageController.handleConfigChanged(key)),
+  progressBarView: new ProgressBarView(),
+  dockView: new ReaderDockView((collapsed) => {
+    ConfigStore.set("readerDockCollapsed", collapsed);
+  }),
+  reader: new ReaderController(
+    (state) => PageController.syncReaderState(state),
+    (message) => PageController.showHint(message),
+  ),
+  observer: null as MutationObserver | null,
+  debounceTimer: undefined as number | undefined,
+  hintTimer: undefined as number | undefined,
   globalListenersBound: false,
   readerMounted: false,
   endActionChapterKey: "",
@@ -31,7 +42,7 @@ export const PageController = {
   historyWriteTs: 0,
   historyWrittenChapterKey: "",
   resumeAttemptedKey: "",
-  chapterAccessCache: new Map(),
+  chapterAccessCache: new Map<string, { allowed: boolean; reason: string }>(),
   pageContext: {
     isReader: false,
     isSeriesPage: false,
@@ -40,17 +51,6 @@ export const PageController = {
   },
 
   init() {
-    this.settingsView = new SettingsModalView((key) =>
-      this.handleConfigChanged(key)
-    );
-    this.progressBarView = new ProgressBarView();
-    this.dockView = new ReaderDockView((collapsed) => {
-      ConfigStore.set("readerDockCollapsed", collapsed);
-    });
-    this.reader = new ReaderController(
-      (state) => this.syncReaderState(state),
-      (message) => this.showHint(message)
-    );
     this.chapterAccessCache = new Map();
     this.endActionChapterKey = "";
     this.endActionCompleted = false;
@@ -66,8 +66,8 @@ export const PageController = {
   observeMutations() {
     if (this.observer || !document.body) return;
     this.observer = new MutationObserver(() => {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = setTimeout(() => this.run(), 250);
+      window.clearTimeout(this.debounceTimer);
+      this.debounceTimer = window.setTimeout(() => this.run(), 250);
     });
     this.observer.observe(document.body, { childList: true, subtree: true });
   },
@@ -86,7 +86,7 @@ export const PageController = {
     });
   },
 
-  getPageContext() {
+  getPageContext(): PageContext {
     const path = window.location.pathname || "/";
     const isReader = /\/chapter\/[^/?#]+/.test(path);
     const isSeriesListing = /^\/(browse|series)(\/|$)/.test(path);
@@ -163,7 +163,7 @@ export const PageController = {
     this.readerMounted = false;
   },
 
-  syncReaderState(state) {
+  syncReaderState(state?: ReaderStateSnapshot): void {
     if (!this.pageContext.isReader || !this.readerMounted) return;
     const snapshot = state || this.reader.getStateSnapshot();
 
@@ -228,7 +228,7 @@ export const PageController = {
     );
   },
 
-  handleConfigChanged(key) {
+  handleConfigChanged(key: ConfigKey): void {
     if (key === "themePreset") {
       ThemeController.apply(ConfigStore.get("themePreset"));
     }
@@ -294,18 +294,19 @@ export const PageController = {
     this.syncReaderState();
   },
 
-  handleKeyDown(e) {
-    const tag = (e.target && e.target.tagName) || "";
+  handleKeyDown(e: KeyboardEvent): void {
+    const targetElement = e.target instanceof Element ? e.target : null;
+    const tag = targetElement?.tagName || "";
     if (tag === "INPUT" || tag === "TEXTAREA") return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (e.target && e.target.closest && e.target.closest("#au-modal-overlay")) {
+    if (targetElement?.closest("#au-modal-overlay")) {
       return;
     }
 
     const context = this.getPageContext();
     const key = typeof e.key === "string" ? e.key : "";
     const code = e.code || "";
-    const matchesConfig = (configKey, legacy = false) =>
+    const matchesConfig = (configKey: ConfigKey, legacy = false) =>
       matchesBinding(e, ConfigStore.get(configKey)) || !!legacy;
 
     if (context.isReader) {
@@ -376,13 +377,13 @@ export const PageController = {
     }
   },
 
-  handleDblClick(e) {
+  handleDblClick(e: MouseEvent): void {
     if (!this.pageContext.isReader) return;
     if (!ConfigStore.get("readerWidget")) return;
     if (!ConfigStore.get("doubleClickScroll")) return;
 
-    const target = e.target;
-    if (!target || !target.closest) return;
+    const target = e.target instanceof Element ? e.target : null;
+    if (!target) return;
     if (target.closest("#au-reader-dock-shell")) return;
     if (target.closest("#au-modal-overlay")) return;
 
@@ -391,10 +392,10 @@ export const PageController = {
 
   focusSearch() {
     const searchInput =
-      document.querySelector('input[placeholder*="Search"]') ||
-      document.querySelector('input[type="search"]') ||
-      document.querySelector("#browse-interactive input") ||
-      document.querySelector(".series-search input");
+      document.querySelector<HTMLInputElement>('input[placeholder*="Search"]') ||
+      document.querySelector<HTMLInputElement>('input[type="search"]') ||
+      document.querySelector<HTMLInputElement>("#browse-interactive input") ||
+      document.querySelector<HTMLInputElement>(".series-search input");
 
     if (searchInput) {
       searchInput.focus();
@@ -404,8 +405,8 @@ export const PageController = {
 
     // Header search may render as a button that opens a dialog.
     const searchTrigger =
-      document.querySelector('astro-island[component-url*="SearchBar"] button') ||
-      document.querySelector('header button[aria-label*="search" i]');
+      document.querySelector<HTMLButtonElement>('astro-island[component-url*="SearchBar"] button') ||
+      document.querySelector<HTMLButtonElement>('header button[aria-label*="search" i]');
     if (searchTrigger) searchTrigger.click();
   },
 
@@ -426,7 +427,7 @@ export const PageController = {
     if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
   },
 
-  showHint(message) {
+  showHint(message: string): void {
     let hint = document.getElementById("au-shortcut-hint");
     if (!hint) {
       hint = document.createElement("div");
@@ -437,21 +438,21 @@ export const PageController = {
 
     hint.textContent = message;
     hint.classList.add("visible");
-    clearTimeout(this.hintTimer);
-    this.hintTimer = setTimeout(() => hint.classList.remove("visible"), 1000);
+    window.clearTimeout(this.hintTimer);
+    this.hintTimer = window.setTimeout(() => hint.classList.remove("visible"), 1000);
   },
 
-  hasClasses(el, classes) {
+  hasClasses(el: Element | null | undefined, classes: readonly string[]): boolean {
     return !!el && !!el.classList && classes.every((c) => el.classList.contains(c));
   },
 
-  hasClassSnippets(el, snippets) {
+  hasClassSnippets(el: Element | null | undefined, snippets: readonly string[]): boolean {
     if (!el || typeof el.className !== "string") return false;
     return snippets.every((snippet) => el.className.includes(snippet));
   },
 
-  findAncestor(el, predicate) {
-    let cur = el;
+  findAncestor(el: Element, predicate: (element: Element) => boolean): Element | null {
+    let cur: Element | null = el;
     while (cur && cur !== document.body) {
       if (predicate(cur)) return cur;
       cur = cur.parentElement;
@@ -459,22 +460,22 @@ export const PageController = {
     return null;
   },
 
-  getSeriesAnchors(root = document, options = {}) {
+  getSeriesAnchors(root: QueryRoot = document, options: { includeChapters?: boolean } = {}): HTMLAnchorElement[] {
     const { includeChapters = false } = options;
     if (!root || !root.querySelectorAll) return [];
-    return Array.from(root.querySelectorAll(SERIES_LINK_SELECTOR)).filter((anchor) => {
+    return Array.from(root.querySelectorAll<HTMLAnchorElement>(SERIES_LINK_SELECTOR)).filter((anchor) => {
       const href = anchor.getAttribute("href") || anchor.href || "";
       if (!href) return false;
       return includeChapters || !href.includes("/chapter/");
     });
   },
 
-  getChapterAnchors(root = document) {
+  getChapterAnchors(root: QueryRoot = document): HTMLAnchorElement[] {
     if (!root || !root.querySelectorAll) return [];
-    return Array.from(root.querySelectorAll(CHAPTER_LINK_SELECTOR)).filter((anchor) => {
+    return Array.from(root.querySelectorAll<HTMLAnchorElement>(CHAPTER_LINK_SELECTOR)).filter((anchor) => {
       const href = anchor.getAttribute("href") || anchor.href || "";
       return /\/chapter\//.test(href);
     });
   },
 
-};
+} satisfies ThisType<PageControllerContext>;

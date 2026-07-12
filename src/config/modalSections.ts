@@ -1,4 +1,31 @@
 import { THEME_PRESET_OPTIONS } from "../theme/themePresets.js";
+import type { AppConfig, ConfigKey } from "./defaults.js";
+
+export interface ModalOption { value: string; label: string }
+export interface ModalInput {
+  key: ConfigKey;
+  id: string;
+  label: string;
+  type: "number" | "color";
+  step?: string;
+  tooltip?: string;
+}
+export interface ModalSelect {
+  key: ConfigKey;
+  id: string;
+  label: string;
+  options: readonly (string | ModalOption)[];
+  tooltip?: string;
+}
+export interface ModalSection {
+  key: string;
+  title: string;
+  toggles?: readonly (readonly [ConfigKey, string])[];
+  selects?: readonly ModalSelect[];
+  inputs?: readonly ModalInput[];
+  render?: () => string;
+  html?: string;
+}
 
 const APPEARANCE_MODAL_SECTION = {
   title: "Appearance",
@@ -19,7 +46,7 @@ const APPEARANCE_MODAL_SECTION = {
       type: "color",
     },
   ],
-};
+} satisfies Omit<ModalSection, "key">;
 
 const READER_MODAL_SECTION = {
   title: "Reader",
@@ -68,6 +95,6 @@ const READER_MODAL_SECTION = {
       step: "5",
     },
   ],
-};
+} satisfies Omit<ModalSection, "key">;
 
 export { APPEARANCE_MODAL_SECTION, READER_MODAL_SECTION };

@@ -1,4 +1,6 @@
 export class ProgressBarView {
+  boundClick: ((event: MouseEvent) => void) | null;
+
   constructor() {
     this.boundClick = null;
   }
@@ -10,7 +12,7 @@ export class ProgressBarView {
     bar.innerHTML = '<div id="au-progress-bar-fill"></div>';
     document.body.appendChild(bar);
 
-    this.boundClick = (e) => {
+    this.boundClick = (e: MouseEvent) => {
       const rect = bar.getBoundingClientRect();
       const pct = rect.width > 0 ? (e.clientX - rect.left) / rect.width : 0;
       const clamped = Math.max(0, Math.min(1, pct));
@@ -20,11 +22,11 @@ export class ProgressBarView {
     bar.addEventListener("click", this.boundClick);
   }
 
-  update(progressPct) {
+  update(progressPct: unknown): void {
     const fill = document.getElementById("au-progress-bar-fill");
     if (!fill) return;
     const pct = Math.max(0, Math.min(100, Number(progressPct) || 0));
-    fill.style.width = `${pct}%`;
+    (fill as HTMLElement).style.width = `${pct}%`;
   }
 
   unmount() {
@@ -35,4 +37,3 @@ export class ProgressBarView {
     this.boundClick = null;
   }
 }
-

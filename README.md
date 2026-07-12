@@ -1,13 +1,14 @@
 # Asura Utils (Vite + vite-plugin-monkey)
 
-This project is migrated to `vite-plugin-monkey` and now builds userscript artifacts from `src/main.js`.
+This project uses TypeScript, Vite, and `vite-plugin-monkey` to build userscript artifacts from `src/main.ts`.
 
 ## Scripts
 
 - `pnpm dev`: Start Vite dev mode for userscript development.
 - `pnpm build`: Build production userscript artifacts.
+- `pnpm typecheck`: Run strict TypeScript validation without emitting files.
 - `pnpm preview`: Start Vite preview server.
-- `pnpm test`: Build and verify output artifacts/metadata.
+- `pnpm test`: Type-check, build, and verify output artifacts/metadata.
 
 ## Build Artifacts
 
@@ -34,10 +35,10 @@ To release a new version:
 
 ## Source Layout
 
-- `src/main.js`: Bootstrap entry.
+- `src/main.ts`: Bootstrap entry.
 - `src/config/*`: Defaults and modal section config.
 - `src/store/*`: Persistent config store.
 - `src/theme/*`: Theme presets and application.
 - `src/views/*`: Settings/progress/dock view classes.
 - `src/controllers/*`: Reader/page controller logic.
-- `src/styles/*`: Multi-file CSS imports plus the dynamic purple-accent remap engine (`dynamic-color-remaps.js`) that themes hardcoded site colors when a non-default theme is active.
+- `src/styles/*`: Multi-file CSS imports plus the typed dynamic purple-accent remap engine (`dynamic-color-remaps.ts`) that themes hardcoded site colors when a non-default theme is active.

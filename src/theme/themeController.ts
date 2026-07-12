@@ -1,11 +1,12 @@
 import { DEFAULTS } from "../config/defaults.js";
 import { ConfigStore } from "../store/configStore.js";
 import { BASE_THEME_TOKENS, THEME_PRESETS } from "./themePresets.js";
+import type { ThemeTokens } from "./themePresets.js";
 
 export const ThemeController = {
   activeThemeKey: DEFAULTS.themePreset,
   appliedSignature: "",
-  bodyThemeObserver: null,
+  bodyThemeObserver: null as MutationObserver | null,
 
   resolveCustomAccent() {
     if (!ConfigStore.get("customAccentEnabled")) return "";
@@ -13,7 +14,7 @@ export const ThemeController = {
     return /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : "";
   },
 
-  buildCustomAccentTokens(accent) {
+  buildCustomAccentTokens(accent: string): ThemeTokens {
     return {
       "--au-accent": accent,
       "--auo-accent": accent,
@@ -29,9 +30,10 @@ export const ThemeController = {
     };
   },
 
-  resolveTheme(themeKey) {
+  resolveTheme(themeKey: unknown) {
     const key = ConfigStore.sanitize("themePreset", themeKey);
-    const preset = THEME_PRESETS[key] || THEME_PRESETS[DEFAULTS.themePreset];
+    const preset = THEME_PRESETS[key] ?? THEME_PRESETS[DEFAULTS.themePreset];
+    if (!preset) throw new Error(`Missing theme preset: ${key}`);
     return {
       key,
       label: preset.label,
@@ -42,14 +44,14 @@ export const ThemeController = {
     };
   },
 
-  applyThemeToBody(themeKey) {
+  applyThemeToBody(themeKey: string): boolean {
     if (!document.body) return false;
     document.body.classList.add("au-theme-enabled");
     document.body.setAttribute("data-au-theme", themeKey);
     return true;
   },
 
-  ensureBodyTheme(themeKey) {
+  ensureBodyTheme(themeKey: string): void {
     if (this.applyThemeToBody(themeKey)) {
       if (this.bodyThemeObserver) {
         this.bodyThemeObserver.disconnect();
@@ -68,7 +70,7 @@ export const ThemeController = {
     this.bodyThemeObserver.observe(document.documentElement, { childList: true });
   },
 
-  apply(themeKey) {
+  apply(themeKey: unknown): string {
     const resolved = this.resolveTheme(themeKey);
     const root = document.documentElement;
     if (!root) return resolved.key;
@@ -90,7 +92,7 @@ export const ThemeController = {
       ? { ...resolved.tokens, ...this.buildCustomAccentTokens(customAccent) }
       : resolved.tokens;
     Object.entries(tokens).forEach(([token, value]) => {
-      root.style.setProperty(token, value);
+      root.style.setProperty(token, String(value));
     });
 
     this.activeThemeKey = resolved.key;

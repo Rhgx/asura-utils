@@ -58,13 +58,16 @@ const KEYBIND_FIELDS = [
     label: "Jump To Chapters",
     defaultBinding: "KeyL",
   },
-];
+] as const;
+
+export type KeybindKey = (typeof KEYBIND_FIELDS)[number]["key"];
+export type KeybindField = (typeof KEYBIND_FIELDS)[number];
 
 const KEYBIND_DEFAULTS = Object.fromEntries(
   KEYBIND_FIELDS.map((field) => [field.key, field.defaultBinding])
-);
+) as Record<KeybindKey, string>;
 
-const KEY_FALLBACK_MAP = {
+const KEY_FALLBACK_MAP: Readonly<Record<string, string>> = {
   "+": "Equal",
   "=": "Equal",
   "-": "Minus",
@@ -100,13 +103,13 @@ const BLOCKED_CODES = new Set([
   "CapsLock",
 ]);
 
-function normalizeBinding(binding) {
+function normalizeBinding(binding: unknown): string {
   if (binding === null || binding === undefined) return "";
   const value = String(binding).trim();
   return value;
 }
 
-function bindingToLabel(binding) {
+function bindingToLabel(binding: unknown): string {
   const code = normalizeBinding(binding);
   if (!code) return "Unassigned";
   if (/^Key[A-Z]$/.test(code)) return code.slice(3);
@@ -123,14 +126,14 @@ function bindingToLabel(binding) {
   return code;
 }
 
-function normalizeEventToBinding(event) {
+function normalizeEventToBinding(event: KeyboardEvent | null | undefined): string {
   if (!event || event.ctrlKey || event.metaKey || event.altKey) return "";
   const code = normalizeBinding(event.code);
   if (BLOCKED_CODES.has(code)) return "";
   return code;
 }
 
-function normalizeKeyToCode(key) {
+function normalizeKeyToCode(key: unknown): string {
   const raw = key === null || key === undefined ? "" : String(key);
   if (!raw) return "";
   if (KEY_FALLBACK_MAP[raw]) return KEY_FALLBACK_MAP[raw];
@@ -139,7 +142,7 @@ function normalizeKeyToCode(key) {
   return "";
 }
 
-function matchesBinding(event, binding) {
+function matchesBinding(event: KeyboardEvent | null | undefined, binding: unknown): boolean {
   const target = normalizeBinding(binding);
   if (!target || !event) return false;
   if (event.code === target) return true;

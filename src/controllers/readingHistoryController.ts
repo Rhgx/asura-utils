@@ -1,5 +1,6 @@
 import { ConfigStore } from "../store/configStore.js";
 import { HistoryStore, chapterSlugToLabel, parseReaderPath, parseSeriesPath } from "../store/historyStore.js";
+import type { PageControllerContext } from "./types.js";
 
 export const readingHistoryController = {
   applyReaderBrightness() {
@@ -12,7 +13,7 @@ export const readingHistoryController = {
   getSeriesTitleFromReader() {
     const seriesLink = this.reader ? this.reader.findSeriesLink() : null;
     const linkText =
-      seriesLink && typeof seriesLink.textContent === "string"
+      seriesLink instanceof HTMLAnchorElement && typeof seriesLink.textContent === "string"
         ? seriesLink.textContent.trim()
         : "";
     if (linkText && linkText.length <= 90) return linkText;
@@ -22,7 +23,7 @@ export const readingHistoryController = {
       .trim();
   },
 
-  recordReaderVisit(progress = null) {
+  recordReaderVisit(progress: number | null = null): void {
     if (!this.pageContext.isReader) return;
     if (!ConfigStore.get("trackReadingHistory")) return;
 
@@ -147,4 +148,4 @@ export const readingHistoryController = {
       }
     }, 900);
   },
-};
+} satisfies ThisType<PageControllerContext>;
