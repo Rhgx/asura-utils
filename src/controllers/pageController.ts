@@ -103,7 +103,8 @@ export const PageController = {
     if (this.globalListenersBound) return;
     this.globalListenersBound = true;
 
-    document.addEventListener("keydown", (e) => this.handleKeyDown(e));
+    // Capture on window so this runs before the site's document-level key handlers; stopPropagation keeps them from also acting on the same key.
+    window.addEventListener("keydown", (e) => this.handleKeyDown(e), true);
     document.addEventListener("dblclick", (e) => this.handleDblClick(e));
     window.addEventListener("scroll", () => this.handleScroll(), {
       passive: true,
@@ -349,6 +350,9 @@ export const PageController = {
     if (targetElement?.closest("#au-modal-overlay")) {
       return;
     }
+    if (targetElement?.closest("[contenteditable='true'],[contenteditable='']")) {
+      return;
+    }
 
     const context = this.getPageContext();
     const key = typeof e.key === "string" ? e.key : "";
@@ -367,24 +371,34 @@ export const PageController = {
       if (matchesConfig("keybindToggleScroll")) {
         if (readerEnabled) {
           e.preventDefault();
+          e.stopPropagation();
           this.reader.toggleScroll();
         }
         return;
       }
 
       if (matchesConfig("keybindSpeedUp", speedUpLegacy)) {
-        if (readerEnabled) this.reader.stepSpeed(CONSTANTS.SPEED_STEP);
+        if (readerEnabled) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.reader.stepSpeed(CONSTANTS.SPEED_STEP);
+        }
         return;
       }
 
       if (matchesConfig("keybindSpeedDown", speedDownLegacy)) {
-        if (readerEnabled) this.reader.stepSpeed(-CONSTANTS.SPEED_STEP);
+        if (readerEnabled) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.reader.stepSpeed(-CONSTANTS.SPEED_STEP);
+        }
         return;
       }
 
       if (matchesConfig("keybindNextChapter", nextLegacy)) {
         if (readerEnabled) {
           e.preventDefault();
+          e.stopPropagation();
           this.reader.navigate("next");
         }
         return;
@@ -393,24 +407,34 @@ export const PageController = {
       if (matchesConfig("keybindPrevChapter", prevLegacy)) {
         if (readerEnabled) {
           e.preventDefault();
+          e.stopPropagation();
           this.reader.navigate("prev");
         }
         return;
       }
 
       if (matchesConfig("keybindGoSeries")) {
-        if (readerEnabled) this.reader.goSeries();
+        if (readerEnabled) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.reader.goSeries();
+        }
         return;
       }
 
       if (matchesConfig("keybindToggleFitWidth")) {
-        if (readerEnabled) this.reader.toggleFitWidth();
+        if (readerEnabled) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.reader.toggleFitWidth();
+        }
         return;
       }
     }
 
     if (matchesConfig("keybindFocusSearch")) {
       e.preventDefault();
+      e.stopPropagation();
       this.focusSearch();
       return;
     }
@@ -418,6 +442,7 @@ export const PageController = {
     if (context.isSeriesPage) {
       if (matchesConfig("keybindJumpChapters")) {
         e.preventDefault();
+        e.stopPropagation();
         this.scrollToChapterList();
         return;
       }
