@@ -227,22 +227,28 @@ export class ReaderController {
     const keyword = direction === "next" ? "next" : "prev";
     const links = Array.from(document.querySelectorAll<HTMLAnchorElement>("a"));
 
+    // The chapter <head> carries rel=prev/next links, which are the most reliable source.
+    const relHref = document
+      .querySelector<HTMLLinkElement>(`link[rel="${direction}"]`)
+      ?.getAttribute("href");
+    if (relHref) {
+      const targetHref = new URL(relHref, window.location.href).href;
+      let linked: HTMLAnchorElement | null = links.find((a) => a.href === targetHref) ?? null;
+      // A detached anchor still navigates on click, so it works when the page has no matching link.
+      if (!linked) {
+        linked = document.createElement("a");
+        linked.href = targetHref;
+      }
+      this.navTargets.set(direction, linked);
+      return linked;
+    }
+
     const direct = links.find((a) => {
       if (!a.href || !a.href.includes("/chapter/")) return false;
       const txt = (a.textContent || "").trim().toLowerCase();
       return txt.includes(keyword);
     });
-    if (direct) {
-      this.navTargets.set(direction, direct);
-      return direct;
-    }
-
-    // Older layouts label navigation links but do not include /chapter/ in the URL.
-    const fallback = links.find((a) => {
-      const txt = (a.textContent || "").trim().toLowerCase();
-      return txt.includes(keyword);
-    });
-    const target = fallback || null;
+    const target = direct || null;
     this.navTargets.set(direction, target);
     return target;
   }

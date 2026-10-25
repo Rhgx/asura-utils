@@ -25,24 +25,6 @@ export const pageCleanupController = {
           node.querySelector?.('[component-url*="HeroCarousel"],[class*="hero-carousel"]');
       if (heroNode) return heroNode.firstElementChild || heroNode;
 
-      const loopNode =
-        node.matches("div.loop.owl-carousel.full") ?
-          node :
-          node.querySelector("div.loop.owl-carousel.full");
-      if (loopNode) return loopNode.closest("div.overflow-hidden") || loopNode;
-
-      const carouselNode =
-        node.matches("div.carousel-root, div.carousel.carousel-slider") ?
-          node :
-          node.querySelector("div.carousel-root, div.carousel.carousel-slider");
-      if (carouselNode) {
-        return (
-          carouselNode.closest("div.overflow-hidden") ||
-          carouselNode.closest("div.carousel-root") ||
-          carouselNode
-        );
-      }
-
       // Avoid broad wrappers that can span most of the page.
       const nestedOverflow = node.querySelector("div.overflow-hidden");
       if (nestedOverflow && node.classList && node.classList.contains("min-h-72")) {
@@ -54,7 +36,7 @@ export const pageCleanupController = {
 
     // Prefer explicit home-slider structures from the current Asura homepage markup.
     const explicitSlider = document.querySelector(
-      'astro-island[component-url*="HeroCarousel"], .hero-section-embla, .embla-hero, div.loop.owl-carousel.full, div.carousel-root, div.carousel.carousel-slider'
+      'astro-island[component-url*="HeroCarousel"], .hero-section-embla, .embla-hero'
     );
     if (explicitSlider) {
       const explicitContainer = normalizeSliderTarget(explicitSlider);

@@ -496,8 +496,7 @@ export const pageTargetController = {
           txt.length > 140 &&
           txt.length < 2200 &&
           (el.querySelector("#description-text") ||
-            el.querySelector("#expand-description") ||
-            txt.includes("fate did not let him go"))
+            el.querySelector("#expand-description"))
         );
       });
     if (synopsisBlock) synopsisBlock.classList.add("au-series-synopsis");

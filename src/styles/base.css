@@ -131,7 +131,16 @@ body.au-compact-sidebar .au-compact-sidebar-target > div {
 
 /* Auto-scroll sets positions frame by frame, so native smooth scrolling would fight it. */
 html { scroll-behavior: auto !important; }
-body.au-page-reader .w-full.mx-auto.center img,
+/* The site's data-page wrappers keep an inline aspect-ratio at full width, so cap them too or narrowed pages leave blank gaps. */
+body.au-page-reader div[data-page] {
+  max-width: var(--comic-width, 800px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+body.au-page-reader.au-fit-width div[data-page] {
+  max-width: 100% !important;
+}
+body.au-page-reader div[data-page] img,
 body.au-page-reader img[src*="/asura-images/chapters/"],
 body.au-page-reader img[data-src*="/asura-images/chapters/"],
 body.au-page-reader img[data-loaded-src*="/asura-images/chapters/"] {
@@ -140,7 +149,7 @@ body.au-page-reader img[data-loaded-src*="/asura-images/chapters/"] {
   max-width: var(--comic-width, 800px) !important;
   margin: 0 auto !important;
 }
-body.au-page-reader.au-fit-width .w-full.mx-auto.center img,
+body.au-page-reader.au-fit-width div[data-page] img,
 body.au-page-reader.au-fit-width img[src*="/asura-images/chapters/"],
 body.au-page-reader.au-fit-width img[data-src*="/asura-images/chapters/"],
 body.au-page-reader.au-fit-width img[data-loaded-src*="/asura-images/chapters/"] {
@@ -149,7 +158,7 @@ body.au-page-reader.au-fit-width img[data-loaded-src*="/asura-images/chapters/"]
 }
 
 /* Reader image brightness, driven by the dock slider / settings. */
-body.au-page-reader .w-full.mx-auto.center img,
+body.au-page-reader div[data-page] img,
 body.au-page-reader img[src*="/asura-images/chapters/"],
 body.au-page-reader img[data-src*="/asura-images/chapters/"],
 body.au-page-reader img[data-loaded-src*="/asura-images/chapters/"] {
