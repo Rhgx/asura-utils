@@ -366,9 +366,12 @@ export const pageCleanupController = {
       id.includes("scroll_to_top") ||
       aria.includes("back to top") ||
       aria.includes("scroll to top") ||
+      aria.includes("return to top") ||
       title.includes("back to top") ||
       title.includes("scroll to top") ||
-      text.includes("back to top");
+      title.includes("return to top") ||
+      text.includes("back to top") ||
+      text.includes("return to top");
 
     const hasUpIcon = !!el.querySelector(
       'svg[class*="chevron-up"],svg[class*="arrow-up"],svg[class*="arrow-big-up"],svg[class*="chevrons-up"]'
@@ -393,8 +396,10 @@ export const pageCleanupController = {
       '#scroll-top-btn',
       '[aria-label*="back to top" i]',
       '[aria-label*="scroll to top" i]',
+      '[aria-label*="return to top" i]',
       '[title*="back to top" i]',
       '[title*="scroll to top" i]',
+      '[title*="return to top" i]',
     ].join(",");
 
     document.querySelectorAll(explicitSelectors).forEach((el) => {
