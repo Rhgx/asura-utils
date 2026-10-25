@@ -39,7 +39,7 @@ const SETTING_TOOLTIPS: Partial<Record<ConfigKey, string>> = {
   trackReadingHistory:
     "Remembers your last-read chapter and progress per series.",
   resumeChapterPosition:
-    "Jumps back to where you left off when reopening a chapter.",
+    "Jumps back to where you left off when reopening a chapter. Used only when the site has no saved position.",
   customAccentEnabled: "Overrides the theme accent with your own color.",
   customAccent: "Accent color used across the themed UI.",
   readerBrightness: "Dims chapter images for night reading (40-100%).",

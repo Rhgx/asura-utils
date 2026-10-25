@@ -2,6 +2,35 @@ import { ConfigStore } from "../store/configStore.js";
 import { HistoryStore, chapterSlugToLabel, parseReaderPath, parseSeriesPath } from "../store/historyStore.js";
 import type { PageControllerContext } from "./types.js";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// Mirrors the site's own resume rules so we only defer when it will actually restore a position.
+function siteHasResumePosition(seriesSlug: string, chapterName: string): boolean {
+  try {
+    const raw = window.localStorage.getItem(`resume:comic:${seriesSlug}`);
+    if (!raw) return false;
+    const data: unknown = JSON.parse(raw);
+    if (!isRecord(data)) return false;
+    const entry = data[chapterName];
+    if (!isRecord(entry)) return false;
+    const progress = entry["progress"];
+    const ts = entry["ts"];
+    const position = entry["position"];
+    if (typeof progress !== "number" || progress >= 0.8) return false;
+    if (typeof ts !== "number" || Date.now() - ts > 5184e6) return false;
+    if (!isRecord(position)) return false;
+    const i = position["i"];
+    const o = position["o"];
+    if (typeof i !== "number" || typeof o !== "number") return false;
+    // The site ignores the top-of-chapter position, so there is nothing for it to restore.
+    return !(i === 0 && o < 0.15);
+  } catch {
+    return false;
+  }
+}
+
 export const readingHistoryController = {
   applyReaderBrightness() {
     document.documentElement.style.setProperty(
@@ -131,6 +160,10 @@ export const readingHistoryController = {
 
     const parsed = parseReaderPath(window.location.pathname);
     if (!parsed) return;
+    // The site's own resume takes precedence: it jumps on #resume and restores its saved
+    // position, so scrolling here as well would move the page twice. Ours is the fallback.
+    if (window.location.hash === "#resume") return;
+    if (siteHasResumePosition(parsed.seriesSlug, parsed.chapterSlug)) return;
     const entry = HistoryStore.getSeries(parsed.seriesSlug);
     if (!entry || entry.lastChapter !== parsed.chapterSlug) return;
 
