@@ -1,6 +1,20 @@
 import { CONSTANTS } from "../config/defaults.js";
+import { KEYBIND_FIELDS, matchesBinding } from "../config/keybinds.js";
 import { ConfigStore } from "../store/configStore.js";
 import { CHAPTER_IMAGE_SELECTOR } from "./readerConstants.js";
+
+// How long auto-scroll waits after the last manual scroll input before resuming.
+const MANUAL_HOLD_MS = 1200;
+// Space reports as " " in KeyboardEvent.key.
+const MANUAL_SCROLL_KEYS = new Set([
+  "ArrowUp",
+  "ArrowDown",
+  "PageUp",
+  "PageDown",
+  "Home",
+  "End",
+  " ",
+]);
 
 export class ReaderController {
   readonly onStateChange: (state: ReaderStateSnapshot) => void;
@@ -11,6 +25,7 @@ export class ReaderController {
   private navTargets = new Map<ChapterDirection, HTMLAnchorElement | null>();
   private seriesLink: HTMLAnchorElement | { href: string } | null | undefined;
   private imageResizeObserver: ResizeObserver | null = null;
+  private manualInputBound = false;
 
   constructor(
     onStateChange: (state: ReaderStateSnapshot) => void,
@@ -22,6 +37,7 @@ export class ReaderController {
       isScrolling: false,
       accumulatedScroll: 0,
       rafId: 0,
+      manualHoldUntil: 0,
       speed: ConfigStore.get("autoScrollSpeed"),
       width: ConfigStore.get("imageWidth"),
     };
@@ -29,10 +45,43 @@ export class ReaderController {
 
   start() {
     this.invalidateDocumentCache();
+    this.bindManualInputListeners();
     this.state.speed = ConfigStore.get("autoScrollSpeed");
     this.state.width = ConfigStore.get("imageWidth");
     this.applyWidth();
     this.emitState();
+  }
+
+  // Manual wheel, touch and scroll-key input holds auto-scroll briefly instead of stopping it,
+  // so the loop does not fight the reader. Our own scrollBy calls never trigger this.
+  private bindManualInputListeners() {
+    if (this.manualInputBound) return;
+    this.manualInputBound = true;
+
+    window.addEventListener("wheel", () => this.holdAutoScroll(), { passive: true });
+    window.addEventListener("touchstart", () => this.holdAutoScroll(), { passive: true });
+    window.addEventListener("touchmove", () => this.holdAutoScroll(), { passive: true });
+    window.addEventListener("keydown", (e) => this.handleManualScrollKey(e));
+  }
+
+  private handleManualScrollKey(e: KeyboardEvent) {
+    if (!MANUAL_SCROLL_KEYS.has(e.key)) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const target = e.target instanceof HTMLElement ? e.target : null;
+    if (
+      target &&
+      (target.isContentEditable || target.tagName === "INPUT" || target.tagName === "TEXTAREA")
+    ) {
+      return;
+    }
+    // Keys bound to script actions are not scroll input, even if their handler did not stop propagation.
+    if (KEYBIND_FIELDS.some((field) => matchesBinding(e, ConfigStore.get(field.key)))) return;
+    this.holdAutoScroll();
+  }
+
+  private holdAutoScroll() {
+    if (!this.state.isScrolling) return;
+    this.state.manualHoldUntil = performance.now() + MANUAL_HOLD_MS;
   }
 
   stop() {
@@ -68,14 +117,17 @@ export class ReaderController {
   scrollLoop() {
     if (!this.state.isScrolling) return;
 
-    // Keep fractional movement between frames so low speeds still scroll smoothly.
-    const scale = this.state.width / CONSTANTS.BASE_WIDTH;
-    this.state.accumulatedScroll += (this.state.speed / 2) * scale;
-    const step = Math.floor(this.state.accumulatedScroll);
+    // While held, skip accumulation too so the reader does not jump when the hold ends.
+    if (performance.now() >= this.state.manualHoldUntil) {
+      // Keep fractional movement between frames so low speeds still scroll smoothly.
+      const scale = this.state.width / CONSTANTS.BASE_WIDTH;
+      this.state.accumulatedScroll += (this.state.speed / 2) * scale;
+      const step = Math.floor(this.state.accumulatedScroll);
 
-    if (step >= 1) {
-      window.scrollBy(0, step);
-      this.state.accumulatedScroll -= step;
+      if (step >= 1) {
+        window.scrollBy(0, step);
+        this.state.accumulatedScroll -= step;
+      }
     }
 
     this.state.rafId = requestAnimationFrame(() => this.scrollLoop());
@@ -314,6 +366,7 @@ interface ReaderState {
   isScrolling: boolean;
   accumulatedScroll: number;
   rafId: number;
+  manualHoldUntil: number;
   speed: number;
   width: number;
 }
