@@ -58,9 +58,9 @@ Auto-scroll can also be toggled by double-clicking a chapter page when that opti
 1. Open a chapter page.
 2. Select the slim handle on the right edge to expand the reader dock.
 3. Adjust scrolling, image width, brightness, or navigation from the dock.
-4. Select the gear button in the site header to configure appearance, reader behavior, layout, shortcuts, and saved data.
+4. Select the gear button in the site header or the reader dock to configure appearance, reader behavior, layout, shortcuts, and saved data.
 
-The default chapter-end action intelligently opens the next available chapter. It checks for premium locks before navigating.
+The default chapter-end action intelligently opens the next available chapter. It checks for premium locks before navigating and shows when a locked chapter unlocks.
 
 ## Themes
 
