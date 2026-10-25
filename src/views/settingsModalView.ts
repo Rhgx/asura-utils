@@ -29,6 +29,8 @@ const SETTING_TOOLTIPS: Partial<Record<ConfigKey, string>> = {
   menuSeriesOverhaul: "Applies custom header and series-page styling tags.",
   themePreset: "Changes Asura Utils color tokens across supported UI.",
   readerWidget: "Shows the reader dock and enables reader controls.",
+  hideNativeReaderControls:
+    "Hides the site's tap-to-show bars and hint on chapter pages. The dock replaces them.",
   showProgressBar: "Displays the top reading progress bar in reader pages.",
   fitWidthMode: "Lets chapter images expand to available screen width.",
   doubleClickScroll: "Double-click the page to start/stop auto-scroll.",

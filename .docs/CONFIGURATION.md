@@ -39,6 +39,7 @@ added.
 | Setting | Default | Range / values | Description |
 | --- | --- | --- | --- |
 | Enable Reader Dock | On | On / Off | Shows the collapsible chapter reader controls |
+| Hide Site Reader Controls | Off | On / Off | Hides the site's tap-to-show bars and hint on chapter pages, since the dock replaces them |
 | Show Progress Bar | On | On / Off | Shows reading progress at the top of chapter pages |
 | Fit Width to Screen | Off | On / Off | Fits reader images to the available viewport width |
 | Double-Click to Scroll | On | On / Off | Lets a page double-click toggle auto-scroll |

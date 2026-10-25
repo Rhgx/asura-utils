@@ -7,6 +7,7 @@ const DEFAULTS = {
   hideSlider: false,
   colorTimestamps: true,
   readerWidget: true,
+  hideNativeReaderControls: false,
   autoScrollSpeed: 2.0,
   imageWidth: 800,
   adBlock: true,

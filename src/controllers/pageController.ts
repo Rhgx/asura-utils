@@ -257,6 +257,10 @@ export const PageController = {
     );
     body.classList.toggle("au-page-listing", this.pageContext.isSeriesListing);
     body.classList.toggle("au-page-reader", this.pageContext.isReader);
+    body.classList.toggle(
+      "au-hide-native-reader",
+      this.pageContext.isReader && !!ConfigStore.get("hideNativeReaderControls")
+    );
     body.classList.toggle("au-page-auth", this.pageContext.isAuthPage);
     body.classList.toggle("au-page-ebooks", window.location.pathname.startsWith("/ebooks"));
     body.classList.toggle(

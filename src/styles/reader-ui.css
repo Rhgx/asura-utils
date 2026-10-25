@@ -310,3 +310,10 @@
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .au-shortcut-hint.visible { opacity: 1; transform: translate(-50%, 0); }
+
+/* Hide the site's own tap-to-show reader bars and hint (the dock replaces them).
+Targets only site overlays: our elements have au- ids and no Tailwind classes. */
+body.au-page-reader.au-hide-native-reader div.fixed.animate-pulse.pointer-events-none[class*="left-1/2"],
+body.au-page-reader.au-hide-native-reader div.fixed[class*="bg-zinc-900/95"][class*="left-0"][class*="right-0"] {
+  display: none !important;
+}

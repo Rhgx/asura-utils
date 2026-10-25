@@ -52,6 +52,7 @@ const READER_MODAL_SECTION = {
   title: "Reader",
   toggles: [
     ["readerWidget", "Enable Reader Dock"],
+    ["hideNativeReaderControls", "Hide Site Reader Controls"],
     ["showProgressBar", "Show Progress Bar"],
     ["fitWidthMode", "Fit Width to Screen"],
     ["doubleClickScroll", "Double-Click to Scroll"],
