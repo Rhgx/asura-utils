@@ -198,6 +198,28 @@ export const pageCleanupController = {
 
   findPopularSections() {
     const targets = new Set<Element>();
+
+    // The site's Trending and Popular blocks are explicit components, so hide them directly.
+    document
+      .querySelectorAll('astro-island[component-url*="TrendingSection"]')
+      .forEach((el) => targets.add(el));
+    const popularIsland = document.querySelector('astro-island[component-url*="PopularSidebar"]');
+    if (popularIsland) {
+      // The Popular column holds only that island, so hide the whole column to avoid an empty gap.
+      const popularColumn = popularIsland.parentElement;
+      targets.add(popularColumn && popularColumn.children.length === 1 ? popularColumn : popularIsland);
+    }
+    if (targets.size > 0) return Array.from(targets);
+
+    // Fallback for layouts without those islands. Never return a container that holds the main
+    // listing, or a tall one, since walking up from a heading can reach the whole content row.
+    const isSafePopularTarget = (el: Element) =>
+      !el.matches("main") &&
+      !el.querySelector('main, main h1, astro-island[component-url*="LatestUpdates"]') &&
+      el.getBoundingClientRect().height <= 1600;
+    const isFallbackSection = (el: Element) =>
+      this.isLikelySeriesSection(el, { minLinks: 3 }) && isSafePopularTarget(el);
+
     const titlePattern =
       /\b(popular|trending|hot|most\s+(read|popular)|top\s+series)\b/i;
     const headings = Array.from(
@@ -207,10 +229,7 @@ export const pageCleanupController = {
     const maybeAddSectionForNode = (node: Element) => {
       const txt = (node.textContent || "").trim().toLowerCase();
       if (!txt || txt.length > 120 || !titlePattern.test(txt)) return;
-      const container = this.findAncestor(
-        node,
-        (el) => this.isLikelySeriesSection(el, { minLinks: 3 })
-      );
+      const container = this.findAncestor(node, isFallbackSection);
       if (container) targets.add(container);
     };
 
@@ -224,10 +243,7 @@ export const pageCleanupController = {
       )
     );
     hintedBlocks.forEach((el) => {
-      const container = this.findAncestor(
-        el,
-        (node) => this.isLikelySeriesSection(node, { minLinks: 3 })
-      );
+      const container = this.findAncestor(el, isFallbackSection);
       if (container) targets.add(container);
     });
 
@@ -280,6 +296,13 @@ export const pageCleanupController = {
   findCompactSidebarTargets() {
     const targets = new Set<Element>();
 
+    // On the home page the Popular list has its own right column, so use that before generic detection.
+    const popularIsland = document.querySelector('astro-island[component-url*="PopularSidebar"]');
+    const popularColumn = popularIsland?.parentElement;
+    if (popularColumn && popularColumn.children.length === 1) {
+      return [popularColumn];
+    }
+
     const explicitCandidates = Array.from(
       document.querySelectorAll(
         'aside,[class*="sidebar"],[class*="side-bar"],div[class*="float-right"]'
@@ -301,13 +324,24 @@ export const pageCleanupController = {
     document
       .querySelectorAll(".au-compact-sidebar-target")
       .forEach((el) => el.classList.remove("au-compact-sidebar-target"));
+    document
+      .querySelectorAll(".au-compact-sidebar-expand")
+      .forEach((el) => el.classList.remove("au-compact-sidebar-expand"));
 
     if (!ConfigStore.get("compactSidebar")) return;
     if (window.innerWidth < 980) return;
 
-    this.findCompactSidebarTargets().forEach((el) => {
+    const targets = this.findCompactSidebarTargets();
+    targets.forEach((el) => {
       el.classList.add("au-compact-sidebar-target");
     });
+
+    // Let the Latest Updates column take the width the compacted sidebar frees up.
+    const mainColumn = document.querySelector('astro-island[component-url*="LatestUpdates"]')?.parentElement;
+    const row = mainColumn?.parentElement;
+    if (mainColumn && row && targets.some((el) => el.parentElement === row)) {
+      mainColumn.classList.add("au-compact-sidebar-expand");
+    }
   },
 
   isLikelyBackToTopControl(el: Element, allowNonFloating = false): boolean {
@@ -463,9 +497,20 @@ export const pageCleanupController = {
     document
       .querySelectorAll(".au-hide-popular-target")
       .forEach((el) => el.classList.remove("au-hide-popular-target"));
+    document
+      .querySelectorAll(".au-hide-popular-expand")
+      .forEach((el) => el.classList.remove("au-hide-popular-expand"));
 
     if (ConfigStore.get("hidePopularSection")) {
-      this.findPopularSections().forEach((el) => el.classList.add("au-hide-popular-target"));
+      const popularSections = this.findPopularSections();
+      popularSections.forEach((el) => el.classList.add("au-hide-popular-target"));
+
+      // When the Popular column is hidden, let the Latest Updates column take the full row.
+      const mainColumn = document.querySelector('astro-island[component-url*="LatestUpdates"]')?.parentElement;
+      const row = mainColumn?.parentElement;
+      if (mainColumn && row && popularSections.some((el) => el.parentElement === row)) {
+        mainColumn.classList.add("au-hide-popular-expand");
+      }
     }
 
     document

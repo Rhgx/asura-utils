@@ -91,6 +91,7 @@ body.au-hide-comments .comments-section,
 body.au-hide-comments [class*="comment"],
 body.au-hide-comments [id*="comment"],
 body.au-hide-popular .au-hide-popular-target { display: none !important; }
+body.au-hide-popular .au-hide-popular-expand { width: 100% !important; flex: 1 1 auto !important; }
 body.au-color-timestamps .au-timestamp-fresh:not([class*="text-yellow"]):not([class*="text-amber"]) {
   color: var(--auo-accent) !important;
   font-weight: 700;
@@ -131,6 +132,7 @@ body.au-compact-sidebar .au-compact-sidebar-target {
 body.au-compact-sidebar .au-compact-sidebar-target > div {
   margin: 0 5px !important;
 }
+body.au-compact-sidebar .au-compact-sidebar-expand { flex: 1 1 auto !important; }
 
 /* Auto-scroll sets positions frame by frame, so native smooth scrolling would fight it. */
 html { scroll-behavior: auto !important; }

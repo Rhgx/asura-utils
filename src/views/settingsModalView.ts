@@ -25,7 +25,7 @@ const SETTING_TOOLTIPS: Partial<Record<ConfigKey, string>> = {
   hideComments: "Hides comment-related sections on supported pages.",
   hideDefaultBackToTop: "Hides the site's floating back-to-top control.",
   compactSidebar: "Shrinks right-side layout blocks to use less width.",
-  hidePopularSection: "Hides popular/recommended sections when detected.",
+  hidePopularSection: "Hides the Trending and Popular sections on the home page.",
   menuSeriesOverhaul: "Applies custom header and series-page styling tags.",
   themePreset: "Changes Asura Utils color tokens across supported UI.",
   readerWidget: "Shows the reader dock and enables reader controls.",
