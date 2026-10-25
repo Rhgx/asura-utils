@@ -450,7 +450,7 @@ export const pageTargetController = {
     if (synopsisBlock) synopsisBlock.classList.add("au-series-synopsis");
 
     const metaScope = seriesCard || document.body;
-    Array.from(metaScope.querySelectorAll("div"))
+    const metaCandidates = Array.from(metaScope.querySelectorAll("div"))
       .filter((el) => {
         const txt = textOf(el);
         if (!txt) return false;
@@ -466,6 +466,14 @@ export const pageTargetController = {
           txt.includes("followed by");
         return hasTargetText && txt.length < 700;
       })
+      // Hidden copies (such as the mobile-only stats row) have no layout box and must not take the slot.
+      .filter((el) => {
+        const rect = el.getBoundingClientRect();
+        return el.getClientRects().length > 0 && rect.width > 0 && rect.height > 0;
+      });
+    metaCandidates
+      // Keep the outermost match so a container and its children are not both tagged.
+      .filter((el) => !metaCandidates.some((other) => other !== el && other.contains(el)))
       .slice(0, 8)
       .forEach((el) => el.classList.add("au-series-meta"));
 
