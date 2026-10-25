@@ -2,6 +2,7 @@ import { ConfigStore } from "../store/configStore.js";
 import type { ChapterEndAction } from "../config/defaults.js";
 import type { ChapterAccessResult, PageControllerContext } from "./types.js";
 import { CHAPTER_IMAGE_SELECTOR } from "./readerConstants.js";
+import { findChapterReaderInfo } from "./chapterProps.js";
 
 export const chapterEndController = {
   getReaderChapterKey() {
@@ -39,6 +40,8 @@ export const chapterEndController = {
     if (!root || !root.querySelectorAll) return 0;
     const primaryCount = root.querySelectorAll(CHAPTER_IMAGE_SELECTOR).length;
     if (primaryCount > 0) return primaryCount;
+    const readerInfo = findChapterReaderInfo(root);
+    if (typeof readerInfo?.pageCount === "number") return readerInfo.pageCount;
     const chapterReaderIsland = root.querySelector?.(
       'astro-island[component-url*="ChapterReader"]'
     );
@@ -48,6 +51,11 @@ export const chapterEndController = {
 
   hasPremiumLockSignals(root = document) {
     if (!root) return false;
+    // The reader props carry the server's lock state, so they win over page heuristics.
+    const propsLocked = findChapterReaderInfo(root)?.isLocked;
+    if (typeof propsLocked === "boolean") return propsLocked;
+    if (/-\s*premium\s*\|/i.test(root.title)) return true;
+
     const textSource = root.body?.textContent || root.textContent || "";
     const bodyText = textSource.toLowerCase();
     const premiumPhrases = [
@@ -59,23 +67,12 @@ export const chapterEndController = {
       "members only chapter",
       "for premium members",
     ];
-    const hasPremiumText = premiumPhrases.some((token) => bodyText.includes(token));
-    if (!hasPremiumText) return false;
-
-    const ctaNodes = Array.from(root.querySelectorAll?.("button,a") || []);
-    const hasUnlockCta = ctaNodes.some((node) => {
-      const txt = (node.textContent || "").trim().toLowerCase();
-      return txt.includes("unlock") || txt.includes("premium");
-    });
-
-    const hasPremiumUi = !!root.querySelector?.(
-      '[class*="premium"],[id*="premium"],[class*="locked"],[id*="locked"]'
-    );
-
-    return hasUnlockCta || hasPremiumUi || hasPremiumText;
+    return premiumPhrases.some((token) => bodyText.includes(token));
   },
 
   isLikelyPremiumLockedCurrentChapter() {
+    const propsLocked = findChapterReaderInfo(document)?.isLocked;
+    if (typeof propsLocked === "boolean") return propsLocked;
     const chapterImageCount = this.getChapterImageCount(document);
     if (chapterImageCount > 0) return false;
     return this.hasPremiumLockSignals(document);
@@ -140,8 +137,14 @@ export const chapterEndController = {
       } else {
         const html = await response.text();
         const doc = new DOMParser().parseFromString(html, "text/html");
+        const propsLocked = findChapterReaderInfo(doc)?.isLocked;
         const chapterImageCount = this.getChapterImageCount(doc);
-        if (chapterImageCount > 0) {
+        if (typeof propsLocked === "boolean") {
+          result = {
+            allowed: !propsLocked,
+            reason: propsLocked ? "premium_locked" : "reader_props_unlocked",
+          };
+        } else if (chapterImageCount > 0) {
           result = { allowed: true, reason: "reader_images_present" };
         } else {
           const hasPremiumSignals = this.hasPremiumLockSignals(doc);
