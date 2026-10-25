@@ -340,7 +340,8 @@ export const pageCleanupController = {
       .forEach((el) => el.classList.remove("au-compact-sidebar-expand"));
 
     if (!ConfigStore.get("compactSidebar")) return;
-    if (window.innerWidth < 980) return;
+    // The site's columns only sit side by side from the lg breakpoint (1024px); below that they stack.
+    if (window.innerWidth < 1024) return;
 
     const targets = this.findCompactSidebarTargets();
     targets.forEach((el) => {
