@@ -15,6 +15,8 @@ export interface ChapterAccessResult {
   allowed: boolean;
   reason: string;
   unlockTime?: string | null;
+  // Page image URLs of an accessible chapter, used to warm the cache before navigation.
+  pageUrls?: string[];
 }
 
 export type QueryRoot = Document | Element;
@@ -35,6 +37,7 @@ export interface PageControllerContext {
   endActionCompleted: boolean;
   endActionInFlight: boolean;
   endActionHintTs: number;
+  prefetchedChapterKey: string;
   historyWriteTs: number;
   historyWrittenChapterKey: string;
   historyWrittenProgress: number | null;
@@ -54,6 +57,7 @@ export interface PageControllerContext {
   tryNavigateNextChapterWithPremiumCheck(): Promise<boolean>;
   stopReaderAutoScrollForEndAction(): boolean | void;
   performSmartEndAction(actionMode: ChapterEndAction): Promise<boolean>;
+  maybePrefetchNextChapter(): Promise<void>;
 
   applyReaderBrightness(): void;
   getSeriesTitleFromReader(): string;

@@ -41,6 +41,7 @@ export const PageController = {
   endActionCompleted: false,
   endActionInFlight: false,
   endActionHintTs: 0,
+  prefetchedChapterKey: "",
   historyWriteTs: 0,
   historyWrittenChapterKey: "",
   historyWrittenProgress: null as number | null,
@@ -59,6 +60,7 @@ export const PageController = {
     this.endActionCompleted = false;
     this.endActionInFlight = false;
     this.endActionHintTs = 0;
+    this.prefetchedChapterKey = "";
 
     ThemeController.apply(ConfigStore.get("themePreset"));
     this.bindGlobalListeners();
@@ -339,6 +341,7 @@ export const PageController = {
       }
       if (!this.pageContext.isReader) return;
       this.maybeRunChapterEndAction();
+      this.maybePrefetchNextChapter();
       const progress = this.reader.getProgress();
       this.recordReaderVisit(progress);
       if (!this.readerMounted) return;

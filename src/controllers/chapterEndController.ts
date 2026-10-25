@@ -4,6 +4,9 @@ import type { ChapterAccessResult, PageControllerContext } from "./types.js";
 import { CHAPTER_IMAGE_SELECTOR } from "./readerConstants.js";
 import { findChapterReaderInfo, formatUnlockCountdown } from "./chapterProps.js";
 
+const PREFETCH_PROGRESS_PERCENT = 70;
+const PREFETCH_PAGE_COUNT = 3;
+
 export const chapterEndController = {
   getReaderChapterKey() {
     return `${window.location.pathname || ""}${window.location.search || ""}`;
@@ -160,6 +163,7 @@ export const chapterEndController = {
             reason: hasPremiumSignals ? "premium_locked" : "inconclusive_allow",
           };
         }
+        if (result.allowed) result.pageUrls = readerInfo?.pageUrls ?? [];
       }
     } catch (_error) {
       // Fail open for timeouts and network errors for the same reason as non-2xx responses.
@@ -170,6 +174,30 @@ export const chapterEndController = {
 
     this.chapterAccessCache.set(targetUrl, result);
     return result;
+  },
+
+  async maybePrefetchNextChapter(): Promise<void> {
+    if (!this.pageContext.isReader || !ConfigStore.get("readerWidget")) return;
+
+    const chapterKey = this.getReaderChapterKey();
+    if (this.prefetchedChapterKey === chapterKey) return;
+
+    const bounds = this.reader.getChapterContentBounds();
+    if (!bounds) return;
+    if (this.reader.getProgress(bounds) < PREFETCH_PROGRESS_PERCENT) return;
+
+    // Mark the chapter before awaiting so scroll frames that run during the probe do not start another one.
+    this.prefetchedChapterKey = chapterKey;
+    const nextTarget = this.reader.getChapterNavTarget("next");
+    if (!nextTarget || !nextTarget.href) return;
+
+    const access = await this.probeChapterAccess(nextTarget.href);
+    if (!access.allowed || !access.pageUrls?.length) return;
+    for (const url of access.pageUrls.slice(0, PREFETCH_PAGE_COUNT)) {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = url;
+    }
   },
 
   async tryNavigateNextChapterWithPremiumCheck() {

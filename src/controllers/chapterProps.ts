@@ -3,6 +3,7 @@ export interface ChapterReaderInfo {
   isPremium: boolean | null;
   unlockTime: string | null;
   pageCount: number | null;
+  pageUrls: string[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -32,7 +33,21 @@ export function parseChapterReaderProps(props: string): ChapterReaderInfo | null
     isPremium: typeof isPremium === "boolean" ? isPremium : null,
     unlockTime: typeof unlockTime === "string" ? unlockTime : null,
     pageCount: Array.isArray(pages) ? pages.length : null,
+    pageUrls: parsePageUrls(pages),
   };
+}
+
+// Each page is a wrapped record like [0, { url: [0, "https://..."], width: [0, 900], ... }].
+function parsePageUrls(pages: unknown): string[] {
+  if (!Array.isArray(pages)) return [];
+  const urls: string[] = [];
+  for (const page of pages) {
+    const record = unwrapProp(page);
+    if (!isRecord(record)) continue;
+    const url = unwrapProp(record["url"]);
+    if (typeof url === "string") urls.push(url);
+  }
+  return urls;
 }
 
 export function findChapterReaderInfo(root: Document): ChapterReaderInfo | null {
