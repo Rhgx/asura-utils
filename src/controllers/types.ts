@@ -14,6 +14,7 @@ export interface PageContext {
 export interface ChapterAccessResult {
   allowed: boolean;
   reason: string;
+  unlockTime?: string | null;
 }
 
 export type QueryRoot = Document | Element;

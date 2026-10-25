@@ -2,7 +2,7 @@ import { ConfigStore } from "../store/configStore.js";
 import type { ChapterEndAction } from "../config/defaults.js";
 import type { ChapterAccessResult, PageControllerContext } from "./types.js";
 import { CHAPTER_IMAGE_SELECTOR } from "./readerConstants.js";
-import { findChapterReaderInfo } from "./chapterProps.js";
+import { findChapterReaderInfo, formatUnlockCountdown } from "./chapterProps.js";
 
 export const chapterEndController = {
   getReaderChapterKey() {
@@ -97,7 +97,12 @@ export const chapterEndController = {
 
     if (!ConfigStore.get("hasPremiumAccess") && this.isLikelyPremiumLockedCurrentChapter()) {
       this.endActionCompleted = true;
-      this.showEndActionHint("End Action skipped: Premium-locked chapter detected");
+      const countdown = formatUnlockCountdown(findChapterReaderInfo(document)?.unlockTime ?? null, Date.now());
+      this.showEndActionHint(
+        countdown
+          ? `Premium-locked chapter, unlocks ${countdown}`
+          : "End Action skipped: Premium-locked chapter detected"
+      );
       return;
     }
 
@@ -137,12 +142,14 @@ export const chapterEndController = {
       } else {
         const html = await response.text();
         const doc = new DOMParser().parseFromString(html, "text/html");
-        const propsLocked = findChapterReaderInfo(doc)?.isLocked;
+        const readerInfo = findChapterReaderInfo(doc);
+        const propsLocked = readerInfo?.isLocked;
         const chapterImageCount = this.getChapterImageCount(doc);
         if (typeof propsLocked === "boolean") {
           result = {
             allowed: !propsLocked,
             reason: propsLocked ? "premium_locked" : "reader_props_unlocked",
+            unlockTime: readerInfo?.unlockTime ?? null,
           };
         } else if (chapterImageCount > 0) {
           result = { allowed: true, reason: "reader_images_present" };
@@ -171,7 +178,12 @@ export const chapterEndController = {
 
     const access = await this.probeChapterAccess(nextTarget.href);
     if (!access.allowed) {
-      this.showEndActionHint("End Action: Next chapter blocked (premium lock)");
+      const countdown = formatUnlockCountdown(access.unlockTime ?? null, Date.now());
+      this.showEndActionHint(
+        countdown
+          ? `End Action: Next chapter unlocks ${countdown}`
+          : "End Action: Next chapter blocked (premium lock)"
+      );
       return false;
     }
 
