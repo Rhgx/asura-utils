@@ -1,6 +1,10 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { TIMESTAMP_PATTERN, getTimestampAgeClass } from "../src/controllers/timestampAge.js";
+import {
+  TIMESTAMP_PATTERN,
+  getTimestampAgeClass,
+  isStandaloneTimestamp,
+} from "../src/controllers/timestampAge.js";
 
 // Local time keeps the date-only cases independent of the machine's timezone.
 const now = new Date(2026, 9, 25, 12).getTime();
@@ -14,6 +18,20 @@ describe("TIMESTAMP_PATTERN", () => {
 
   it("does not match plain chapter text", () => {
     assert.equal(TIMESTAMP_PATTERN.test("Chapter 159"), false);
+  });
+});
+
+describe("isStandaloneTimestamp", () => {
+  it("accepts text that is only a timestamp", () => {
+    for (const label of ["1 hour ago", "15 hours ago", "Oct 20, 2026"]) {
+      assert.equal(isStandaloneTimestamp(label), true, label);
+    }
+  });
+
+  it("rejects chapter titles, badges, and unlock countdowns", () => {
+    for (const label of ["Chapter 160", "Unlocks in 4h 37m", "EARLY ACCESS"]) {
+      assert.equal(isStandaloneTimestamp(label), false, label);
+    }
   });
 });
 

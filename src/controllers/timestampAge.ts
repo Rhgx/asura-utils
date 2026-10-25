@@ -1,5 +1,15 @@
 export const TIMESTAMP_PATTERN = /(?:\b(?:today|yesterday|just\s+now)\b|\blast\s+(?:hour|day|week|month|year)\b|\b\d+\s*(?:sec(?:ond)?s?|min(?:ute)?s?|hours?|days?|weeks?|months?|years?)\s+ago\b|\b\d+\s*(?:s|m|h|d|w|mo|y)(?:\s+\d+\s*(?:s|m|h|d|w|mo|y))*\b|\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2}(?:,\s*\d{4})?\b|\b\d{4}[-/]\d{1,2}[-/]\d{1,2}\b)/i;
 
+const STANDALONE_TIMESTAMP_PATTERN = new RegExp(`^(?:${TIMESTAMP_PATTERN.source})$`, "i");
+
+// True only when the whole label is a timestamp. Unlock countdowns such as
+// "Unlocks in 4h 37m" contain a duration-shaped substring, so they are rejected explicitly.
+export function isStandaloneTimestamp(text: string): boolean {
+  const normalized = text.trim();
+  if (/unlock/i.test(normalized)) return false;
+  return STANDALONE_TIMESTAMP_PATTERN.test(normalized);
+}
+
 const unitHours: Record<string, number> = {
   s: 1 / 3600,
   m: 1 / 60,

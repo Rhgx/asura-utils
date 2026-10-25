@@ -1,6 +1,10 @@
 import { ConfigStore } from "../store/configStore.js";
 import type { PageControllerContext } from "./types.js";
-import { TIMESTAMP_PATTERN, getTimestampAgeClass } from "./timestampAge.js";
+import {
+  TIMESTAMP_PATTERN,
+  getTimestampAgeClass,
+  isStandaloneTimestamp,
+} from "./timestampAge.js";
 
 export const pageTargetController = {
   tagChapterTimestamps() {
@@ -29,6 +33,16 @@ export const pageTargetController = {
         if (element.closest("a") === anchor) return;
         const text = (element.textContent || "").trim();
         if (text.length <= 60 && TIMESTAMP_PATTERN.test(text)) {
+          element.classList.add("au-chapter-timestamp", getTimestampAgeClass(text, Date.now()));
+        }
+      });
+
+      // Series page rows put the timestamp inside the chapter link. Only whole-text
+      // matches count here so chapter titles and unlock countdowns stay untagged.
+      anchor.querySelectorAll("*").forEach((element) => {
+        if (element.children.length > 0 || element.classList.contains("au-chapter-timestamp")) return;
+        const text = (element.textContent || "").trim();
+        if (isStandaloneTimestamp(text)) {
           element.classList.add("au-chapter-timestamp", getTimestampAgeClass(text, Date.now()));
         }
       });
