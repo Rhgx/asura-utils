@@ -145,6 +145,14 @@ body.au-page-reader div[data-page] {
 body.au-page-reader.au-fit-width div[data-page] {
   max-width: 100% !important;
 }
+/* The site wraps pages in a container capped at 720px, which overrides wider image widths and fit-width mode, so lift that cap too. */
+body.au-page-reader div:has(> div[data-page]) {
+  max-width: var(--comic-width, 800px) !important;
+  width: 100% !important;
+}
+body.au-page-reader.au-fit-width div:has(> div[data-page]) {
+  max-width: 100% !important;
+}
 body.au-page-reader div[data-page] img,
 body.au-page-reader img[src*="/asura-images/chapters/"],
 body.au-page-reader img[data-src*="/asura-images/chapters/"],
