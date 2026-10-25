@@ -229,12 +229,35 @@
 .au-dock-content { min-width: 292px; padding: 16px; }
 .au-dock-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
 .au-dock-title { color: var(--auo-text); font-size: 14px; font-weight: 600; letter-spacing: 0; }
+.au-dock-header-actions { display: flex; align-items: center; gap: 8px; }
 .au-dock-progress {
   padding: 2px 8px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--auo-accent) 16%, transparent);
   color: var(--auo-accent);
   font-weight: 600;
+}
+.au-dock-icon-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  background: var(--auo-card-alt-bg);
+  color: var(--auo-text-dim);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.au-dock-icon-btn:hover {
+  background: var(--auo-surface-hover);
+  border-color: color-mix(in srgb, var(--auo-accent) 60%, transparent);
+  color: var(--auo-text);
+}
+.au-dock-icon-btn:focus-visible {
+  outline: 2px solid var(--auo-accent);
+  outline-offset: 2px;
 }
 .au-dock-section { border-bottom-color: rgba(255, 255, 255, 0.06); }
 .au-dock-section-label { color: var(--auo-text-dim); font-weight: 600; }

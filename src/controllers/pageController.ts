@@ -178,6 +178,10 @@ export const PageController = {
       navigate: (direction) => this.reader.navigate(direction),
       goSeries: () => this.reader.goSeries(),
       goTop: () => this.reader.goTop(),
+      openSettings: () => {
+        // The modal has no explicit open method, so only toggle when it is not already showing.
+        if (!document.getElementById("au-modal-overlay")) this.settingsView.toggleModal();
+      },
     });
 
     this.dockView.setCollapsed(ConfigStore.get("readerDockCollapsed"), false);

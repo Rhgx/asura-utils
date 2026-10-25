@@ -12,6 +12,7 @@ export interface ReaderDockActions {
   navigate(direction: ChapterDirection): boolean;
   goSeries(): boolean;
   goTop(): void;
+  openSettings(): void;
 }
 
 export class ReaderDockView {
@@ -72,7 +73,12 @@ export class ReaderDockView {
         <div class="au-dock-content">
           <div class="au-dock-header">
             <div class="au-dock-title">Reader Tools</div>
-            <div id="au-dock-progress" class="au-dock-progress">0%</div>
+            <div class="au-dock-header-actions">
+              <div id="au-dock-progress" class="au-dock-progress">0%</div>
+              <button id="au-dock-settings" class="au-dock-icon-btn" type="button" aria-label="Open settings" title="Settings">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </button>
+            </div>
           </div>
 
           <div class="au-dock-section">
@@ -164,8 +170,10 @@ export class ReaderDockView {
     const nextBtn = byId("au-dock-next");
     const seriesBtn = byId("au-dock-series");
     const topBtn = byId("au-dock-top");
+    const settingsBtn = byId("au-dock-settings");
 
     if (handle) handle.onclick = () => this.setCollapsed(!this.collapsed, true);
+    if (settingsBtn) settingsBtn.onclick = () => actions.openSettings();
     if (scrollBtn) scrollBtn.onclick = () => actions.toggleScroll();
     if (speedDec) speedDec.onclick = () => actions.stepSpeed(-CONSTANTS.SPEED_STEP);
     if (speedInc) speedInc.onclick = () => actions.stepSpeed(CONSTANTS.SPEED_STEP);
