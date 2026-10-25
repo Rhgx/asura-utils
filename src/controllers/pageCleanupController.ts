@@ -457,7 +457,9 @@ export const pageCleanupController = {
     }
 
     const path = window.location.pathname || "/";
-    const isHome = path === "/" || path === "" || path.startsWith("/page/");
+    // The site rewrites the home URL to /comics or /novels depending on the reading mode.
+    const isHome =
+      path === "/" || path === "" || path.startsWith("/page/") || /^\/(comics|novels)\/?$/.test(path);
     document
       .querySelectorAll(".au-hide-popular-target")
       .forEach((el) => el.classList.remove("au-hide-popular-target"));
