@@ -449,11 +449,15 @@ export const pageTargetController = {
       });
     if (synopsisBlock) synopsisBlock.classList.add("au-series-synopsis");
 
-    const metaScope = seriesCard || document.body;
+    // The desktop info panel (rating, status, author) sits in a column beside the series card, so search the whole row.
+    const metaScope = seriesCard?.parentElement || document.body;
     const metaCandidates = Array.from(metaScope.querySelectorAll("div"))
       .filter((el) => {
         const txt = textOf(el);
-        if (!txt) return false;
+        if (!txt || txt.length >= 200) return false;
+        // Action rows and the chapter list mention chapters or bookmarks too; leave their buttons and links alone.
+        if (el.querySelector('button, a[href*="/chapter/"]')) return false;
+        if (el.closest('astro-island[component-url*="ChapterListReact"]')) return false;
         const hasTargetText =
           txt.includes("rating") ||
           txt.includes("chapters") ||
@@ -464,7 +468,7 @@ export const pageTargetController = {
           txt.includes("type") ||
           txt.includes("bookmark") ||
           txt.includes("followed by");
-        return hasTargetText && txt.length < 700;
+        return hasTargetText;
       })
       // Hidden copies (such as the mobile-only stats row) have no layout box and must not take the slot.
       .filter((el) => {
