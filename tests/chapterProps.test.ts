@@ -18,6 +18,11 @@ describe("parseChapterReaderProps", () => {
       isPremium: false,
       unlockTime: null,
       pageCount: 3,
+      pageUrls: [
+        "https://cdn.asurascans.com/asura-images/chapters/academys-genius-swordmaster/159/7852e0.webp?v=1792327660",
+        "https://cdn.asurascans.com/asura-images/chapters/academys-genius-swordmaster/159/4f8f42.webp?v=1792327660",
+        "https://cdn.asurascans.com/asura-images/chapters/academys-genius-swordmaster/159/bac657.webp?v=1792327660",
+      ],
     });
   });
 
@@ -28,6 +33,7 @@ describe("parseChapterReaderProps", () => {
       isPremium: true,
       unlockTime: "2026-10-25T20:57:32.947811Z",
       pageCount: 0,
+      pageUrls: [],
     });
   });
 
@@ -49,6 +55,7 @@ describe("parseChapterReaderProps", () => {
       isPremium: null,
       unlockTime: null,
       pageCount: null,
+      pageUrls: [],
     });
   });
 });
