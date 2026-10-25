@@ -61,19 +61,7 @@ export class SettingsModalView {
   }
 
   createHeaderButton() {
-    const profileLinks = document.querySelectorAll<HTMLElement>(
-      'header a[href*="/login"], header a[href*="/dashboard"], header a[href*="/account"], header a[href*="/user/"]'
-    );
-    if (profileLinks.length === 0) return;
-
-    const targetAnchor =
-      Array.from(profileLinks).find((el) => el.offsetParent !== null) ||
-      profileLinks[0]!;
-    const insertionTarget =
-      targetAnchor.closest(".mobile-menu-hide") ||
-      targetAnchor.closest(".profile-menu-hide") ||
-      targetAnchor.closest("astro-island") ||
-      targetAnchor;
+    const insertionTarget = this.findHeaderButtonTarget();
     if (!insertionTarget || !insertionTarget.parentNode) return;
 
     let btn = document.getElementById("au-settings-btn-main");
@@ -94,6 +82,39 @@ export class SettingsModalView {
     } else if (btn.nextSibling !== insertionTarget) {
       insertionTarget.parentNode.insertBefore(btn, insertionTarget);
     }
+  }
+
+  findHeaderButtonTarget(): Element | null {
+    // The user menu island is in the header for both signed-in and signed-out visitors.
+    // Signed-in profile links only exist inside its closed dropdown, so they cannot anchor the button.
+    const userMenu = document.querySelector('header astro-island[component-url*="UserMenu"]');
+    if (userMenu) {
+      // Insert beside the wrapper that sits in the header's flex row; inside a block wrapper the button stacks above the row.
+      let target: Element = userMenu;
+      while (
+        target.parentElement &&
+        target.parentElement.tagName !== "HEADER" &&
+        window.getComputedStyle(target.parentElement).display !== "flex"
+      ) {
+        target = target.parentElement;
+      }
+      return target;
+    }
+
+    const profileLinks = document.querySelectorAll<HTMLElement>(
+      'header a[href*="/login"], header a[href*="/dashboard"], header a[href*="/account"], header a[href*="/user/"]'
+    );
+    if (profileLinks.length === 0) return null;
+
+    const targetAnchor =
+      Array.from(profileLinks).find((el) => el.offsetParent !== null) ||
+      profileLinks[0]!;
+    return (
+      targetAnchor.closest(".mobile-menu-hide") ||
+      targetAnchor.closest(".profile-menu-hide") ||
+      targetAnchor.closest("astro-island") ||
+      targetAnchor
+    );
   }
 
   toggleModal() {
