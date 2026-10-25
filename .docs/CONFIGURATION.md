@@ -6,7 +6,7 @@ Open the gear button in the Asura Scans header to change these options. Settings
 
 | Setting | Default | Description |
 | --- | :---: | --- |
-| Ad Blocker | On | Hides common ad containers and promotional close buttons |
+| Ad Blocker | On | Hides common ad containers, Asura+ subscription banners, and promotional close buttons |
 | Colored Chapter Timestamps | On | Varies timestamp color and weight by recency so newer updates stand out |
 | Hide Home Slider | Off | Removes the large featured slider from the home page |
 | Hide Toraka Promo | On | Hides detected Toraka promotion sections |

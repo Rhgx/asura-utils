@@ -17,7 +17,7 @@ import {
 const APP_VERSION = packageJson.version;
 
 const SETTING_TOOLTIPS: Partial<Record<ConfigKey, string>> = {
-  adBlock: "Hides common ad containers and promo close buttons.",
+  adBlock: "Hides common ad containers, Asura+ subscription banners, and promo close buttons.",
   colorTimestamps:
     "Colors and weights chapter timestamps by recency; newer updates appear brighter and bolder.",
   hideSlider: "Removes the large featured slider on the home page.",

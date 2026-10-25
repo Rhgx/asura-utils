@@ -71,7 +71,10 @@ body.au-adblock #main-menu-ads,
 body.au-adblock div[id*="google_ads"],
 body.au-adblock div[class*="adsbygoogle"],
 body.au-adblock .au-hide-beta-banner-target,
-body.au-adblock button[aria-label="Close promotion"] {
+body.au-adblock button[aria-label="Close promotion"],
+/* Asura+ subscription upsells (Mythic banner and yearly offer). */
+body.au-adblock astro-island[component-url*="MythicBanner"],
+body.au-adblock astro-island[component-url*="PromoBanner"] {
   display: none !important;
   pointer-events: none !important;
 }
