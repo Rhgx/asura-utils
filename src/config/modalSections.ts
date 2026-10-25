@@ -1,5 +1,5 @@
 import { THEME_PRESET_OPTIONS } from "../theme/themePresets.js";
-import type { AppConfig, ConfigKey } from "./defaults.js";
+import type { ConfigKey } from "./defaults.js";
 
 export interface ModalOption { value: string; label: string }
 export interface ModalInput {
