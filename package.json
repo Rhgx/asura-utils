@@ -12,7 +12,8 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "test": "pnpm typecheck && pnpm build && tsx scripts/verify-build.ts"
+    "test:unit": "tsx --test tests/*.test.ts",
+    "test": "pnpm typecheck && pnpm test:unit && pnpm build && tsx scripts/verify-build.ts"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

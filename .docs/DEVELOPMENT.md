@@ -25,7 +25,8 @@ Use `pnpm install --frozen-lockfile` when reproducing CI exactly.
 | `pnpm dev` | Starts the Vite userscript development server |
 | `pnpm typecheck` | Runs TypeScript with `--noEmit` |
 | `pnpm build` | Creates production userscript artifacts |
-| `pnpm test` | Typechecks, builds, and runs artifact metadata checks |
+| `pnpm test:unit` | Runs the unit tests in `tests/` with Node's test runner through `tsx` |
+| `pnpm test` | Typechecks, runs unit tests, builds, and runs artifact metadata checks |
 | `pnpm preview` | Starts Vite's preview server |
 
 Run `pnpm test` before committing a change intended for release.
