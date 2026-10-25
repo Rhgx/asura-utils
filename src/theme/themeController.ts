@@ -27,7 +27,20 @@ export const ThemeController = {
       "--auo-link": `color-mix(in srgb, ${accent} 45%, white)`,
       "--auo-auth-hover-bg": `color-mix(in srgb, ${accent} 54%, black)`,
       "--auo-chapter-hover-border": `color-mix(in srgb, ${accent} 45%, transparent)`,
+      "--auo-on-accent": this.pickOnAccent(accent),
     };
+  },
+
+  // Picks the label color (white or near-black) with the higher WCAG contrast on the accent.
+  pickOnAccent(accent: string): string {
+    const channel = (offset: number) => {
+      const value = parseInt(accent.slice(offset, offset + 2), 16) / 255;
+      return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    };
+    const luminance = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+    const whiteContrast = 1.05 / (luminance + 0.05);
+    const darkContrast = (luminance + 0.05) / 0.056;
+    return whiteContrast >= darkContrast ? "#ffffff" : "#121212";
   },
 
   resolveTheme(themeKey: unknown) {

@@ -61,7 +61,7 @@
     "--auo-link": "#d6f6f3",
     "--auo-chapter-bg": "#232d39",
     "--auo-chapter-hover-border": "rgba(47, 157, 149, 0.5)",
-    "--auo-on-accent": "#effffd",
+    "--auo-on-accent": "#121820",
     "--au-logo-filter": "hue-rotate(-96deg) saturate(1) brightness(1.06)"
   }
 }

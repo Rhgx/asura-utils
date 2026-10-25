@@ -36,6 +36,8 @@ const PURPLE_HUE_MIN = 250;
 const PURPLE_HUE_MAX = 330;
 const NAMED_PURPLE_SCALE_REGEX = /^(?:purple|violet|fuchsia)-(\d{2,3})(?:\/(\d{1,3}))?$/i;
 const UTILITY_REGEX = /^(bg|text|border|ring|stroke|fill|from|via|to|shadow)-(.+)$/;
+// Fills at or below this lightness resolve to the strong accent shade.
+const STRONG_LIGHTNESS = 38;
 
 // Tailwind variants we can translate to CSS selectors. Unknown variants
 // (responsive prefixes, data-[...] states) are skipped entirely so we never
@@ -190,7 +192,7 @@ function accentMix(opacityPercent: number): string {
 function declarationsFor(prefix: UtilityPrefix, parsed: ParsedUtility, { isHover }: { isHover: boolean }): string {
   const { lightness, opacity } = parsed;
   const isSoft = lightness > 64;
-  const isStrong = lightness < 38;
+  const isStrong = lightness < STRONG_LIGHTNESS;
   const textColor = isSoft ? "var(--auo-link)" : "var(--auo-accent)";
 
   switch (prefix) {
@@ -268,7 +270,20 @@ function buildRuleForClassToken(classToken: string): string {
     isHover: hasHover && !hasGroupHover,
   });
   if (!declarations) return "";
-  return buildRule([`${THEME_SCOPE} ${selector}`], declarations);
+  const rules = [buildRule([`${THEME_SCOPE} ${selector}`], declarations)];
+  // Solid accent fills that paint the base accent also get the on-accent label
+  // color. Hover and group-hover fills are skipped (strong shade or transparent
+  // rest state). An element with a hover background keeps its site label color
+  // while hovered, because the strong shade behind it is too dark for on-accent.
+  if (prefix === "bg" && parsed.opacity === null && !hasHover && parsed.lightness >= STRONG_LIGHTNESS) {
+    rules.push(
+      buildRule(
+        [`${THEME_SCOPE} ${selector}:not([class*="hover:bg-"]:hover)`],
+        "color:var(--auo-on-accent)!important"
+      )
+    );
+  }
+  return rules.join("");
 }
 
 function isPurpleUtilityCandidate(classToken: string): boolean {

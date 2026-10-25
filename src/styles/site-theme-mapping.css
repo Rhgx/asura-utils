@@ -223,6 +223,7 @@ body.au-theme-enabled .au-theme-site-section [class*="text-gray-500"] {
 body.au-theme-enabled .au-theme-site-section [class*="bg-[#913FE2]"]:not([class*="/"]):not([class*="hover:bg-"]),
 body.au-theme-enabled .au-theme-site-section [class*="bg-[#6F2598]"]:not([class*="/"]):not([class*="hover:bg-"]) {
   background-color: var(--auo-accent) !important;
+  color: var(--auo-on-accent) !important;
 }
 
 body.au-theme-enabled .au-theme-site-section [class*="hover:bg-[#7c35c2]"]:not([class*="/"]):hover,
@@ -270,6 +271,15 @@ body.au-theme-enabled .au-theme-site-section .group:hover .au-theme-accent-bg-gr
 
 body.au-theme-enabled .au-theme-site-section .au-theme-accent-bg {
   background-color: var(--auo-accent) !important;
+}
+
+/* Label color for solid accent fills. Hover-background elements keep their site
+ * label color while hovered, since the strong hover shade is too dark for on-accent. */
+body.au-theme-enabled .au-theme-site-section .au-theme-accent-bg:not([class*="hover:bg-"]:hover),
+body.au-theme-enabled footer [class*="bg-[#913FE2]"]:not([class*="/"]):not([class*="hover:bg-"]:hover),
+body.au-theme-enabled astro-island[component-url*="BrowseFilters"] [class~="bg-[#913FE2]"]:not([class*="hover:bg-"]:hover),
+body.au-theme-enabled astro-island[component-url*="BrowseFilters"] [style*="background-color: rgb(145, 63, 226)"]:not([class*="hover:bg-"]:hover) {
+  color: var(--auo-on-accent) !important;
 }
 
 body.au-theme-enabled .au-theme-site-section .au-theme-accent-bg-soft {
