@@ -151,10 +151,18 @@ export const pageCleanupController = {
   },
 
   findBetaBannerPromos() {
+    // Account and payment notices (payment method, dispute, failed payment, relink) need
+    // the user's attention, so they are never hidden, even when a text or link check matches.
+    const accountNoticeComponents = ["MigrationBanner", "ChargebackBanner", "RelinkBanner", "PaymentFailedBanner"];
+    const accountNotices = Array.from(
+      document.querySelectorAll(
+        accountNoticeComponents.map((name) => `astro-island[component-url*="${name}"]`).join(",")
+      )
+    );
     // Component names are the safest match; link and text checks cover older layouts.
     const explicitBanners = Array.from(
       document.querySelectorAll(
-        'astro-island[component-url*="MigrationBanner"],astro-island[component-url*="MonthlySubBanner"],astro-island[component-url*="ChargebackBanner"],astro-island[component-url*="RelinkBanner"],astro-island[component-url*="AnnouncementBanner"],astro-island[component-url*="PromoBanner"]'
+        'astro-island[component-url*="MonthlySubBanner"],astro-island[component-url*="AnnouncementBanner"],astro-island[component-url*="PromoBanner"]'
       )
     );
     const anchors = Array.from(
@@ -193,7 +201,10 @@ export const pageCleanupController = {
       if (candidate) targets.add(candidate);
     });
 
-    return Array.from(targets);
+    // Drop any target that is, sits inside, or wraps a protected notice island.
+    const isAccountNotice = (el: Element) =>
+      accountNotices.some((notice) => notice.contains(el) || el.contains(notice));
+    return Array.from(targets).filter((el) => !isAccountNotice(el));
   },
 
   findPopularSections() {
