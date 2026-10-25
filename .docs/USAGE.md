@@ -67,7 +67,7 @@ History is stored locally through Tampermonkey. Use **Settings → Data → Clea
 
 ## Appearance
 
-Choose a preset from **Settings → Appearance**. Available presets are Asura Classic, Asura Ocean, Tokyo Night, Rosé Pine Moon, Kanagawa Dragon, Gruvbox Material, and Everforest Dark.
+Choose a preset from **Settings → Appearance**. Available presets are Asura Classic, Asura Ocean, Asura Midnight (true black), Asura Sapphire, Asura Crimson, Asura Ember, and Asura Sakura.
 
 Enable **Custom Accent Color** to override the preset accent. Changes preview immediately and apply across supported site elements.
 

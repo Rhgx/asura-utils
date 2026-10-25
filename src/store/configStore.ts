@@ -1,4 +1,5 @@
 import { CONFIG_META, DEFAULTS } from "../config/defaults.js";
+import { LEGACY_THEME_KEYS } from "../theme/themePresets.js";
 import type {
   AppConfig,
   BooleanConfigKey,
@@ -36,7 +37,8 @@ export const ConfigStore = {
     }
 
     if (type === "string") {
-      const str = value === null || value === undefined ? String(fallback || "") : String(value);
+      let str = value === null || value === undefined ? String(fallback || "") : String(value);
+      if (key === "themePreset") str = LEGACY_THEME_KEYS[str] ?? str;
       if (Array.isArray(meta.options) && meta.options.length > 0) {
         if (meta.options.includes(str)) return str as ConfigValue<K>;
         if (meta.options.includes(String(fallback))) return String(fallback) as ConfigValue<K>;

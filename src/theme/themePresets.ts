@@ -54,4 +54,13 @@ const THEME_PRESET_OPTIONS = presetList.map(({ key, label }) => ({
 
 const BASE_THEME_TOKENS = baseThemeTokens as ThemeTokens;
 
-export { BASE_THEME_TOKENS, THEME_PRESETS, THEME_PRESET_OPTIONS };
+// Removed presets map to their closest replacement so saved and imported settings keep a similar look.
+const LEGACY_THEME_KEYS: Readonly<Record<string, string>> = {
+  tokyoNight: "asuraSapphire",
+  rosePineMoon: "asuraSakura",
+  kanagawaDragon: "asuraMidnight",
+  gruvboxMaterial: "asuraEmber",
+  everforestDark: "asuraOcean",
+};
+
+export { BASE_THEME_TOKENS, LEGACY_THEME_KEYS, THEME_PRESETS, THEME_PRESET_OPTIONS };
