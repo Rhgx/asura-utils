@@ -113,6 +113,13 @@
 .au-dock-nav-btn:disabled,
 .au-dock-step:disabled,
 .au-dock-num:disabled { opacity: 0.45; cursor: not-allowed; }
+/* The dock has its own -/+ steppers, so the native spinner arrows are hidden. */
+.au-dock-num { -moz-appearance: textfield; appearance: textfield; }
+.au-dock-num::-webkit-outer-spin-button,
+.au-dock-num::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 .au-dock-stepper { display: inline-flex; align-items: center; gap: 6px; }
 .au-dock-step {
   width: 28px;

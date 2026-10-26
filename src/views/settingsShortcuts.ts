@@ -19,7 +19,7 @@ function renderShortcutRow(field: KeybindField, cfg: AppConfig): string {
     : "";
 
   return `
-    <div class="au-shortcut-row" data-shortcut-row="${field.key}" data-au-search="${escapeHtml(searchText(`${label} ${helpText}`))}">
+    <div class="au-shortcut-row" data-shortcut-row="${field.key}" data-au-search="${escapeHtml(searchText(`${label} ${helpText}`))}" data-au-label="${escapeHtml(label)}">
       <div class="au-shortcut-meta">
         <div class="au-shortcut-name">${escapeHtml(label)}</div>
         ${help}
@@ -58,7 +58,7 @@ function groupShortcutFields(): Map<MessageKey, KeybindField[]> {
 
 export function renderShortcutsEditor(cfg: AppConfig): string {
   const groups = Array.from(groupShortcutFields(), ([groupKey, fields]) => `
-    <div class="au-shortcut-card" data-au-group>
+    <div class="au-shortcut-card">
       <div class="au-shortcut-card-title">${escapeHtml(t(groupKey))}</div>
       <div class="au-shortcut-grid">
         ${fields.map((field) => renderShortcutRow(field, cfg)).join("")}
@@ -72,10 +72,9 @@ export function renderShortcutsEditor(cfg: AppConfig): string {
     clear: "<b>Backspace/Delete</b>",
   });
 
-  // The intro is not a setting, so it is marked as group extra and hidden while searching.
   return `
     <div class="au-shortcut-editor">
-      <div class="au-shortcut-intro au-group-extra">
+      <div class="au-shortcut-intro">
         <div class="au-shortcut-intro-title">${escapeHtml(t("shortcuts.introTitle"))}</div>
         <div class="au-shortcut-intro-copy">
           ${introCopy}

@@ -6,6 +6,7 @@ export const es: Record<MessageKey, string> = {
   "settings.close": "Cerrar ajustes",
   "settings.madeBy": "Hecho por {author}",
   "settings.search": "Buscar ajustes",
+  "settings.clearSearch": "Borrar búsqueda",
   "settings.searchResults": "Resultados de búsqueda",
   "settings.noResults": "No hay ajustes que coincidan.",
   "settings.sections": "Secciones de ajustes",

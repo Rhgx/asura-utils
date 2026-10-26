@@ -103,7 +103,7 @@ body.au-theme-enabled .au-settings-btn:hover {
 .au-search-input {
   width: 100%;
   box-sizing: border-box;
-  padding: 6px 8px 6px 29px;
+  padding: 6px 30px 6px 29px;
   font: inherit;
   font-size: 13px;
   background: var(--au-input-bg);
@@ -113,6 +113,86 @@ body.au-theme-enabled .au-settings-btn:hover {
   outline: none;
 }
 .au-search-input:focus { border-color: var(--auo-accent); }
+/* The browser's own clear control is replaced by the button below, which matches the theme. */
+.au-search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.au-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--auo-text-dim);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+.au-search-clear:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--auo-text);
+}
+.au-search-clear svg {
+  width: 14px;
+  height: 14px;
+}
+.au-search-results {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  overflow-y: auto;
+}
+.au-result {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #a1a1aa;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.au-result svg {
+  flex: none;
+  margin-top: 2px;
+}
+.au-result-text {
+  display: grid;
+  min-width: 0;
+}
+.au-result-label {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--auo-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.au-result-page {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--auo-text-dim);
+}
+.au-result:hover { background: rgba(255, 255, 255, 0.06); }
+.au-result.active { background: color-mix(in srgb, var(--auo-accent) 22%, transparent); }
+.au-result.active svg { color: var(--auo-link); }
+.au-search-empty {
+  padding: 16px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--auo-text-dim);
+}
 .au-nav {
   display: flex;
   flex: 1;
@@ -156,6 +236,8 @@ body.au-theme-enabled .au-settings-btn:hover {
 }
 .au-nav-btn.active svg { color: var(--auo-link); }
 .au-nav-btn:focus-visible,
+.au-result:focus-visible,
+.au-search-clear:focus-visible,
 .au-close-btn:focus-visible {
   outline: 2px solid var(--auo-accent);
   outline-offset: -2px;
@@ -183,6 +265,12 @@ body.au-theme-enabled .au-settings-btn:hover {
 .au-credits-link:hover {
   color: var(--auo-text);
   text-decoration: underline;
+}
+/* The dot travels with the version, so a long translated credit never leaves it dangling at a line end. */
+.au-credits-version {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 .au-credits-dot { color: color-mix(in srgb, var(--auo-text-dim) 55%, transparent); }
 .au-credits-avatar {
@@ -249,29 +337,16 @@ body.au-theme-enabled .au-settings-btn:hover {
   scrollbar-color: color-mix(in srgb, var(--auo-text-dim) 45%, transparent) transparent;
 }
 .au-page { display: none; }
-.au-page.active,
-.au-content.is-searching .au-page {
+.au-page.active {
   display: flex;
   flex-direction: column;
   gap: 22px;
+  animation: au-tab-panel-in 0.18s ease;
 }
-.au-page.active { animation: au-tab-panel-in 0.18s ease; }
-/* While searching, every page with a match is listed under its own name. */
-.au-content.is-searching .au-page { margin-bottom: 28px; }
-.au-page-label { display: none; }
-.au-content.is-searching .au-page-label {
-  display: block;
-  margin-bottom: -10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--auo-text);
-}
-.au-content.is-searching .au-group-extra { display: none; }
-.au-search-empty {
-  padding: 40px 0;
-  text-align: center;
-  font-size: 13px;
-  color: var(--auo-text-dim);
+/* Briefly marks the setting a search result opened. */
+.is-flash {
+  border-radius: 7px;
+  animation: au-setting-flash 1.2s ease;
 }
 .au-group {
   display: flex;
@@ -301,8 +376,7 @@ body.au-theme-enabled .au-settings-btn:hover {
   box-sizing: border-box;
   padding: 10px 14px;
 }
-/* Divide visible rows only, so a search that hides the first row leaves no stray border. */
-.au-setting-row:not([hidden]) ~ .au-setting-row { border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.au-setting-row + .au-setting-row { border-top: 1px solid rgba(255, 255, 255, 0.06); }
 .au-setting-text {
   display: grid;
   gap: 2px;
@@ -443,6 +517,13 @@ body.au-theme-enabled .au-settings-btn:hover {
   outline: none;
 }
 .au-input-num:focus { border-color: var(--au-accent); }
+/* The native spinner arrows clash with the theme; the arrow keys still step the value. */
+.au-input-num { -moz-appearance: textfield; appearance: textfield; }
+.au-input-num::-webkit-outer-spin-button,
+.au-input-num::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 .au-input-select {
   background: var(--au-input-bg);
   border: 1px solid var(--au-input-border);
@@ -765,6 +846,18 @@ input:checked + .au-slider:before { transform: translateX(20px); }
   from { opacity: 1; transform: translateY(0) scale(1); }
   to { opacity: 0; transform: translateY(10px) scale(0.985); }
 }
+@keyframes au-setting-flash {
+  0%, 35% {
+    box-shadow:
+      inset 0 0 0 999px color-mix(in srgb, var(--auo-accent) 16%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--auo-accent) 70%, transparent);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 0 999px transparent,
+      inset 0 0 0 1px transparent;
+  }
+}
 @keyframes au-tab-panel-in {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
@@ -866,6 +959,13 @@ body.au-theme-enabled #au-modal .au-input-select:focus {
     scrollbar-width: none;
   }
   .au-nav-spacer { display: none; }
+  .au-search-results {
+    order: 2;
+    flex: none;
+    max-height: 40vh;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
   .au-nav-btn {
     flex: none;
     width: auto;

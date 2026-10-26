@@ -5,6 +5,7 @@ export const en = {
   "settings.close": "Close settings",
   "settings.madeBy": "Made by {author}",
   "settings.search": "Search settings",
+  "settings.clearSearch": "Clear search",
   "settings.searchResults": "Search Results",
   "settings.noResults": "No matching settings.",
   "settings.sections": "Settings sections",

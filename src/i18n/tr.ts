@@ -6,6 +6,7 @@ export const tr: Record<MessageKey, string> = {
   "settings.close": "Ayarları kapat",
   "settings.madeBy": "{author} tarafından yapıldı",
   "settings.search": "Ayarlarda ara",
+  "settings.clearSearch": "Aramayı temizle",
   "settings.searchResults": "Arama Sonuçları",
   "settings.noResults": "Eşleşen ayar yok.",
   "settings.sections": "Ayar bölümleri",

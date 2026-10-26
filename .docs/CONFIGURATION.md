@@ -2,7 +2,7 @@
 
 Open the gear button in the Asura Scans header to change these options. Settings are saved immediately in Tampermonkey storage.
 
-The settings window lists its sections in a sidebar: Reader, Site, Library, Appearance, and Shortcuts, with Backup & Reset pinned at the bottom. The search box at the top of the sidebar filters every section at once, matching setting names and descriptions; press `Esc` to clear it. The gear in the reader dock opens the window on the Reader section. On narrow screens the sidebar becomes a strip above the settings.
+The settings window lists its sections in a sidebar: Reader, Site, Library, Appearance, and Shortcuts, with Backup & Reset pinned at the bottom. Typing in the search box at the top of the sidebar replaces the section list with matching settings from every section, each labeled with its section. Matches on a setting's name come before matches found only in its description. Select a result, or move through the results with the arrow keys and press `Enter`, to open its section and highlight the setting. Press `Esc` or the clear button to return to the section list. The gear in the reader dock opens the window on the Reader section. On narrow screens the sidebar becomes a strip above the settings.
 
 ## Reader
 

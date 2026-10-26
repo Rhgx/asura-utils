@@ -6,6 +6,7 @@ export const id: Record<MessageKey, string> = {
   "settings.close": "Tutup pengaturan",
   "settings.madeBy": "Dibuat oleh {author}",
   "settings.search": "Cari pengaturan",
+  "settings.clearSearch": "Hapus pencarian",
   "settings.searchResults": "Hasil Pencarian",
   "settings.noResults": "Tidak ada pengaturan yang cocok.",
   "settings.sections": "Bagian pengaturan",

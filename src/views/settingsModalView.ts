@@ -29,7 +29,7 @@ import {
 import { formatPercent, t, tPlural } from "../i18n/index.js";
 import type { MessageKey } from "../i18n/index.js";
 import { escapeHtml } from "./escapeHtml.js";
-import { PAGE_ICONS, SEARCH_ICON, rocksEmblemSvg } from "./settingsIcons.js";
+import { CLEAR_ICON, PAGE_ICONS, SEARCH_ICON, rocksEmblemSvg } from "./settingsIcons.js";
 import { matchesSearch, searchText } from "./settingsSearch.js";
 
 const APP_VERSION = packageJson.version;
@@ -144,7 +144,7 @@ export class SettingsModalView {
       <div id="au-modal" role="dialog" aria-modal="true" aria-labelledby="au-modal-title">
         <aside class="au-sidebar">
           <div class="au-sidebar-title" id="au-modal-title">${escapeHtml(t("settings.title"))}</div>
-          <label class="au-search">
+          <div class="au-search">
             ${SEARCH_ICON}
             <input
               type="search"
@@ -155,19 +155,25 @@ export class SettingsModalView {
               spellcheck="false"
               data-au-search-input
             >
-          </label>
-          <nav class="au-nav" role="tablist" aria-orientation="vertical" aria-label="${escapeHtml(t("settings.sections"))}">
+            <button type="button" class="au-search-clear" aria-label="${escapeHtml(t("settings.clearSearch"))}" data-au-search-clear hidden>
+              ${CLEAR_ICON}
+            </button>
+          </div>
+          <nav class="au-nav" role="tablist" aria-orientation="vertical" aria-label="${escapeHtml(t("settings.sections"))}" data-au-nav-list>
             ${navHTML(SETTINGS_PAGES.filter((page) => !page.footer))}
             <div class="au-nav-spacer" aria-hidden="true"></div>
             ${navHTML(SETTINGS_PAGES.filter((page) => page.footer))}
           </nav>
+          <div class="au-search-results" aria-label="${escapeHtml(t("settings.searchResults"))}" data-au-search-results hidden></div>
           <footer class="au-credits">
             <a class="au-credits-link" href="${AUTHOR_URL}" target="_blank" rel="noopener noreferrer">
               <span class="au-credits-avatar">${rocksEmblemSvg}</span>
               ${credit}
             </a>
-            <span class="au-credits-dot" aria-hidden="true">&middot;</span>
-            <a class="au-credits-link" href="${RELEASES_URL}" target="_blank" rel="noopener noreferrer">v${APP_VERSION}</a>
+            <span class="au-credits-version">
+              <span class="au-credits-dot" aria-hidden="true">&middot;</span>
+              <a class="au-credits-link" href="${RELEASES_URL}" target="_blank" rel="noopener noreferrer">v${APP_VERSION}</a>
+            </span>
           </footer>
         </aside>
         <div class="au-main">
@@ -179,7 +185,6 @@ export class SettingsModalView {
           </div>
           <div class="au-content" data-au-content>
             ${SETTINGS_PAGES.map((page) => this.pageHTML(page, cfg)).join("")}
-            <div class="au-search-empty" data-au-search-empty hidden>${escapeHtml(t("settings.noResults"))}</div>
           </div>
         </div>
       </div>
@@ -226,8 +231,10 @@ export class SettingsModalView {
     const pagePanels = Array.from(overlay.querySelectorAll<HTMLElement>("[data-au-page]"));
     const content = overlay.querySelector<HTMLElement>("[data-au-content]");
     const mainTitle = overlay.querySelector<HTMLElement>("[data-au-main-title]");
+    const navList = overlay.querySelector<HTMLElement>("[data-au-nav-list]");
     const searchInput = overlay.querySelector<HTMLInputElement>("[data-au-search-input]");
-    const searchEmpty = overlay.querySelector<HTMLElement>("[data-au-search-empty]");
+    const searchClear = overlay.querySelector<HTMLButtonElement>("[data-au-search-clear]");
+    const searchResults = overlay.querySelector<HTMLElement>("[data-au-search-results]");
     const pageTitles = new Map(SETTINGS_PAGES.map((page) => [page.key, t(page.title)]));
 
     const setActivePage = (pageKey: SettingsPageKey) => {
@@ -244,38 +251,75 @@ export class SettingsModalView {
       if (content) content.scrollTop = 0;
     };
 
-    // Search filters every page in place: unmatched rows, then empty groups and pages, are hidden.
-    // Lists and notes that are not settings are hidden by CSS while a search is active.
-    const applySearch = (query: string) => {
-      if (!content) return;
-      const trimmed = query.trim();
-      const items = content.querySelectorAll<HTMLElement>("[data-au-search]");
-      const groups = content.querySelectorAll<HTMLElement>("[data-au-group]");
-      content.classList.toggle("is-searching", trimmed !== "");
+    // Every searchable item, indexed once. The lists that re-render in place hold no searchable items.
+    const searchIndex = Array.from(content?.querySelectorAll<HTMLElement>("[data-au-search]") ?? []).flatMap((el) => {
+      const pageKey = el.closest("[data-au-page]")?.getAttribute("data-au-page");
+      const page = SETTINGS_PAGES.find((candidate) => candidate.key === pageKey);
+      if (!page) return [];
+      const label = el.getAttribute("data-au-label") ?? "";
+      return [{ el, page, label, labelText: searchText(label), text: el.getAttribute("data-au-search") ?? "" }];
+    });
+    let searchMatches: typeof searchIndex = [];
+    let activeResult = -1;
 
-      if (!trimmed) {
-        items.forEach((item) => { item.hidden = false; });
-        groups.forEach((group) => { group.hidden = false; });
-        pagePanels.forEach((panel) => { panel.hidden = false; });
-        if (searchEmpty) searchEmpty.hidden = true;
-        setActivePage(this.activePage);
+    const markActiveResult = () => {
+      searchResults?.querySelectorAll<HTMLElement>("[data-au-result]").forEach((result, index) => {
+        const isActive = index === activeResult;
+        result.classList.toggle("active", isActive);
+        if (isActive) result.scrollIntoView({ block: "nearest" });
+      });
+    };
+
+    // Opening a result shows its section and points at the setting; the results stay listed.
+    const openResult = (index: number) => {
+      const match = searchMatches[index];
+      if (!match) return;
+      activeResult = index;
+      markActiveResult();
+      setActivePage(match.page.key);
+      match.el.scrollIntoView({ block: "center" });
+      match.el.classList.remove("is-flash");
+      // Reading layout restarts the highlight animation when the same result is opened twice.
+      void match.el.offsetWidth;
+      match.el.classList.add("is-flash");
+      window.setTimeout(() => match.el.classList.remove("is-flash"), 1200);
+    };
+
+    // Like T3 Code, a search swaps the section list for matching settings from every section.
+    // Matches on the setting name are listed before matches found only in a description.
+    const applySearch = (query: string) => {
+      const trimmed = query.trim();
+      const isSearching = trimmed !== "";
+      if (navList) navList.hidden = isSearching;
+      if (searchClear) searchClear.hidden = query === "";
+      if (!searchResults) return;
+      searchResults.hidden = !isSearching;
+      if (!isSearching) {
+        searchResults.innerHTML = "";
+        searchMatches = [];
+        activeResult = -1;
         return;
       }
 
-      items.forEach((item) => {
-        item.hidden = !matchesSearch(item.getAttribute("data-au-search") ?? "", trimmed);
-      });
-      const hasMatch = (el: HTMLElement) => el.querySelector("[data-au-search]:not([hidden])") !== null;
-      groups.forEach((group) => { group.hidden = !hasMatch(group); });
-      pagePanels.forEach((panel) => { panel.hidden = !hasMatch(panel); });
-
-      navButtons.forEach((btn) => {
-        btn.classList.remove("active");
-        btn.setAttribute("aria-selected", "false");
-      });
-      if (searchEmpty) searchEmpty.hidden = pagePanels.some((panel) => !panel.hidden);
-      if (mainTitle) mainTitle.textContent = t("settings.searchResults");
-      content.scrollTop = 0;
+      searchMatches = searchIndex
+        .filter((item) => matchesSearch(item.text, trimmed))
+        .sort((a, b) => Number(matchesSearch(b.labelText, trimmed)) - Number(matchesSearch(a.labelText, trimmed)));
+      activeResult = searchMatches.length > 0 ? 0 : -1;
+      searchResults.innerHTML =
+        searchMatches.length === 0
+          ? `<div class="au-search-empty">${escapeHtml(t("settings.noResults"))}</div>`
+          : searchMatches
+              .map((match, index) => `
+                <button type="button" class="au-result" data-au-result="${index}">
+                  ${PAGE_ICONS[match.page.key]}
+                  <span class="au-result-text">
+                    <span class="au-result-label">${escapeHtml(match.label)}</span>
+                    <span class="au-result-page">${escapeHtml(pageTitles.get(match.page.key) ?? "")}</span>
+                  </span>
+                </button>
+              `)
+              .join("");
+      markActiveResult();
     };
 
     const clearSearch = () => {
@@ -286,16 +330,33 @@ export class SettingsModalView {
 
     searchInput?.addEventListener("input", () => applySearch(searchInput.value));
     searchInput?.addEventListener("keydown", (e) => {
-      if (e.key !== "Escape" || searchInput.value === "") return;
-      e.preventDefault();
+      if (e.key === "Escape" && searchInput.value !== "") {
+        e.preventDefault();
+        clearSearch();
+      } else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && searchMatches.length > 0) {
+        e.preventDefault();
+        const step = e.key === "ArrowDown" ? 1 : -1;
+        activeResult = (activeResult + step + searchMatches.length) % searchMatches.length;
+        markActiveResult();
+      } else if (e.key === "Enter" && activeResult >= 0) {
+        e.preventDefault();
+        openResult(activeResult);
+      }
+    });
+    searchClear?.addEventListener("click", () => {
       clearSearch();
+      searchInput?.focus();
+    });
+    searchResults?.addEventListener("click", (e) => {
+      const target = e.target instanceof Element ? e.target : null;
+      const index = target?.closest("[data-au-result]")?.getAttribute("data-au-result");
+      if (index) openResult(Number(index));
     });
 
     navButtons.forEach((btn) => {
       btn.onclick = () => {
         const pageKey = SETTINGS_PAGES.find((page) => page.key === btn.getAttribute("data-au-nav"))?.key;
         if (!pageKey) return;
-        clearSearch();
         setActivePage(pageKey);
       };
     });
@@ -507,7 +568,6 @@ export class SettingsModalView {
         aria-labelledby="au-nav-${page.key}"
         data-au-page="${page.key}"
       >
-        <div class="au-page-label">${escapeHtml(t(page.title))}</div>
         ${page.groups.map((group) => this.groupHTML(group, cfg)).join("")}
       </div>
     `;
@@ -524,7 +584,7 @@ export class SettingsModalView {
     const content = group.content ? this.groupContentHTML(group.content, cfg) : "";
 
     return `
-      <section class="au-group" data-au-group>
+      <section class="au-group">
         ${title}
         ${rows}
         ${checklist}
@@ -574,7 +634,7 @@ export class SettingsModalView {
     }
 
     return `
-      <div class="au-setting-row" data-au-search="${escapeHtml(searchText(`${label} ${hint}`))}" ${dependencyAttrs(row)}>
+      <div class="au-setting-row" data-au-search="${escapeHtml(searchText(`${label} ${hint}`))}" data-au-label="${safeLabel}" ${dependencyAttrs(row)}>
         <div class="au-setting-text">
           <div class="au-setting-label">${safeLabel}</div>
           <div class="au-setting-hint">${escapeHtml(hint)}</div>
@@ -590,7 +650,7 @@ export class SettingsModalView {
     const hint = t(`setting.${item.key}.tooltip`);
     const safeHint = escapeHtml(hint);
     return `
-      <div class="au-check" data-au-search="${escapeHtml(searchText(`${label} ${hint}`))}" ${dependencyAttrs(item)}>
+      <div class="au-check" data-au-search="${escapeHtml(searchText(`${label} ${hint}`))}" data-au-label="${escapeHtml(label)}" ${dependencyAttrs(item)}>
         <label class="au-check-main">
           <input type="checkbox" data-key="${item.key}" aria-description="${safeHint}" ${cfg[item.key] ? "checked" : ""}>
           <span>${escapeHtml(label)}</span>
@@ -611,15 +671,15 @@ export class SettingsModalView {
             ["import-history", "data.importHistory"],
             ["clear-history", "data.clearHistory", true],
           ])}
-          <div class="au-group-extra" data-au-history>${this.historyBodyHTML()}</div>
+          <div data-au-history>${this.historyBodyHTML()}</div>
         `;
       case "filters":
-        return `<div class="au-group-extra" data-au-filters>${this.filtersBodyHTML()}</div>`;
+        return `<div data-au-filters>${this.filtersBodyHTML()}</div>`;
       case "shortcuts":
         return renderShortcutsEditor(cfg);
       case "settingsData":
         return `
-          <div class="au-data-note au-group-extra">${escapeHtml(t("data.note"))}</div>
+          <div class="au-data-note">${escapeHtml(t("data.note"))}</div>
           ${this.dataActionsHTML([
             ["export", "data.exportSettings"],
             ["import", "data.importSettings"],
@@ -629,17 +689,25 @@ export class SettingsModalView {
     }
   }
 
-  // The button labels double as the search text, so "export" or "reset" finds these actions.
+  // Each button is its own search result, so "export" or "reset" finds these actions.
   dataActionsHTML(
     actions: readonly (readonly [action: string, label: MessageKey, danger?: boolean])[]
   ): string {
-    const labels = actions.map(([, label]) => t(label));
     const buttons = actions
-      .map(([action, label, danger]) => `
-        <button type="button" class="au-data-btn${danger ? " au-data-btn-danger" : ""}" data-au-action="${action}">${escapeHtml(t(label))}</button>
-      `)
+      .map(([action, labelKey, danger]) => {
+        const label = t(labelKey);
+        return `
+          <button
+            type="button"
+            class="au-data-btn${danger ? " au-data-btn-danger" : ""}"
+            data-au-action="${action}"
+            data-au-search="${escapeHtml(searchText(label))}"
+            data-au-label="${escapeHtml(label)}"
+          >${escapeHtml(label)}</button>
+        `;
+      })
       .join("");
-    return `<div class="au-data-actions" data-au-search="${escapeHtml(searchText(labels.join(" ")))}">${buttons}</div>`;
+    return `<div class="au-data-actions">${buttons}</div>`;
   }
 
   historyBodyHTML(): string {

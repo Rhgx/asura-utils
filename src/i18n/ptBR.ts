@@ -6,6 +6,7 @@ export const ptBR: Record<MessageKey, string> = {
   "settings.close": "Fechar configurações",
   "settings.madeBy": "Feito por {author}",
   "settings.search": "Buscar configurações",
+  "settings.clearSearch": "Limpar busca",
   "settings.searchResults": "Resultados da busca",
   "settings.noResults": "Nenhuma configuração encontrada.",
   "settings.sections": "Seções de configurações",

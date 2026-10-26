@@ -9,7 +9,7 @@ Asura Utils adds two primary controls to Asura Scans:
 | Reader handle | Right edge of a chapter page | Expands or collapses the reader dock |
 | Settings button | Site header beside the profile control, and the reader dock header on chapter pages | Opens all Asura Utils settings |
 
-Settings are split into sections in the window's sidebar: Reader, Site, Library, Appearance, Shortcuts, and Backup & Reset. Type in the search box at the top of the sidebar to find a setting in any section; press `Esc` to clear the search. The gear in the reader dock opens the window on the Reader section.
+Settings are split into sections in the window's sidebar: Reader, Site, Library, Appearance, Shortcuts, and Backup & Reset. Type in the search box at the top of the sidebar to list matching settings from every section, then select one to jump to it. Press `Esc` to clear the search. The gear in the reader dock opens the window on the Reader section.
 
 ## Reader dock
 
