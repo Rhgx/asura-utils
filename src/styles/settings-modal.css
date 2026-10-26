@@ -431,8 +431,9 @@
   cursor: pointer;
 }
 /* The help icon sits at the end of each cell, so its tooltip opens toward the cell instead of past the modal edge. */
-.au-check .au-control-label::before { left: auto; right: 1px; }
-.au-check .au-control-label::after { left: auto; right: -6px; }
+/* The [data-tooltip] attribute makes these outrank the base tooltip rules, which come later in this file. */
+.au-check .au-control-label[data-tooltip]::before { left: auto; right: 1px; }
+.au-check .au-control-label[data-tooltip]::after { left: auto; right: -6px; }
 .au-control-label {
   position: relative;
   display: inline-flex;
