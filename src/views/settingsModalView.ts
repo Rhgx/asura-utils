@@ -1,11 +1,21 @@
-import { APPEARANCE_MODAL_SECTION, READER_MODAL_SECTION } from "../config/modalSections.js";
+import {
+  appearanceModalSection,
+  languageModalSelect,
+  readerModalSection,
+} from "../config/modalSections.js";
 import type { ModalSection } from "../config/modalSections.js";
 import {
   KEYBIND_FIELDS,
   normalizeEventToBinding,
 } from "../config/keybinds.js";
 import { ConfigStore } from "../store/configStore.js";
-import { HistoryStore } from "../store/historyStore.js";
+import {
+  COMPLETED_THRESHOLD,
+  HistoryStore,
+  chapterSlugToLabel,
+  formatHistoryAge,
+} from "../store/historyStore.js";
+import { FilterStore } from "../store/filterStore.js";
 import { DEFAULTS, isConfigKey } from "../config/defaults.js";
 import type { AppConfig, ConfigKey } from "../config/defaults.js";
 import packageJson from "../../package.json";
@@ -13,39 +23,50 @@ import {
   renderShortcutsEditor,
   setShortcutListeningState,
 } from "./settingsShortcuts.js";
+import { formatPercent, t, tPlural } from "../i18n/index.js";
+import type { MessageKey } from "../i18n/index.js";
+import { escapeHtml } from "./escapeHtml.js";
 
 const APP_VERSION = packageJson.version;
 
-const SETTING_TOOLTIPS: Partial<Record<ConfigKey, string>> = {
-  adBlock: "Hides common ad containers, Asura+ subscription banners, and promo close buttons.",
-  colorTimestamps:
-    "Colors and weights chapter timestamps by recency; newer updates appear brighter and bolder.",
-  hideSlider: "Removes the large featured slider on the comics and novels home pages.",
-  hideToraka: "Hides Toraka promotion sections when detected.",
-  hideComments: "Hides comment-related sections on supported pages.",
-  hideDefaultBackToTop: "Hides the site's floating back-to-top control.",
-  compactSidebar: "Shrinks right-side layout blocks to use less width.",
-  hidePopularSection: "Hides the Trending and Popular sections on the home page.",
-  menuSeriesOverhaul: "Applies custom header and series-page styling tags.",
-  themePreset: "Changes Asura Utils color tokens across supported UI.",
-  readerWidget: "Shows the reader dock and enables reader controls.",
-  hideNativeReaderControls:
-    "Hides the site's tap-to-show bars and hint on chapter pages. The dock replaces them.",
-  showProgressBar: "Displays the top reading progress bar in reader pages.",
-  fitWidthMode: "Lets chapter images expand to available screen width.",
-  doubleClickScroll: "Double-click the page to start/stop auto-scroll.",
-  hasPremiumAccess: "Skip premium-lock checks for chapter end actions.",
-  chapterEndAction: "Action to run when you reach chapter end.",
-  imageWidth: "Base max width used when Fit Width is disabled.",
-  autoScrollSpeed: "Auto-scroll speed in pixels-per-frame steps.",
-  trackReadingHistory:
-    "Remembers your last-read chapter and progress per series.",
-  resumeChapterPosition:
-    "Jumps back to where you left off when reopening a chapter. Used only when the site has no saved position.",
-  customAccentEnabled: "Overrides the theme accent with your own color.",
-  customAccent: "Accent color used across the themed UI.",
-  readerBrightness: "Dims chapter images for night reading (40-100%).",
+// Catalog keys for setting tooltips. Settings without an entry show no tooltip.
+const SETTING_TOOLTIP_KEYS: Partial<Record<ConfigKey, MessageKey>> = {
+  adBlock: "setting.adBlock.tooltip",
+  colorTimestamps: "setting.colorTimestamps.tooltip",
+  hideSlider: "setting.hideSlider.tooltip",
+  hideToraka: "setting.hideToraka.tooltip",
+  hideComments: "setting.hideComments.tooltip",
+  hideDefaultBackToTop: "setting.hideDefaultBackToTop.tooltip",
+  showNewChapterBadges: "setting.showNewChapterBadges.tooltip",
+  seriesFilters: "setting.seriesFilters.tooltip",
+  compactSidebar: "setting.compactSidebar.tooltip",
+  hidePopularSection: "setting.hidePopularSection.tooltip",
+  hideAnnouncements: "setting.hideAnnouncements.tooltip",
+  hideNovelPromos: "setting.hideNovelPromos.tooltip",
+  hideReactions: "setting.hideReactions.tooltip",
+  menuSeriesOverhaul: "setting.menuSeriesOverhaul.tooltip",
+  themePreset: "setting.themePreset.tooltip",
+  readerWidget: "setting.readerWidget.tooltip",
+  hideNativeReaderControls: "setting.hideNativeReaderControls.tooltip",
+  showProgressBar: "setting.showProgressBar.tooltip",
+  fitWidthMode: "setting.fitWidthMode.tooltip",
+  doubleClickScroll: "setting.doubleClickScroll.tooltip",
+  hasPremiumAccess: "setting.hasPremiumAccess.tooltip",
+  chapterEndAction: "setting.chapterEndAction.tooltip",
+  imageWidth: "setting.imageWidth.tooltip",
+  autoScrollSpeed: "setting.autoScrollSpeed.tooltip",
+  trackReadingHistory: "setting.trackReadingHistory.tooltip",
+  resumeChapterPosition: "setting.resumeChapterPosition.tooltip",
+  customAccentEnabled: "setting.customAccentEnabled.tooltip",
+  customAccent: "setting.customAccent.tooltip",
+  readerBrightness: "setting.readerBrightness.tooltip",
+  language: "setting.language.tooltip",
 };
+
+function tooltipFor(key: ConfigKey): string {
+  const messageKey = SETTING_TOOLTIP_KEYS[key];
+  return messageKey ? t(messageKey) : "";
+}
 
 export class SettingsModalView {
   readonly onConfigChanged: (key: ConfigKey, value: AppConfig[ConfigKey]) => void;
@@ -140,35 +161,53 @@ export class SettingsModalView {
     const sections: ModalSection[] = [
       {
         key: "general",
-        title: "General",
+        title: t("tab.general"),
+        // Language is the first control on General, so it sits above the toggles.
+        selectsFirst: true,
+        selects: [languageModalSelect()],
         toggles: [
-          ["adBlock", "Ad Blocker"],
-          ["colorTimestamps", "Color Chapter Timestamps"],
-          ["hideSlider", "Hide Home Slider"],
-          ["hideToraka", "Hide Toraka Promo"],
-          ["hideComments", "Hide Comments Section"],
-          ["hideDefaultBackToTop", "Hide Site's Back-to-Top"],
+          ["adBlock", t("setting.adBlock.label")],
+          ["colorTimestamps", t("setting.colorTimestamps.label")],
+          ["hideSlider", t("setting.hideSlider.label")],
+          ["hideToraka", t("setting.hideToraka.label")],
+          ["hideComments", t("setting.hideComments.label")],
+          ["hideDefaultBackToTop", t("setting.hideDefaultBackToTop.label")],
+          ["showNewChapterBadges", t("setting.showNewChapterBadges.label")],
         ],
       },
       {
         key: "layout",
-        title: "Layout",
+        title: t("tab.layout"),
         toggles: [
-          ["compactSidebar", "Compact Sidebar"],
-          ["hidePopularSection", "Hide Popular Section"],
-          ["menuSeriesOverhaul", "Overhaul Main Menu + Series Page"],
+          ["compactSidebar", t("setting.compactSidebar.label")],
+          ["hidePopularSection", t("setting.hidePopularSection.label")],
+          ["hideAnnouncements", t("setting.hideAnnouncements.label")],
+          ["hideNovelPromos", t("setting.hideNovelPromos.label")],
+          ["hideReactions", t("setting.hideReactions.label")],
+          ["menuSeriesOverhaul", t("setting.menuSeriesOverhaul.label")],
+          ["seriesFilters", t("setting.seriesFilters.label")],
         ],
       },
-      { ...APPEARANCE_MODAL_SECTION, key: "appearance" },
-      { ...READER_MODAL_SECTION, key: "reader" },
+      {
+        key: "filters",
+        title: t("tab.filters"),
+        render: () => `<div data-au-filters>${this.filtersBodyHTML()}</div>`,
+      },
+      { ...appearanceModalSection(), key: "appearance" },
+      { ...readerModalSection(), key: "reader" },
       {
         key: "shortcuts",
-        title: "Shortcuts",
+        title: t("tab.shortcuts"),
         render: () => renderShortcutsEditor(cfg),
       },
       {
+        key: "history",
+        title: t("tab.history"),
+        render: () => `<div data-au-history>${this.historyBodyHTML()}</div>`,
+      },
+      {
         key: "data",
-        title: "Data",
+        title: t("tab.data"),
         render: () => this.dataSectionHTML(),
       },
     ];
@@ -191,7 +230,7 @@ export class SettingsModalView {
             role="tab"
             aria-selected="${isActive ? "true" : "false"}"
           >
-            ${section.title}
+            ${escapeHtml(section.title)}
           </button>
         `;
       })
@@ -206,7 +245,7 @@ export class SettingsModalView {
               key,
               label,
               cfg[key],
-              SETTING_TOOLTIPS[key] || ""
+              tooltipFor(key)
             )
           )
           .join("");
@@ -216,7 +255,7 @@ export class SettingsModalView {
             const isDisabled =
               (input.key === "imageWidth" && !!cfg.fitWidthMode) ||
               (input.key === "customAccent" && !cfg.customAccentEnabled);
-            const tooltip = input.tooltip || SETTING_TOOLTIPS[input.key] || "";
+            const tooltip = input.tooltip || tooltipFor(input.key);
             const inputClass =
               input.type === "color" ? "au-input-color" : "au-input-num";
             return `
@@ -243,10 +282,10 @@ export class SettingsModalView {
                 const value = typeof opt === "string" ? opt : opt.value;
                 const label = typeof opt === "string" ? opt : opt.label;
                 const selected = String(cfg[select.key]) === String(value);
-                return `<option value="${value}" ${selected ? "selected" : ""}>${label}</option>`;
+                return `<option value="${value}" ${selected ? "selected" : ""}>${escapeHtml(label)}</option>`;
               })
               .join("");
-            const tooltip = select.tooltip || SETTING_TOOLTIPS[select.key] || "";
+            const tooltip = select.tooltip || tooltipFor(select.key);
 
             return `
               <div class="au-control-row">
@@ -270,9 +309,8 @@ export class SettingsModalView {
             data-tab-panel="${section.key}"
             role="tabpanel"
           >
-            <div class="au-section-title">${section.title}</div>
-            ${toggles}
-            ${selects}
+            <div class="au-section-title">${escapeHtml(section.title)}</div>
+            ${section.selectsFirst ? `${selects}${toggles}` : `${toggles}${selects}`}
             ${inputs}
             ${staticHtml}
           </div>
@@ -283,8 +321,8 @@ export class SettingsModalView {
     overlay.innerHTML = `
       <div id="au-modal">
         <div class="au-modal-header">
-          <span class="au-modal-title">Asura Utils Settings</span>
-          <button type="button" class="au-close-btn" aria-label="Close settings">
+          <span class="au-modal-title">${escapeHtml(t("settings.title"))}</span>
+          <button type="button" class="au-close-btn" aria-label="${escapeHtml(t("settings.close"))}">
             <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
           </button>
         </div>
@@ -294,7 +332,7 @@ export class SettingsModalView {
         <div class="au-tab-panels">
           ${sectionHtml}
         </div>
-        <div class="au-modal-signature">Made by Rocks &bull; v${APP_VERSION}</div>
+        <div class="au-modal-signature">${escapeHtml(t("settings.madeBy", { author: "Rocks" }))} &bull; v${APP_VERSION}</div>
       </div>
     `;
 
@@ -386,7 +424,7 @@ export class SettingsModalView {
         return;
       }
       listeningShortcutKey = fieldKey;
-      setShortcutListeningState(overlay, fieldKey, true, "Press a key...");
+      setShortcutListeningState(overlay, fieldKey, true, t("shortcuts.pressKey"));
     };
 
     const captureShortcutKeydown = (event: KeyboardEvent) => {
@@ -470,6 +508,62 @@ export class SettingsModalView {
       button.onclick = () =>
         this.handleDataAction(button.getAttribute("data-au-action"), button);
     });
+    // The filter list is re-rendered in place, so these listeners sit on its stable container.
+    const filtersPanel = overlay.querySelector<HTMLElement>("[data-au-filters]");
+    filtersPanel?.addEventListener("click", (e) => {
+      const target = e.target instanceof Element ? e.target : null;
+      const path = target?.closest("[data-au-unhide]")?.getAttribute("data-au-unhide");
+      if (!path) return;
+      FilterStore.unhideSeries(path);
+      this.onConfigChanged("seriesFilters", ConfigStore.get("seriesFilters"));
+      if (filtersPanel) filtersPanel.innerHTML = this.filtersBodyHTML();
+      syncPanelMinHeight();
+    });
+    filtersPanel?.addEventListener("change", (e) => {
+      // Checkbox state already matches the stored list, so the genre list is not re-rendered.
+      const target = e.target instanceof HTMLInputElement ? e.target : null;
+      const name = target?.getAttribute("data-au-genre");
+      if (!target || !name) return;
+      FilterStore.setGenreExcluded(name, target.checked);
+      this.onConfigChanged("seriesFilters", ConfigStore.get("seriesFilters"));
+    });
+
+    // Same pattern as the filter list: re-rendered in place (import, clear), so listeners sit on the stable container.
+    const historyPanel = overlay.querySelector<HTMLElement>("[data-au-history]");
+    const syncHistoryList = () => {
+      if (!historyPanel) return;
+      const query = (historyPanel.querySelector<HTMLInputElement>("[data-au-history-search]")?.value ?? "")
+        .trim()
+        .toLowerCase();
+      const rows = historyPanel.querySelectorAll<HTMLElement>(".au-history-item");
+      let matches = 0;
+      rows.forEach((row) => {
+        const isMatch = (row.getAttribute("data-au-history-title") ?? "").includes(query);
+        row.hidden = !isMatch;
+        if (isMatch) matches++;
+      });
+      const note = historyPanel.querySelector<HTMLElement>("[data-au-history-note]");
+      if (!note) return;
+      note.textContent =
+        rows.length === 0
+          ? t("history.empty")
+          : matches === 0
+            ? t("history.noMatches")
+            : "";
+      note.hidden = note.textContent === "";
+    };
+    historyPanel?.addEventListener("input", syncHistoryList);
+    historyPanel?.addEventListener("click", (e) => {
+      const target = e.target instanceof Element ? e.target : null;
+      const button = target?.closest("[data-au-history-remove]") ?? null;
+      const key = button?.getAttribute("data-au-history-remove");
+      if (!button || !key) return;
+      HistoryStore.remove(key);
+      button.closest(".au-history-item")?.remove();
+      syncHistoryList();
+      this.onConfigChanged("trackReadingHistory", ConfigStore.get("trackReadingHistory"));
+    });
+
     overlay.querySelectorAll<HTMLButtonElement>("[data-shortcut-capture]").forEach((button) => {
       button.onclick = () => {
         startShortcutCapture(button.getAttribute("data-shortcut-capture"));
@@ -519,23 +613,16 @@ export class SettingsModalView {
         const value = ConfigStore.set(key, target.value);
         target.value = String(value);
         this.onConfigChanged(key, value);
+        // A language change rewrites every label in the modal, so it is rendered again in place.
+        if (key === "language") this.reopenModal();
       };
     });
   }
 
-  escapeHtml(value: unknown): string {
-    return String(value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  }
-
   controlLabelHTML(label: string, tooltip: string): string {
-    const safeLabel = this.escapeHtml(label);
+    const safeLabel = escapeHtml(label);
     if (!tooltip) return `<span>${safeLabel}</span>`;
-    const safeTip = this.escapeHtml(tooltip);
+    const safeTip = escapeHtml(tooltip);
     return `
       <span class="au-control-label" data-tooltip="${safeTip}">
         <span>${safeLabel}</span>
@@ -559,16 +646,98 @@ export class SettingsModalView {
   dataSectionHTML(): string {
     return `
       <div class="au-data-note">
-        Export copies your settings as JSON to the clipboard. Import applies
-        JSON from a paste prompt. Reading history stores your last-read
-        chapter per series.
+        ${escapeHtml(t("data.note"))}
       </div>
       <div class="au-data-actions">
-        <button type="button" class="au-data-btn" data-au-action="export">Export Settings</button>
-        <button type="button" class="au-data-btn" data-au-action="import">Import Settings</button>
-        <button type="button" class="au-data-btn" data-au-action="reset">Reset to Defaults</button>
-        <button type="button" class="au-data-btn au-data-btn-danger" data-au-action="clear-history">Clear Reading History</button>
+        <button type="button" class="au-data-btn" data-au-action="export">${escapeHtml(t("data.exportSettings"))}</button>
+        <button type="button" class="au-data-btn" data-au-action="import">${escapeHtml(t("data.importSettings"))}</button>
+        <button type="button" class="au-data-btn" data-au-action="export-history">${escapeHtml(t("data.exportHistory"))}</button>
+        <button type="button" class="au-data-btn" data-au-action="import-history">${escapeHtml(t("data.importHistory"))}</button>
+        <button type="button" class="au-data-btn" data-au-action="reset">${escapeHtml(t("data.reset"))}</button>
+        <button type="button" class="au-data-btn au-data-btn-danger" data-au-action="clear-history">${escapeHtml(t("data.clearHistory"))}</button>
       </div>
+    `;
+  }
+
+  historyBodyHTML(): string {
+    const now = Date.now();
+    const entries = Object.entries(HistoryStore.load()).sort(
+      ([, a], [, b]) => b.lastTs - a.lastTs
+    );
+    const rowsHTML = entries
+      .map(([key, entry]) => {
+        const title = entry.title || key;
+        const progress = entry.lastProgress >= COMPLETED_THRESHOLD ? t("history.finished") : formatPercent(entry.lastProgress);
+        const meta = [chapterSlugToLabel(entry.lastChapter), progress, formatHistoryAge(entry.lastTs, now)]
+          .filter(Boolean)
+          .map((part) => escapeHtml(part))
+          .join(" &bull; ");
+        return `
+          <li class="au-history-item" data-au-history-title="${escapeHtml(title.toLowerCase())}">
+            <div class="au-history-info">
+              <div class="au-history-title-row">
+                <a class="au-history-title" href="${escapeHtml(entry.lastHref)}">${escapeHtml(title)}</a>
+                ${key.startsWith("novel:") ? `<span class="au-history-tag">${escapeHtml(t("history.novelTag"))}</span>` : ""}
+              </div>
+              <div class="au-history-meta">
+                <span>${meta}</span>
+                <span>${escapeHtml(tPlural("history.readCount", entry.read.length))}</span>
+              </div>
+            </div>
+            <button type="button" class="au-data-btn" data-au-history-remove="${escapeHtml(key)}">${escapeHtml(t("history.remove"))}</button>
+          </li>
+        `;
+      })
+      .join("");
+
+    return `
+      <input type="search" class="au-history-search" placeholder="${escapeHtml(t("history.search"))}" aria-label="${escapeHtml(t("history.searchLabel"))}" data-au-history-search>
+      <div class="au-data-note" data-au-history-note ${entries.length === 0 ? "" : "hidden"}>${escapeHtml(t("history.empty"))}</div>
+      <ul class="au-history-list">${rowsHTML}</ul>
+    `;
+  }
+
+  refreshHistoryPanel(): void {
+    const panel = document.querySelector<HTMLElement>("#au-modal [data-au-history]");
+    if (panel) panel.innerHTML = this.historyBodyHTML();
+  }
+
+  filtersBodyHTML(): string {
+    const hidden = FilterStore.listHidden();
+    const excluded = new Set(FilterStore.listExcludedGenres().map((name) => name.toLowerCase()));
+    const genres = FilterStore.listGenreNames().sort((a, b) => a.localeCompare(b));
+
+    const hiddenHTML =
+      hidden.length === 0
+        ? `<div class="au-data-note">${escapeHtml(t("filters.noHidden"))}</div>`
+        : `<ul class="au-filter-list">${hidden
+            .map(
+              (series) => `
+                <li class="au-filter-item">
+                  <span class="au-filter-name">${escapeHtml(series.title)}</span>
+                  <button type="button" class="au-data-btn" data-au-unhide="${escapeHtml(series.path)}">${escapeHtml(t("filters.unhide"))}</button>
+                </li>
+              `
+            )
+            .join("")}</ul>`;
+
+    const genreHTML = genres
+      .map(
+        (name) => `
+          <label class="au-filter-genre">
+            <input type="checkbox" data-au-genre="${escapeHtml(name)}" ${excluded.has(name.toLowerCase()) ? "checked" : ""}>
+            <span>${escapeHtml(name)}</span>
+          </label>
+        `
+      )
+      .join("");
+
+    return `
+      <div class="au-filter-heading">${escapeHtml(t("filters.hiddenHeading"))}</div>
+      ${hiddenHTML}
+      <div class="au-filter-heading">${escapeHtml(t("filters.genresHeading"))}</div>
+      <div class="au-data-note">${escapeHtml(t("filters.genresNote"))}</div>
+      <div class="au-filter-genres">${genreHTML}</div>
     `;
   }
 
@@ -596,25 +765,60 @@ export class SettingsModalView {
       ConfigStore.set(key, parsed[key]);
     });
     this.onConfigChanged("themePreset", ConfigStore.get("themePreset"));
+    this.onConfigChanged("language", ConfigStore.get("language"));
+  }
+
+  copyJsonToClipboard(json: string, promptLabel: string, button: HTMLButtonElement): void {
+    const clipboard = navigator.clipboard;
+    if (clipboard && typeof clipboard.writeText === "function") {
+      clipboard
+        .writeText(json)
+        .then(() => this.buttonFeedback(button, t("feedback.copied")))
+        .catch(() => window.prompt(promptLabel, json));
+    } else {
+      window.prompt(promptLabel, json);
+    }
   }
 
   handleDataAction(action: string | null, button: HTMLButtonElement): void {
     if (action === "export") {
-      const json = JSON.stringify(ConfigStore.getAll(), null, 2);
-      const clipboard = navigator.clipboard;
-      if (clipboard && typeof clipboard.writeText === "function") {
-        clipboard
-          .writeText(json)
-          .then(() => this.buttonFeedback(button, "Copied!"))
-          .catch(() => window.prompt("Copy settings JSON:", json));
-      } else {
-        window.prompt("Copy settings JSON:", json);
+      this.copyJsonToClipboard(
+        JSON.stringify(ConfigStore.getAll(), null, 2),
+        t("data.promptCopySettings"),
+        button
+      );
+      return;
+    }
+
+    if (action === "export-history") {
+      const json = JSON.stringify({ version: 1, history: HistoryStore.load() }, null, 2);
+      this.copyJsonToClipboard(json, t("data.promptCopyHistory"), button);
+      return;
+    }
+
+    if (action === "import-history") {
+      const raw = window.prompt(t("data.promptPasteHistory"));
+      if (!raw) return;
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        this.buttonFeedback(button, t("feedback.invalidJson"));
+        return;
       }
+      const count = HistoryStore.importEntries(parsed);
+      if (count === 0) {
+        this.buttonFeedback(button, t("feedback.invalidJson"));
+        return;
+      }
+      this.onConfigChanged("trackReadingHistory", ConfigStore.get("trackReadingHistory"));
+      this.refreshHistoryPanel();
+      this.buttonFeedback(button, t("feedback.importedHistory", { count }));
       return;
     }
 
     if (action === "import") {
-      const raw = window.prompt("Paste settings JSON to import:");
+      const raw = window.prompt(t("data.promptPasteSettings"));
       if (!raw) return;
       try {
         const parsed = JSON.parse(raw) as unknown;
@@ -622,29 +826,31 @@ export class SettingsModalView {
           throw new Error("not an object");
         }
         this.applyImportedConfig(parsed as Record<string, unknown>);
-        this.buttonFeedback(button, "Imported!");
+        this.buttonFeedback(button, t("feedback.importedSettings"));
         this.reopenModal();
       } catch {
-        this.buttonFeedback(button, "Invalid JSON");
+        this.buttonFeedback(button, t("feedback.invalidJson"));
       }
       return;
     }
 
     if (action === "reset") {
-      if (!window.confirm("Reset all Asura Utils settings to defaults?")) return;
+      if (!window.confirm(t("data.confirmReset"))) return;
       Object.keys(DEFAULTS).forEach((key) => {
         if (!isConfigKey(key)) return;
         ConfigStore.set(key, DEFAULTS[key]);
       });
       this.onConfigChanged("themePreset", ConfigStore.get("themePreset"));
+      this.onConfigChanged("language", ConfigStore.get("language"));
       this.reopenModal();
       return;
     }
 
     if (action === "clear-history") {
-      if (!window.confirm("Clear all saved reading history?")) return;
+      if (!window.confirm(t("data.confirmClearHistory"))) return;
       HistoryStore.clear();
-      this.buttonFeedback(button, "Cleared!");
+      this.refreshHistoryPanel();
+      this.buttonFeedback(button, t("feedback.cleared"));
     }
   }
 }

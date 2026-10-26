@@ -92,6 +92,9 @@ body.au-hide-comments [class*="comment"],
 body.au-hide-comments [id*="comment"],
 body.au-hide-popular .au-hide-popular-target { display: none !important; }
 body.au-hide-popular .au-hide-popular-expand { width: 100% !important; flex: 1 1 auto !important; }
+body.au-hide-novel-promos .au-hide-novel-promo-target { display: none !important; }
+body.au-hide-announcements .au-hide-announcements-target { display: none !important; }
+body.au-hide-reactions .au-hide-reactions-target { display: none !important; }
 body.au-color-timestamps .au-timestamp-fresh:not([class*="text-yellow"]):not([class*="text-amber"]) {
   color: var(--auo-accent) !important;
   font-weight: 700;
@@ -206,3 +209,75 @@ body.au-page-reader img[data-loaded-src*="/asura-images/chapters/"] {
 a.au-chapter-read { opacity: 0.55; }
 a.au-chapter-read:hover { opacity: 0.85; }
 a.au-chapter-current { box-shadow: inset 3px 0 0 var(--auo-accent); }
+
+/* Chapter list tools above the chapter list (chapterToolsController). */
+#au-chapter-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+#au-chapter-tools button {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--auo-accent);
+  color: var(--auo-on-accent) !important;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+#au-chapter-tools button:hover:not(:disabled) { background: var(--auo-accent-strong); }
+#au-chapter-tools button:disabled { opacity: 0.45; cursor: default; }
+body.au-mark-read-mode astro-island:is([component-url*="ChapterListReact"], [component-url*="NovelChapterList"]) a[href*="/chapter/"] {
+  cursor: copy;
+}
+body.au-mark-read-mode astro-island:is([component-url*="ChapterListReact"], [component-url*="NovelChapterList"]) a[href*="/chapter/"]:hover {
+  outline: 1px solid var(--auo-accent);
+  outline-offset: -1px;
+}
+
+/* New chapter badges on series covers (newChapterBadgeController). */
+.au-filtered-series { display: none !important; }
+.au-hide-series-host { position: relative; }
+.au-hide-series-btn {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: var(--auo-surface) !important;
+  color: var(--auo-text) !important;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.au-hide-series-host:hover > .au-hide-series-btn,
+.au-hide-series-host:focus-within > .au-hide-series-btn,
+.au-hide-series-btn:focus-visible { opacity: 1; }
+.au-hide-series-btn:hover {
+  background: var(--auo-accent) !important;
+  color: var(--auo-on-accent) !important;
+}
+.au-new-badge-host { position: relative; }
+.au-new-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--auo-accent) !important;
+  color: var(--auo-on-accent) !important;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  pointer-events: none;
+}

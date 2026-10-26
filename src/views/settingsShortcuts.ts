@@ -6,16 +6,19 @@ import {
   type KeybindField,
 } from "../config/keybinds.js";
 import { ConfigStore } from "../store/configStore.js";
+import { t } from "../i18n/index.js";
+import type { MessageKey } from "../i18n/index.js";
+import { escapeHtml } from "./escapeHtml.js";
 
 function renderShortcutRow(field: KeybindField, cfg: AppConfig): string {
-  const help = "help" in field
-    ? `<div class="au-shortcut-help">${field.help}</div>`
+  const help = "helpKey" in field
+    ? `<div class="au-shortcut-help">${escapeHtml(t(field.helpKey))}</div>`
     : "";
 
   return `
     <div class="au-shortcut-row" data-shortcut-row="${field.key}">
       <div class="au-shortcut-meta">
-        <div class="au-shortcut-name">${field.label}</div>
+        <div class="au-shortcut-name">${escapeHtml(t(field.labelKey))}</div>
         ${help}
       </div>
       <div class="au-shortcut-actions">
@@ -31,41 +34,47 @@ function renderShortcutRow(field: KeybindField, cfg: AppConfig): string {
           class="au-shortcut-reset-btn"
           data-shortcut-reset="${field.key}"
         >
-          Reset
+          ${escapeHtml(t("shortcuts.reset"))}
         </button>
       </div>
     </div>
   `;
 }
 
-function groupShortcutFields(): Map<string, KeybindField[]> {
-  const groups = new Map<string, KeybindField[]>();
+function groupShortcutFields(): Map<MessageKey, KeybindField[]> {
+  const groups = new Map<MessageKey, KeybindField[]>();
 
   for (const field of KEYBIND_FIELDS) {
-    const fields = groups.get(field.group) ?? [];
+    const fields = groups.get(field.groupKey) ?? [];
     fields.push(field);
-    groups.set(field.group, fields);
+    groups.set(field.groupKey, fields);
   }
 
   return groups;
 }
 
 export function renderShortcutsEditor(cfg: AppConfig): string {
-  const groups = Array.from(groupShortcutFields(), ([group, fields]) => `
+  const groups = Array.from(groupShortcutFields(), ([groupKey, fields]) => `
     <div class="au-shortcut-card">
-      <div class="au-shortcut-card-title">${group}</div>
+      <div class="au-shortcut-card-title">${escapeHtml(t(groupKey))}</div>
       <div class="au-shortcut-grid">
         ${fields.map((field) => renderShortcutRow(field, cfg)).join("")}
       </div>
     </div>
   `).join("");
 
+  // The key names are markup supplied by code, so the translated sentence itself stays plain text.
+  const introCopy = t("shortcuts.introCopy", {
+    esc: "<b>Esc</b>",
+    clear: "<b>Backspace/Delete</b>",
+  });
+
   return `
     <div class="au-shortcut-scroll">
       <div class="au-shortcut-intro">
-        <div class="au-shortcut-intro-title">Rebind your controls</div>
+        <div class="au-shortcut-intro-title">${escapeHtml(t("shortcuts.introTitle"))}</div>
         <div class="au-shortcut-intro-copy">
-          Click a binding to capture a new key. Press <b>Esc</b> to cancel or <b>Backspace/Delete</b> to clear.
+          ${introCopy}
         </div>
       </div>
       <div class="au-shortcut-cards">
@@ -92,7 +101,7 @@ export function setShortcutListeningState(
 
   if (label) {
     label.textContent = isListening
-      ? labelOverride ?? "Press a key..."
+      ? labelOverride ?? t("shortcuts.pressKey")
       : bindingToLabel(isConfigKey(key) ? ConfigStore.get(key) : "");
   }
 }

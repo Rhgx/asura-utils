@@ -1,5 +1,8 @@
 import { CONSTANTS } from "../config/defaults.js";
 import type { ChapterDirection, ReaderStateSnapshot } from "../controllers/readerController.js";
+import type { PageDirection } from "../controllers/pageNavLogic.js";
+import { formatPercent, t } from "../i18n/index.js";
+import { escapeHtml } from "./escapeHtml.js";
 
 export interface ReaderDockActions {
   toggleScroll(): void;
@@ -10,6 +13,7 @@ export interface ReaderDockActions {
   toggleFitWidth(): boolean;
   setBrightness(value: unknown): void;
   navigate(direction: ChapterDirection): boolean;
+  jumpPage(direction: PageDirection): void;
   goSeries(): boolean;
   goTop(): void;
   openSettings(): void;
@@ -62,33 +66,34 @@ export class ReaderDockView {
     shell.id = "au-reader-dock-shell";
     shell.className = "is-collapsed";
     shell.innerHTML = `
-      <button id="au-reader-dock-handle" type="button" aria-label="Toggle reader tools" title="Reader tools">
+      <button id="au-reader-dock-handle" type="button" aria-label="${escapeHtml(t("dock.handleLabel"))}" title="${escapeHtml(t("dock.handleTitle"))}">
         <svg aria-hidden="true" viewBox="0 0 24 96" width="16" height="64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <line x1="6" y1="6" x2="6" y2="90"></line>
           <line x1="12" y1="6" x2="12" y2="90"></line>
           <line x1="18" y1="6" x2="18" y2="90"></line>
         </svg>
       </button>
-      <aside id="au-reader-dock" aria-label="Reader controls">
+      <aside id="au-reader-dock" aria-label="${escapeHtml(t("dock.controlsLabel"))}">
         <div class="au-dock-content">
           <div class="au-dock-header">
-            <div class="au-dock-title">Reader Tools</div>
+            <div class="au-dock-title">${escapeHtml(t("dock.title"))}</div>
             <div class="au-dock-header-actions">
+              <div id="au-dock-page" class="au-dock-page" hidden>0 / 0</div>
               <div id="au-dock-progress" class="au-dock-progress">0%</div>
-              <button id="au-dock-settings" class="au-dock-icon-btn" type="button" aria-label="Open settings" title="Settings">
+              <button id="au-dock-settings" class="au-dock-icon-btn" type="button" aria-label="${escapeHtml(t("dock.openSettings"))}" title="${escapeHtml(t("dock.settings"))}">
                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               </button>
             </div>
           </div>
 
           <div class="au-dock-section">
-            <div class="au-dock-section-label">Auto Scroll</div>
+            <div class="au-dock-section-label">${escapeHtml(t("dock.autoScroll"))}</div>
             <div class="au-dock-row">
-              <span>Status</span>
-              <button id="au-dock-scroll-btn" class="au-dock-btn" type="button">Start (S)</button>
+              <span>${escapeHtml(t("dock.status"))}</span>
+              <button id="au-dock-scroll-btn" class="au-dock-btn" type="button">${escapeHtml(t("dock.start"))}</button>
             </div>
             <div class="au-dock-row">
-              <span>Speed</span>
+              <span>${escapeHtml(t("dock.speed"))}</span>
               <div class="au-dock-stepper">
                 <button id="au-dock-speed-dec" class="au-dock-step" type="button">-</button>
                 <input id="au-dock-speed-input" class="au-dock-num" type="number" step="0.1">
@@ -97,14 +102,14 @@ export class ReaderDockView {
             </div>
           </div>
 
-          <div class="au-dock-section">
-            <div class="au-dock-section-label">Layout</div>
+          <div class="au-dock-section au-dock-layout-section">
+            <div class="au-dock-section-label">${escapeHtml(t("dock.layout"))}</div>
             <div class="au-dock-row">
-              <span>Fit Width</span>
-              <button id="au-dock-fit-btn" class="au-dock-btn" type="button">Off (W)</button>
+              <span>${escapeHtml(t("dock.fitWidth"))}</span>
+              <button id="au-dock-fit-btn" class="au-dock-btn" type="button">${escapeHtml(t("dock.fitOff"))}</button>
             </div>
             <div class="au-dock-row">
-              <span>Width</span>
+              <span>${escapeHtml(t("dock.width"))}</span>
               <div class="au-dock-stepper">
                 <button id="au-dock-width-dec" class="au-dock-step" type="button">-</button>
                 <input id="au-dock-width-input" class="au-dock-num" type="number" step="1">
@@ -112,7 +117,7 @@ export class ReaderDockView {
               </div>
             </div>
             <div class="au-dock-row">
-              <span>Brightness</span>
+              <span>${escapeHtml(t("dock.brightness"))}</span>
               <div class="au-dock-stepper">
                 <input id="au-dock-brightness" class="au-dock-range" type="range" min="40" max="100" step="5">
                 <span id="au-dock-brightness-val" class="au-dock-range-val">100%</span>
@@ -121,18 +126,20 @@ export class ReaderDockView {
           </div>
 
           <div class="au-dock-section">
-            <div class="au-dock-section-label">Navigation</div>
+            <div class="au-dock-section-label">${escapeHtml(t("dock.navigation"))}</div>
             <div class="au-dock-nav-grid">
-              <button id="au-dock-prev" class="au-dock-nav-btn" type="button">Prev (A)</button>
-              <button id="au-dock-next" class="au-dock-nav-btn" type="button">Next (D)</button>
-              <button id="au-dock-series" class="au-dock-nav-btn" type="button">Series (B)</button>
-              <button id="au-dock-top" class="au-dock-nav-btn" type="button">Top</button>
+              <button id="au-dock-prev" class="au-dock-nav-btn" type="button">${escapeHtml(t("dock.prev"))}</button>
+              <button id="au-dock-next" class="au-dock-nav-btn" type="button">${escapeHtml(t("dock.next"))}</button>
+              <button id="au-dock-series" class="au-dock-nav-btn" type="button">${escapeHtml(t("dock.series"))}</button>
+              <button id="au-dock-top" class="au-dock-nav-btn" type="button">${escapeHtml(t("dock.top"))}</button>
+              <button id="au-dock-page-prev" class="au-dock-nav-btn" type="button">${escapeHtml(t("dock.prevPage"))}</button>
+              <button id="au-dock-page-next" class="au-dock-nav-btn" type="button">${escapeHtml(t("dock.nextPage"))}</button>
             </div>
           </div>
 
           <div class="au-dock-footer">
-            Keys: S Q/E +/- A/D Arrows PgUp/PgDn B W<br>
-            Double-click toggles auto-scroll
+            ${escapeHtml(t("dock.footerKeys"))}<br>
+            ${escapeHtml(t("dock.footerDoubleClick"))}
           </div>
         </div>
       </aside>
@@ -170,6 +177,8 @@ export class ReaderDockView {
     const nextBtn = byId("au-dock-next");
     const seriesBtn = byId("au-dock-series");
     const topBtn = byId("au-dock-top");
+    const pagePrevBtn = byId("au-dock-page-prev");
+    const pageNextBtn = byId("au-dock-page-next");
     const settingsBtn = byId("au-dock-settings");
 
     if (handle) handle.onclick = () => this.setCollapsed(!this.collapsed, true);
@@ -204,6 +213,8 @@ export class ReaderDockView {
     if (nextBtn) nextBtn.onclick = () => { actions.navigate("next"); mobileClose(); };
     if (seriesBtn) seriesBtn.onclick = () => { actions.goSeries(); mobileClose(); };
     if (topBtn) topBtn.onclick = () => { actions.goTop(); mobileClose(); };
+    if (pagePrevBtn) pagePrevBtn.onclick = () => { actions.jumpPage("prev"); mobileClose(); };
+    if (pageNextBtn) pageNextBtn.onclick = () => { actions.jumpPage("next"); mobileClose(); };
     if (this.backdrop) this.backdrop.onclick = () => this.setCollapsed(true, true);
   }
 
@@ -242,6 +253,7 @@ export class ReaderDockView {
 
     const byId = <T extends HTMLElement = HTMLElement>(id: string) => this.getControl<T>(id);
     const progress = byId("au-dock-progress");
+    const pageCounter = byId("au-dock-page");
     const scrollBtn = byId("au-dock-scroll-btn");
     const speedInput = byId<HTMLInputElement>("au-dock-speed-input");
     const widthInput = byId<HTMLInputElement>("au-dock-width-input");
@@ -253,10 +265,17 @@ export class ReaderDockView {
     const widthInc = byId<HTMLButtonElement>("au-dock-width-inc");
 
     if (progress && previous?.progress !== state.progress) {
-      progress.textContent = `${state.progress}%`;
+      progress.textContent = formatPercent(state.progress);
+    }
+    if (
+      pageCounter &&
+      (previous?.page !== state.page || previous?.pageCount !== state.pageCount)
+    ) {
+      pageCounter.hidden = state.pageCount === 0;
+      pageCounter.textContent = `${state.page} / ${state.pageCount}`;
     }
     if (scrollBtn && previous?.isScrolling !== state.isScrolling) {
-      scrollBtn.textContent = state.isScrolling ? "Stop (S)" : "Start (S)";
+      scrollBtn.textContent = state.isScrolling ? t("dock.stop") : t("dock.start");
       scrollBtn.classList.toggle("active", state.isScrolling);
     }
     if (speedInput && previous?.speed !== state.speed) speedInput.value = String(state.speed);
@@ -273,10 +292,10 @@ export class ReaderDockView {
       brightness.value = String(state.brightness);
     }
     if (brightnessVal && previous?.brightness !== state.brightness) {
-      brightnessVal.textContent = `${state.brightness}%`;
+      brightnessVal.textContent = formatPercent(state.brightness);
     }
     if (fitBtn && previous?.fitWidth !== state.fitWidth) {
-      fitBtn.textContent = state.fitWidth ? "On (W)" : "Off (W)";
+      fitBtn.textContent = state.fitWidth ? t("dock.fitOn") : t("dock.fitOff");
       fitBtn.classList.toggle("active", state.fitWidth);
     }
 

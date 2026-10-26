@@ -1,4 +1,5 @@
 import { THEME_PRESETS } from "../theme/themePresets.js";
+import { SUPPORTED_LOCALES } from "../i18n/index.js";
 import { KEYBIND_DEFAULTS, KEYBIND_FIELDS } from "./keybinds.js";
 
 export type ChapterEndAction = "off" | "nextChapter" | "seriesPage" | "stopScroll";
@@ -19,6 +20,9 @@ const DEFAULTS = {
   doubleClickScroll: true,
   compactSidebar: false,
   hidePopularSection: false,
+  hideAnnouncements: false,
+  hideNovelPromos: false,
+  hideReactions: false,
   menuSeriesOverhaul: false,
   readerDockCollapsed: true,
   readerDockSection: "all",
@@ -27,9 +31,12 @@ const DEFAULTS = {
   themePreset: "asuraClassic",
   trackReadingHistory: true,
   resumeChapterPosition: true,
+  showNewChapterBadges: true,
+  seriesFilters: true,
   customAccentEnabled: false,
   customAccent: "#913fe2",
   readerBrightness: 100,
+  language: "auto",
   ...KEYBIND_DEFAULTS,
 };
 
@@ -73,6 +80,7 @@ const CONFIG_META: Partial<Record<ConfigKey, ConfigMeta>> = {
   customAccentEnabled: { type: "boolean" },
   customAccent: { type: "string" },
   readerBrightness: { type: "number", min: 40, max: 100, step: 5 },
+  language: { type: "string", options: ["auto", ...SUPPORTED_LOCALES] },
   ...Object.fromEntries(KEYBIND_FIELDS.map((field) => [field.key, { type: "string" }])),
   themePreset: { type: "string", options: Object.keys(THEME_PRESETS) },
 };

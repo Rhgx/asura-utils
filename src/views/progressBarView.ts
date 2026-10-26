@@ -1,14 +1,18 @@
+import { t } from "../i18n/index.js";
+
 export class ProgressBarView {
   boundClick: ((event: MouseEvent) => void) | null;
   bar: HTMLDivElement | null;
   fill: HTMLDivElement | null;
   lastProgress: number | null;
+  lastTitle: string | null;
 
   constructor() {
     this.boundClick = null;
     this.bar = null;
     this.fill = null;
     this.lastProgress = null;
+    this.lastTitle = null;
   }
 
   mount() {
@@ -35,12 +39,19 @@ export class ProgressBarView {
     bar.addEventListener("click", this.boundClick);
   }
 
-  update(progressPct: unknown): void {
+  update(progressPct: unknown, page: number, pageCount: number): void {
     const fill = this.fill?.isConnected
       ? this.fill
       : document.getElementById("au-progress-bar-fill") as HTMLDivElement | null;
     if (!fill) return;
     this.fill = fill;
+    // Page changes can happen without the rounded progress changing, so the title updates first.
+    const title = pageCount > 0 ? t("progress.pageTitle", { page, count: pageCount }) : null;
+    if (title !== this.lastTitle && this.bar) {
+      this.lastTitle = title;
+      if (title) this.bar.title = title;
+      else this.bar.removeAttribute("title");
+    }
     const pct = Math.max(0, Math.min(100, Number(progressPct) || 0));
     if (pct === this.lastProgress) return;
     this.lastProgress = pct;
@@ -56,5 +67,6 @@ export class ProgressBarView {
     this.bar = null;
     this.fill = null;
     this.lastProgress = null;
+    this.lastTitle = null;
   }
 }

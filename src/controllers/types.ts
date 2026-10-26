@@ -3,12 +3,14 @@ import type { ReaderController, ReaderStateSnapshot } from "./readerController.j
 import type { SettingsModalView } from "../views/settingsModalView.js";
 import type { ProgressBarView } from "../views/progressBarView.js";
 import type { ReaderDockView } from "../views/readerDockView.js";
+import type { KnownChapter } from "./chapterListLogic.js";
 
 export interface PageContext {
   isReader: boolean;
   isSeriesPage: boolean;
   isSeriesListing: boolean;
   isAuthPage: boolean;
+  isNovel: boolean;
 }
 
 export interface ChapterAccessResult {
@@ -42,6 +44,7 @@ export interface PageControllerContext {
   historyWrittenChapterKey: string;
   historyWrittenProgress: number | null;
   resumeAttemptedKey: string;
+  chapterPickMode: boolean;
   chapterAccessCache: Map<string, ChapterAccessResult>;
   pageContext: PageContext;
 
@@ -63,6 +66,11 @@ export interface PageControllerContext {
   getSeriesTitleFromReader(): string;
   recordReaderVisit(progress?: number | null): void;
   applyHistoryUI(): void;
+  applyNewChapterBadges(): void;
+  applySeriesFilters(): void;
+  handleSeriesHideClick(event: MouseEvent): void;
+  applyChapterTools(): void;
+  markReadUpTo(island: Element, chapter: KnownChapter): void;
   maybeResumeChapterPosition(): void;
 
   applyOverhaulTargets(): void;
@@ -86,6 +94,7 @@ export interface PageControllerContext {
   cleanupBackToTopControl(): void;
   cleanupBetaBanner(): void;
   cleanupHomeSections(): void;
+  cleanupExtraSections(): void;
 
   getPageContext(): PageContext;
   bindGlobalListeners(): void;
@@ -101,6 +110,8 @@ export interface PageControllerContext {
   handleDblClick(event: MouseEvent): void;
   handleScroll(): void;
   handleResize(): void;
+  handleChapterPickClick(event: MouseEvent): void;
+  handleChapterPickKeyDown(event: KeyboardEvent): void;
   focusSearch(): void;
   scrollToChapterList(): void;
   showHint(message: string): void;

@@ -1,61 +1,76 @@
+import { t } from "../i18n/index.js";
+
+// Labels, help text, and groups are catalog keys so they are translated when rendered.
 const KEYBIND_FIELDS = [
   {
     key: "keybindToggleScroll",
-    group: "Reader",
-    label: "Toggle Auto Scroll",
+    groupKey: "shortcuts.group.reader",
+    labelKey: "keybind.keybindToggleScroll.label",
+    helpKey: "keybind.keybindToggleScroll.help",
     defaultBinding: "KeyS",
-    help: "Legacy alt: double-click page",
   },
   {
     key: "keybindSpeedUp",
-    group: "Reader",
-    label: "Increase Scroll Speed",
+    groupKey: "shortcuts.group.reader",
+    labelKey: "keybind.keybindSpeedUp.label",
+    helpKey: "keybind.keybindSpeedUp.help",
     defaultBinding: "KeyE",
-    help: "Legacy alts: +, Numpad +",
   },
   {
     key: "keybindSpeedDown",
-    group: "Reader",
-    label: "Decrease Scroll Speed",
+    groupKey: "shortcuts.group.reader",
+    labelKey: "keybind.keybindSpeedDown.label",
+    helpKey: "keybind.keybindSpeedDown.help",
     defaultBinding: "KeyQ",
-    help: "Legacy alts: -, Numpad -",
   },
   {
     key: "keybindNextChapter",
-    group: "Reader",
-    label: "Next Chapter",
+    groupKey: "shortcuts.group.reader",
+    labelKey: "keybind.keybindNextChapter.label",
+    helpKey: "keybind.keybindNextChapter.help",
     defaultBinding: "KeyD",
-    help: "Legacy alts: ArrowRight, PageDown, ]",
   },
   {
     key: "keybindPrevChapter",
-    group: "Reader",
-    label: "Previous Chapter",
+    groupKey: "shortcuts.group.reader",
+    labelKey: "keybind.keybindPrevChapter.label",
+    helpKey: "keybind.keybindPrevChapter.help",
     defaultBinding: "KeyA",
-    help: "Legacy alts: ArrowLeft, PageUp, [",
+  },
+  {
+    key: "keybindNextPage",
+    groupKey: "shortcuts.group.reader",
+    labelKey: "keybind.keybindNextPage.label",
+    defaultBinding: "KeyX",
+  },
+  {
+    key: "keybindPrevPage",
+    groupKey: "shortcuts.group.reader",
+    labelKey: "keybind.keybindPrevPage.label",
+    defaultBinding: "KeyZ",
   },
   {
     key: "keybindGoSeries",
-    group: "Reader",
-    label: "Go To Series",
+    groupKey: "shortcuts.group.reader",
+    labelKey: "keybind.keybindGoSeries.label",
     defaultBinding: "KeyB",
   },
   {
     key: "keybindToggleFitWidth",
-    group: "Reader",
-    label: "Toggle Fit Width",
+    groupKey: "shortcuts.group.reader",
+    labelKey: "keybind.keybindToggleFitWidth.label",
     defaultBinding: "KeyW",
   },
   {
     key: "keybindFocusSearch",
-    group: "Series",
-    label: "Focus Search",
+    groupKey: "shortcuts.group.series",
+    labelKey: "keybind.keybindFocusSearch.label",
     defaultBinding: "KeyC",
   },
   {
     key: "keybindJumpChapters",
-    group: "Series",
-    label: "Jump To Chapters",
+    groupKey: "shortcuts.group.series",
+    labelKey: "keybind.keybindJumpChapters.label",
     defaultBinding: "KeyL",
   },
 ] as const;
@@ -111,7 +126,7 @@ function normalizeBinding(binding: unknown): string {
 
 function bindingToLabel(binding: unknown): string {
   const code = normalizeBinding(binding);
-  if (!code) return "Unassigned";
+  if (!code) return t("shortcuts.unassigned");
   if (/^Key[A-Z]$/.test(code)) return code.slice(3);
   if (/^Digit[0-9]$/.test(code)) return code.slice(5);
   if (code === "Equal") return "+";

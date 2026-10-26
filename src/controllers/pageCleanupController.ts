@@ -535,4 +535,66 @@ export const pageCleanupController = {
       if (slider) slider.classList.add("au-hide-slider-target");
     }
   },
+
+  cleanupExtraSections() {
+    document
+      .querySelectorAll(".au-hide-novel-promo-target")
+      .forEach((el) => el.classList.remove("au-hide-novel-promo-target"));
+    // Novel pages are the novel section itself, so their links and rows are left alone.
+    if (ConfigStore.get("hideNovelPromos") && !window.location.pathname.startsWith("/novels")) {
+      const novelTargets = new Set<Element>();
+      document
+        .querySelectorAll('astro-island[component-url*="TrendingSection"]')
+        .forEach((island) => {
+          // Only the Trending Novels row carries the novelBeta prop.
+          if (!island.getAttribute("props")?.includes('"novelBeta"')) return;
+          const column = island.parentElement;
+          novelTargets.add(column && column.children.length === 1 ? column : island);
+        });
+      // Header, footer, nav, search and our own UI keep their links; the bare "Novels" nav link has no slug.
+      document.querySelectorAll('a[href^="/novels/"]').forEach((anchor) => {
+        if (!/^\/novels\/[^/?#]+/.test(anchor.getAttribute("href") ?? "")) return;
+        if (anchor.closest('header, footer, nav, astro-island[component-url*="SearchBar"], [id^="au-"]')) return;
+        novelTargets.add(anchor);
+      });
+      novelTargets.forEach((el) => el.classList.add("au-hide-novel-promo-target"));
+    }
+
+    document
+      .querySelectorAll(".au-hide-announcements-target")
+      .forEach((el) => el.classList.remove("au-hide-announcements-target"));
+    if (ConfigStore.get("hideAnnouncements")) {
+      document
+        .querySelectorAll('astro-island[component-url*="AnnouncementsSection"]')
+        .forEach((island) => {
+          // The island sits alone in its wrapper, so hide the wrapper to avoid leaving its margin behind.
+          const wrapper = island.parentElement;
+          const target = wrapper && wrapper.children.length === 1 ? wrapper : island;
+          target.classList.add("au-hide-announcements-target");
+        });
+    }
+
+    document
+      .querySelectorAll(".au-hide-reactions-target")
+      .forEach((el) => el.classList.remove("au-hide-reactions-target"));
+    if (ConfigStore.get("hideReactions")) {
+      const reactionLabels = new Set(["upvote", "funny", "love", "surprised", "angry", "sad"]);
+      document
+        .querySelectorAll('astro-island[component-url*="CommentsSection"] section')
+        .forEach((section) => {
+          // Only this section's own headings and buttons count, so a wrapping section is not hidden
+          // because a nested reactions block sits inside it.
+          const ownElements = (selector: string) =>
+            Array.from(section.querySelectorAll(selector)).filter((el) => el.closest("section") === section);
+          const hasHeading = ownElements("h2").some((h) => /what did you think/i.test(h.textContent ?? ""));
+          const labels = new Set<string>();
+          ownElements("button").forEach((button) => {
+            const spans = button.querySelectorAll("span");
+            const label = spans[spans.length - 1]?.textContent?.trim().toLowerCase() ?? "";
+            if (reactionLabels.has(label)) labels.add(label);
+          });
+          if (hasHeading || labels.size >= 3) section.classList.add("au-hide-reactions-target");
+        });
+    }
+  },
 } satisfies ThisType<PageControllerContext>;

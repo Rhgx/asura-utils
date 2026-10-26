@@ -7,10 +7,14 @@ import { chapterEndController } from "./chapterEndController.js";
 import { pageCleanupController } from "./pageCleanupController.js";
 import { pageTargetController } from "./pageTargetController.js";
 import { readingHistoryController } from "./readingHistoryController.js";
+import { newChapterBadgeController } from "./newChapterBadgeController.js";
+import { seriesFilterController } from "./seriesFilterController.js";
+import { chapterToolsController } from "./chapterToolsController.js";
 import { ConfigStore } from "../store/configStore.js";
 import { CONSTANTS } from "../config/defaults.js";
 import type { ConfigKey } from "../config/defaults.js";
 import { matchesBinding } from "../config/keybinds.js";
+import { resolveLocale, setLocale } from "../i18n/index.js";
 import type { PageContext, PageControllerContext, QueryRoot } from "./types.js";
 import type { ReaderStateSnapshot } from "./readerController.js";
 
@@ -18,6 +22,9 @@ const SERIES_LINK_SELECTOR = 'a[href*="/comics/"],a[href*="/series/"]';
 const CHAPTER_LINK_SELECTOR = 'a[href*="/chapter/"]';
 export const PageController = {
   ...readingHistoryController,
+  ...newChapterBadgeController,
+  ...seriesFilterController,
+  ...chapterToolsController,
   ...pageTargetController,
   ...chapterEndController,
   ...pageCleanupController,
@@ -46,12 +53,14 @@ export const PageController = {
   historyWrittenChapterKey: "",
   historyWrittenProgress: null as number | null,
   resumeAttemptedKey: "",
+  chapterPickMode: false,
   chapterAccessCache: new Map<string, { allowed: boolean; reason: string }>(),
   pageContext: {
     isReader: false,
     isSeriesPage: false,
     isSeriesListing: false,
     isAuthPage: false,
+    isNovel: false,
   },
 
   init() {
@@ -107,6 +116,10 @@ export const PageController = {
 
     // Capture on window so this runs before the site's document-level key handlers; stopPropagation keeps them from also acting on the same key.
     window.addEventListener("keydown", (e) => this.handleKeyDown(e), true);
+    // Chapter pick mode needs its own capture listeners: the click must be stopped before the site's chapter links act on it.
+    document.addEventListener("click", (e) => this.handleChapterPickClick(e), true);
+    document.addEventListener("click", (e) => this.handleSeriesHideClick(e), true);
+    window.addEventListener("keydown", (e) => this.handleChapterPickKeyDown(e), true);
     document.addEventListener("dblclick", (e) => this.handleDblClick(e));
     window.addEventListener("scroll", () => this.handleScroll(), {
       passive: true,
@@ -120,11 +133,13 @@ export const PageController = {
     const path = window.location.pathname || "/";
     const isReader = /\/chapter\/[^/?#]+/.test(path);
     const isSeriesListing = /^\/(browse|series)(\/|$)/.test(path);
-    const isSeriesPage = /^\/(comics|series)\/[^/?#]+/.test(path) && !isReader;
+    const isNovel = /^\/novels\/[^/?#]+/.test(path);
+    const isSeriesPage =
+      (/^\/(comics|series)\/[^/?#]+/.test(path) || isNovel) && !isReader;
     const isAuthPage = /^\/(login|signup|forgot-password|reset-password)(\/|$)/.test(
       path
     );
-    return { isReader, isSeriesPage, isSeriesListing, isAuthPage };
+    return { isReader, isSeriesPage, isSeriesListing, isAuthPage, isNovel };
   },
 
   run() {
@@ -147,9 +162,13 @@ export const PageController = {
     this.cleanupBetaBanner();
     this.cleanupCompactSidebar();
     this.cleanupHomeSections();
+    this.cleanupExtraSections();
+    this.applySeriesFilters();
     this.applyReaderBrightness();
     this.recordReaderVisit();
     this.applyHistoryUI();
+    this.applyChapterTools();
+    this.applyNewChapterBadges();
     this.maybeResumeChapterPosition();
     this.syncReaderState();
     this.maybeRunChapterEndAction();
@@ -178,6 +197,7 @@ export const PageController = {
         this.syncReaderState();
       },
       navigate: (direction) => this.reader.navigate(direction),
+      jumpPage: (direction) => this.reader.jumpPage(direction),
       goSeries: () => this.reader.goSeries(),
       goTop: () => this.reader.goTop(),
       openSettings: () => {
@@ -212,7 +232,7 @@ export const PageController = {
 
     if (ConfigStore.get("showProgressBar")) {
       this.progressBarView.mount();
-      this.progressBarView.update(snapshot.progress);
+      this.progressBarView.update(snapshot.progress, snapshot.page, snapshot.pageCount);
     } else {
       this.progressBarView.unmount();
     }
@@ -247,13 +267,22 @@ export const PageController = {
       "au-hide-popular",
       !!ConfigStore.get("hidePopularSection")
     );
+    body.classList.toggle("au-hide-announcements", !!ConfigStore.get("hideAnnouncements"));
+    body.classList.toggle("au-hide-novel-promos", !!ConfigStore.get("hideNovelPromos"));
+    body.classList.toggle("au-hide-reactions", !!ConfigStore.get("hideReactions"));
     body.classList.toggle(
       "au-menu-series-overhaul",
       !!ConfigStore.get("menuSeriesOverhaul")
     );
+    // Comic series layout (au-page-series) does not apply to novel series pages.
     body.classList.toggle(
       "au-page-series",
-      this.pageContext.isSeriesPage && !this.pageContext.isSeriesListing
+      this.pageContext.isSeriesPage && !this.pageContext.isSeriesListing && !this.pageContext.isNovel
+    );
+    body.classList.toggle("au-page-novel", this.pageContext.isNovel);
+    body.classList.toggle(
+      "au-page-novel-reader",
+      this.pageContext.isNovel && this.pageContext.isReader
     );
     body.classList.toggle("au-page-listing", this.pageContext.isSeriesListing);
     body.classList.toggle("au-page-reader", this.pageContext.isReader);
@@ -276,6 +305,17 @@ export const PageController = {
   handleConfigChanged(key: ConfigKey): void {
     if (key === "themePreset") {
       ThemeController.apply(ConfigStore.get("themePreset"));
+    }
+
+    if (key === "language") {
+      setLocale(resolveLocale(ConfigStore.get("language"), navigator.languages));
+      // These nodes are built once with their text, so remove them and let run() build them again.
+      document.getElementById("au-continue-reading")?.remove();
+      document.getElementById("au-chapter-tools")?.remove();
+      document.querySelectorAll(".au-hide-series-btn").forEach((button) => button.remove());
+      const headerButton = document.getElementById("au-settings-btn-main");
+      if (headerButton && (headerButton.textContent || headerButton.title)) headerButton.remove();
+      this.unmountReaderUI();
     }
 
     if (key === "readerWidget") {
@@ -424,6 +464,25 @@ export const PageController = {
         return;
       }
 
+      if (matchesConfig("keybindNextPage")) {
+        // Page jumps only make sense for comic images, so novel text leaves the key alone.
+        if (readerEnabled && !context.isNovel) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.reader.jumpPage("next");
+        }
+        return;
+      }
+
+      if (matchesConfig("keybindPrevPage")) {
+        if (readerEnabled && !context.isNovel) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.reader.jumpPage("prev");
+        }
+        return;
+      }
+
       if (matchesConfig("keybindGoSeries")) {
         if (readerEnabled) {
           e.preventDefault();
@@ -434,7 +493,8 @@ export const PageController = {
       }
 
       if (matchesConfig("keybindToggleFitWidth")) {
-        if (readerEnabled) {
+        // Fit width only affects chapter images, so novel text leaves the key alone.
+        if (readerEnabled && !context.isNovel) {
           e.preventDefault();
           e.stopPropagation();
           this.reader.toggleFitWidth();

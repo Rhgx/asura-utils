@@ -298,6 +298,116 @@ body.au-theme-enabled .au-settings-btn:hover {
   background: color-mix(in srgb, #f87171 14%, transparent);
   border-color: #f87171;
 }
+.au-filter-heading {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--au-text);
+  margin-bottom: 8px;
+}
+.au-filter-list {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+.au-filter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--au-text);
+}
+.au-filter-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.au-filter-item .au-data-btn { flex: none; }
+.au-filter-genres {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px 12px;
+}
+.au-filter-genre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--au-text);
+  cursor: pointer;
+}
+.au-history-search {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 13px;
+  background: var(--au-input-bg);
+  border: 1px solid var(--au-input-border);
+  color: var(--au-text);
+  border-radius: 6px;
+  outline: none;
+}
+.au-history-search:focus { border-color: var(--au-accent); }
+.au-history-list {
+  display: grid;
+  gap: 8px;
+  max-height: 320px;
+  overflow: auto;
+  margin: 0;
+  padding: 0 4px 0 0;
+  list-style: none;
+}
+[data-au-history] [hidden] { display: none; }
+.au-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.au-history-info {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.au-history-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.au-history-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--au-text);
+  text-decoration: none;
+}
+.au-history-title:hover { color: var(--au-accent); }
+.au-history-tag {
+  flex: none;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--au-input-border);
+  color: var(--au-shortcuts-copy);
+}
+.au-history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--au-shortcuts-copy);
+}
+.au-history-item .au-data-btn { flex: none; }
 .au-toggle { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
 .au-toggle input { opacity: 0; width: 0; height: 0; }
 .au-slider {
@@ -563,3 +673,6 @@ body.au-theme-enabled #au-modal .au-input-select:focus {
   .au-tab-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .au-tab-panels { padding: 14px; }
 }
+
+/* Rows and notes toggled with the hidden attribute also set display, which would otherwise win over [hidden]. */
+#au-modal-overlay [hidden] { display: none !important; }

@@ -1,6 +1,8 @@
 import { ConfigStore } from "../store/configStore.js";
 import { HistoryStore, chapterSlugToLabel, parseReaderPath, parseSeriesPath } from "../store/historyStore.js";
 import type { PageControllerContext } from "./types.js";
+import { findNovelReaderTitle } from "./chapterProps.js";
+import { formatPercent, t } from "../i18n/index.js";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -40,6 +42,8 @@ export const readingHistoryController = {
   },
 
   getSeriesTitleFromReader() {
+    const novelTitle = findNovelReaderTitle(document);
+    if (novelTitle) return novelTitle;
     const seriesLink = this.reader ? this.reader.findSeriesLink() : null;
     const rawLinkText =
       seriesLink instanceof HTMLAnchorElement && typeof seriesLink.textContent === "string"
@@ -119,7 +123,7 @@ export const readingHistoryController = {
     });
 
     const chapterList = document.querySelector(
-      'astro-island[component-url*="ChapterListReact"]'
+      'astro-island[component-url*="ChapterListReact"], astro-island[component-url*="NovelChapterList"]'
     );
     if (!chapterList || !chapterList.parentNode) {
       if (existingPill) existingPill.remove();
@@ -128,7 +132,7 @@ export const readingHistoryController = {
 
     const progress = Number(entry.lastProgress) || 0;
     const metaText = `${chapterSlugToLabel(entry.lastChapter)} · ${
-      progress >= 90 ? "finished" : `${progress}%`
+      progress >= 90 ? t("history.finished") : formatPercent(progress)
     }`;
 
     let pill = existingPill;
@@ -137,20 +141,27 @@ export const readingHistoryController = {
       pill.id = "au-continue-reading";
       pill.innerHTML = `
         <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
-        <span class="au-continue-label">Continue Reading</span>
+        <span class="au-continue-label"></span>
         <span class="au-continue-meta"></span>
       `;
+      const label = pill.querySelector(".au-continue-label");
+      if (label) label.textContent = t("continue.label");
     }
     pill.setAttribute("href", entry.lastHref);
     const meta = pill.querySelector(".au-continue-meta");
     if (meta) meta.textContent = metaText;
-    if (pill.nextElementSibling !== chapterList) {
+    // The chapter tools toolbar sits between the pill and the list, so either one counts as in place.
+    const next = pill.nextElementSibling;
+    const inPlace = next === chapterList || (next !== null && next.id === "au-chapter-tools");
+    if (!inPlace) {
       chapterList.parentNode.insertBefore(pill, chapterList);
     }
   },
 
   maybeResumeChapterPosition() {
     if (!this.pageContext.isReader) return;
+    // The site restores novel positions itself, and its resume store is comic-only.
+    if (this.pageContext.isNovel) return;
     if (!ConfigStore.get("trackReadingHistory")) return;
     if (!ConfigStore.get("resumeChapterPosition")) return;
 
@@ -187,7 +198,7 @@ export const readingHistoryController = {
       }
       if (targetTop > 200) {
         window.scrollTo({ top: targetTop, behavior: "auto" });
-        this.showHint(`Resumed at ${progress}%`);
+        this.showHint(t("hint.resumedAt", { progress: formatPercent(progress) }));
       }
     }, 900);
   },

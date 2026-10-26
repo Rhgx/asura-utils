@@ -6,12 +6,14 @@ Open the gear button in the Asura Scans header to change these options. Settings
 
 | Setting | Default | Description |
 | --- | :---: | --- |
+| Language | Auto | Language for Asura Utils menus and messages: Auto (browser language), English, Türkçe, Español, Português (Brasil), or Bahasa Indonesia |
 | Ad Blocker | On | Hides common ad containers, Asura+ subscription banners, and promotional close buttons |
 | Colored Chapter Timestamps | On | Varies timestamp color and weight by recency so newer updates stand out |
 | Hide Home Slider | Off | Removes the large featured slider from the home page |
 | Hide Toraka Promo | On | Hides detected Toraka promotion sections |
 | Hide Comments Section | Off | Hides comment-related sections on supported pages |
 | Hide Default Back-to-Top | On | Removes the site's own back-to-top control |
+| New Chapter Badges | On | Shows a `N new` badge on series covers in your history when the page shows newer chapters. Requires Track Reading History |
 
 ### Timestamp recency levels
 
@@ -57,14 +59,33 @@ added.
 | --- | :---: | --- |
 | Compact Sidebar | Off | Reduces the width used by right-side layout blocks |
 | Hide Popular Section | Off | Hides detected popular or recommended sections |
+| Hide Announcements | Off | Hides the Announcements block on the home pages |
+| Hide Novel Promos | Off | Hides the Trending Novels row and Read the Novel links on comic pages |
+| Hide Reactions | Off | Hides the emoji reactions block above comments |
 | Overhaul Main Menu + Series Page | Off | Applies the alternate header and series-page layout |
+| Series Filters | On | Adds a hide button to series covers on the home and browse pages, and applies the rules in the Filters tab |
+
+## Filters
+
+The **Filters** tab manages the rules from Series Filters. The rules apply only while Series Filters is on.
+
+| List | Contents |
+| --- | --- |
+| Hidden Series | Series hidden from a cover, each with an **Unhide** button |
+| Excluded Genres | A checkbox for each genre seen on the site. Checked genres hide series with that genre |
+
+Genres are learned from series seen on the site, so a series is hidden by genre only after its genres have been seen. Genre matching ignores case. The learned genre cache keeps up to 3000 series, and the genre name list keeps up to 300 names.
 
 ## Shortcuts
 
 All shortcut defaults and alternate keys are listed in the [usage guide](USAGE.md#keyboard-shortcuts). Bindings use physical keyboard codes, so letter shortcuts stay in the same physical position across keyboard layouts.
 
+## History
+
+The **History** tab lists saved series, most recently read first, with a search box and a **Remove** button for each series. Export and import are in the **Data** tab. The history keeps the 150 most recently read series, and up to 600 read chapters per series.
+
 ## Data storage
 
-Configuration and reading history use Tampermonkey's local userscript storage through `GM_getValue` and `GM_setValue`. Asura Utils does not require an account, remote database, or external synchronization service.
+Configuration, reading history, and series filters use Tampermonkey's local userscript storage through `GM_getValue` and `GM_setValue`. Series filters keep hidden series, excluded genres, and the learned genre cache in their own values. Asura Utils does not require an account, remote database, or external synchronization service.
 
-Resetting settings does not clear reading history. Clearing reading history does not reset settings.
+Resetting settings does not clear reading history or series filters. Clearing reading history does not reset settings or series filters. Exported settings do not include reading history or series filters.

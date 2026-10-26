@@ -29,13 +29,14 @@ Open `dist/asura-utils.user.js` in your browser and approve the Tampermonkey ins
 
 | Area | What it adds |
 | --- | --- |
-| Reader | Collapsible reader dock, auto-scroll, adjustable speed, image width and brightness controls |
-| Navigation | Previous and next chapter controls, series navigation, chapter-end actions, premium-lock handling |
-| Progress | Reading progress bar, per-series history, continue-reading links, and position restoration |
-| Appearance | Seven theme presets, custom accent colors, and full-site color remapping |
+| Reader | Collapsible reader dock for comic and novel chapters, auto-scroll, adjustable speed, image width and brightness controls |
+| Navigation | Previous and next chapter and page controls, series navigation, Next Unread and Mark Read Up To on chapter lists, chapter-end actions, premium-lock handling |
+| Progress | Reading progress bar with page readout, per-series history, continue-reading links, new chapter badges, and position restoration |
+| Filters | Hide individual series and exclude genres on the home and browse pages |
+| Appearance | Seven theme presets, custom accent colors, full-site color remapping, and five interface languages |
 | Cleanup | Ad and promotion blocking, optional section hiding, compact sidebar, and layout overhaul |
 | Controls | Rebindable shortcuts plus double-click auto-scroll |
-| Data | Settings export/import, reset controls, and local reading-history management |
+| Data | Settings export/import, reading-history export/import with a searchable history manager, reset controls |
 
 ## Default shortcuts
 
@@ -46,6 +47,7 @@ Shortcuts can be rebound or cleared from **Settings → Shortcuts**.
 | `S` | Toggle auto-scroll | Reader |
 | `Q` / `E` | Decrease / increase scroll speed | Reader |
 | `A` / `D` | Previous / next chapter | Reader |
+| `Z` / `X` | Previous / next page | Comic reader |
 | `B` | Return to the series page | Reader |
 | `W` | Toggle fit-width mode | Reader |
 | `C` | Focus search | Series page |
@@ -80,14 +82,14 @@ Users who installed a build from before automatic updates were introduced must i
 
 ## Privacy
 
-Settings and reading history remain in Tampermonkey storage on your device. Asura Utils does not send that data anywhere.
+Settings, reading history, and series filters remain in Tampermonkey storage on your device. Asura Utils does not send that data anywhere.
 
 ## Documentation
 
 | Guide | Contents |
 | --- | --- |
 | [Documentation index](.docs/README.md) | Overview of all project guides |
-| [Usage guide](.docs/USAGE.md) | Reader controls, shortcuts, history, themes, and data tools |
+| [Usage guide](.docs/USAGE.md) | Reader controls, page navigation, novels, shortcuts, filters, history, language, themes, and data tools |
 | [Configuration reference](.docs/CONFIGURATION.md) | Every setting, default value, and valid range |
 | [Development guide](.docs/DEVELOPMENT.md) | Local setup, scripts, build artifacts, and source layout |
 | [Release guide](.docs/RELEASING.md) | Versioning, tagged releases, CI, and automatic updates |

@@ -1,4 +1,6 @@
 import { THEME_PRESET_OPTIONS } from "../theme/themePresets.js";
+import { SUPPORTED_LOCALES, t } from "../i18n/index.js";
+import type { Locale } from "../i18n/index.js";
 import type { ConfigKey } from "./defaults.js";
 
 export interface ModalOption { value: string; label: string }
@@ -22,80 +24,108 @@ export interface ModalSection {
   title: string;
   toggles?: readonly (readonly [ConfigKey, string])[];
   selects?: readonly ModalSelect[];
+  // Puts selects above toggles, for the Language control at the top of General.
+  selectsFirst?: boolean;
   inputs?: readonly ModalInput[];
   render?: () => string;
   html?: string;
 }
 
-const APPEARANCE_MODAL_SECTION = {
-  title: "Appearance",
-  toggles: [["customAccentEnabled", "Custom Accent Color"]],
-  selects: [
-    {
-      key: "themePreset",
-      id: "sel-themePreset",
-      label: "Theme",
-      options: THEME_PRESET_OPTIONS,
-    },
-  ],
-  inputs: [
-    {
-      key: "customAccent",
-      id: "inp-customAccent",
-      label: "Accent Color",
-      type: "color",
-    },
-  ],
-} satisfies Omit<ModalSection, "key">;
+// Native names stay in their own language so each one is recognizable from any UI language.
+const LANGUAGE_NAMES: Readonly<Record<Locale, string>> = {
+  en: "English",
+  tr: "Türkçe",
+  es: "Español",
+  "pt-BR": "Português (Brasil)",
+  id: "Bahasa Indonesia",
+};
 
-const READER_MODAL_SECTION = {
-  title: "Reader",
-  toggles: [
-    ["readerWidget", "Enable Reader Dock"],
-    ["hideNativeReaderControls", "Hide Site Reader Controls"],
-    ["showProgressBar", "Show Progress Bar"],
-    ["fitWidthMode", "Fit Width to Screen"],
-    ["doubleClickScroll", "Double-Click to Scroll"],
-    ["trackReadingHistory", "Track Reading History"],
-    ["resumeChapterPosition", "Resume Chapter Position"],
-    ["hasPremiumAccess", "Account Has Premium"],
-  ],
-  selects: [
-    {
-      key: "chapterEndAction",
-      id: "sel-chapterEndAction",
-      label: "Chapter End Action",
-      options: [
-        { value: "off", label: "Disabled" },
-        { value: "nextChapter", label: "Next Chapter (Smart)" },
-        { value: "seriesPage", label: "Series Page (Smart)" },
-        { value: "stopScroll", label: "Stop Auto Scroll" },
-      ],
-    },
-  ],
-  inputs: [
-    {
-      key: "imageWidth",
-      id: "inp-imageWidth",
-      label: "Image Width (px)",
-      type: "number",
-      step: "1",
-    },
-    {
-      key: "autoScrollSpeed",
-      id: "inp-autoScrollSpeed",
-      label: "Scroll Speed",
-      type: "number",
-      step: "0.1",
-    },
-    {
-      key: "readerBrightness",
-      id: "inp-readerBrightness",
-      label: "Image Brightness (%)",
-      type: "number",
-      step: "5",
-    },
-  ],
-} satisfies Omit<ModalSection, "key">;
+// These are functions because their labels are translated when the modal renders.
+function languageModalSelect(): ModalSelect {
+  return {
+    key: "language",
+    id: "sel-language",
+    label: t("setting.language.label"),
+    options: [
+      { value: "auto", label: t("option.language.auto") },
+      ...SUPPORTED_LOCALES.map((locale) => ({ value: locale, label: LANGUAGE_NAMES[locale] })),
+    ],
+  };
+}
 
-export { APPEARANCE_MODAL_SECTION, READER_MODAL_SECTION };
+function appearanceModalSection(): Omit<ModalSection, "key"> {
+  return {
+    title: t("tab.appearance"),
+    toggles: [["customAccentEnabled", t("setting.customAccentEnabled.label")]],
+    selects: [
+      {
+        key: "themePreset",
+        id: "sel-themePreset",
+        label: t("setting.themePreset.label"),
+        options: THEME_PRESET_OPTIONS,
+      },
+    ],
+    inputs: [
+      {
+        key: "customAccent",
+        id: "inp-customAccent",
+        label: t("setting.customAccent.label"),
+        type: "color",
+      },
+    ],
+  };
+}
+
+function readerModalSection(): Omit<ModalSection, "key"> {
+  return {
+    title: t("tab.reader"),
+    toggles: [
+      ["readerWidget", t("setting.readerWidget.label")],
+      ["hideNativeReaderControls", t("setting.hideNativeReaderControls.label")],
+      ["showProgressBar", t("setting.showProgressBar.label")],
+      ["fitWidthMode", t("setting.fitWidthMode.label")],
+      ["doubleClickScroll", t("setting.doubleClickScroll.label")],
+      ["trackReadingHistory", t("setting.trackReadingHistory.label")],
+      ["resumeChapterPosition", t("setting.resumeChapterPosition.label")],
+      ["hasPremiumAccess", t("setting.hasPremiumAccess.label")],
+    ],
+    selects: [
+      {
+        key: "chapterEndAction",
+        id: "sel-chapterEndAction",
+        label: t("setting.chapterEndAction.label"),
+        options: [
+          { value: "off", label: t("option.chapterEnd.off") },
+          { value: "nextChapter", label: t("option.chapterEnd.nextChapter") },
+          { value: "seriesPage", label: t("option.chapterEnd.seriesPage") },
+          { value: "stopScroll", label: t("option.chapterEnd.stopScroll") },
+        ],
+      },
+    ],
+    inputs: [
+      {
+        key: "imageWidth",
+        id: "inp-imageWidth",
+        label: t("setting.imageWidth.label"),
+        type: "number",
+        step: "1",
+      },
+      {
+        key: "autoScrollSpeed",
+        id: "inp-autoScrollSpeed",
+        label: t("setting.autoScrollSpeed.label"),
+        type: "number",
+        step: "0.1",
+      },
+      {
+        key: "readerBrightness",
+        id: "inp-readerBrightness",
+        label: t("setting.readerBrightness.label"),
+        type: "number",
+        step: "5",
+      },
+    ],
+  };
+}
+
+export { appearanceModalSection, languageModalSelect, readerModalSection };

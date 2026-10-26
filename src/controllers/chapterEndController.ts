@@ -3,6 +3,7 @@ import type { ChapterEndAction } from "../config/defaults.js";
 import type { ChapterAccessResult, PageControllerContext } from "./types.js";
 import { CHAPTER_IMAGE_SELECTOR } from "./readerConstants.js";
 import { findChapterReaderInfo, formatUnlockCountdown } from "./chapterProps.js";
+import { t } from "../i18n/index.js";
 
 const PREFETCH_PROGRESS_PERCENT = 70;
 const PREFETCH_PAGE_COUNT = 3;
@@ -98,13 +99,16 @@ export const chapterEndController = {
     if (this.endActionCompleted || this.endActionInFlight) return;
     if (!this.isNearPageEnd()) return;
 
-    if (!ConfigStore.get("hasPremiumAccess") && this.isLikelyPremiumLockedCurrentChapter()) {
+    // Novels are locked by Shards, so the Premium subscription setting never clears them.
+    const skipsLockCheck = !this.pageContext.isNovel && ConfigStore.get("hasPremiumAccess");
+    if (!skipsLockCheck && this.isLikelyPremiumLockedCurrentChapter()) {
       this.endActionCompleted = true;
+      const lockLabel = t(this.pageContext.isNovel ? "endAction.lockedLabel" : "endAction.premiumLockedLabel");
       const countdown = formatUnlockCountdown(findChapterReaderInfo(document)?.unlockTime ?? null, Date.now());
       this.showEndActionHint(
         countdown
-          ? `Premium-locked chapter, unlocks ${countdown}`
-          : "End Action skipped: Premium-locked chapter detected"
+          ? t("endAction.chapterUnlocks", { label: lockLabel, countdown })
+          : t("endAction.skippedLocked", { label: lockLabel })
       );
       return;
     }
@@ -119,7 +123,8 @@ export const chapterEndController = {
   },
 
   async probeChapterAccess(url: unknown): Promise<ChapterAccessResult> {
-    if (ConfigStore.get("hasPremiumAccess")) {
+    // Novel lock state comes from the server probe, since Premium does not unlock Shard-locked novels.
+    if (!this.pageContext.isNovel && ConfigStore.get("hasPremiumAccess")) {
       return { allowed: true, reason: "has_premium_access" };
     }
 
@@ -207,10 +212,11 @@ export const chapterEndController = {
     const access = await this.probeChapterAccess(nextTarget.href);
     if (!access.allowed) {
       const countdown = formatUnlockCountdown(access.unlockTime ?? null, Date.now());
+      const blockedLabel = this.pageContext.isNovel
+        ? t("endAction.nextLocked")
+        : t("endAction.nextBlockedPremium");
       this.showEndActionHint(
-        countdown
-          ? `End Action: Next chapter unlocks ${countdown}`
-          : "End Action: Next chapter blocked (premium lock)"
+        countdown ? t("endAction.nextUnlocks", { countdown }) : blockedLabel
       );
       return false;
     }
@@ -233,7 +239,7 @@ export const chapterEndController = {
     if (actionMode === "stopScroll") {
       const stopped = this.stopReaderAutoScrollForEndAction();
       if (!stopped) return false;
-      this.showEndActionHint("End Action: Auto-scroll stopped");
+      this.showEndActionHint(t("endAction.stopped"));
       return true;
     }
 
@@ -245,7 +251,7 @@ export const chapterEndController = {
         return true;
       }
       this.stopReaderAutoScrollForEndAction();
-      this.showEndActionHint("End Action: No destination");
+      this.showEndActionHint(t("endAction.noDestination"));
       return true;
     }
 
@@ -254,11 +260,11 @@ export const chapterEndController = {
         return true;
       }
       if (reader.goSeries()) {
-        this.showEndActionHint("End Action: Falling back to series page");
+        this.showEndActionHint(t("endAction.fallbackSeries"));
         return true;
       }
       this.stopReaderAutoScrollForEndAction();
-      this.showEndActionHint("End Action: No destination");
+      this.showEndActionHint(t("endAction.noDestination"));
       return true;
     }
 

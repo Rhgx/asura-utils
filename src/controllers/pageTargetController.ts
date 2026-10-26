@@ -54,7 +54,7 @@ export const pageTargetController = {
 
     this.tagHeaderOverhaulTargets();
     this.tagThemeTargets();
-    if (this.pageContext.isSeriesPage && !this.pageContext.isSeriesListing) {
+    if (this.pageContext.isSeriesPage && !this.pageContext.isSeriesListing && !this.pageContext.isNovel) {
       this.tagSeriesOverhaulTargets();
     }
     this.tagChapterTimestamps();

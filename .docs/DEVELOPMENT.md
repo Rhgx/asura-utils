@@ -50,11 +50,12 @@ Generated files remain ignored because GitHub Actions rebuilds them from the tag
 | --- | --- |
 | `src/main.ts` | Userscript entry point and application bootstrap |
 | `src/config/` | Default settings, metadata, modal sections, and keybindings |
-| `src/store/` | Persistent configuration and reading-history storage |
+| `src/store/` | Persistent configuration, reading-history, and series-filter storage |
 | `src/theme/` | Theme controller, base tokens, and preset loading |
 | `src/theme/presets/` | JSON theme definitions discovered during the build |
 | `src/controllers/` | Page detection, cleanup, reader, navigation, and history behavior |
 | `src/views/` | Reader dock, progress bar, and settings UI |
+| `src/i18n/` | Interface translations: the English source catalog, other locale catalogs, and language resolution |
 | `src/styles/` | Component, responsive, theme-mapping, and site-overhaul CSS |
 | `scripts/verify-build.ts` | Release artifact and metadata verification |
 | `vite.config.ts` | Vite and `vite-plugin-monkey` build configuration |
@@ -66,6 +67,16 @@ Generated files remain ignored because GitHub Actions rebuilds them from the tag
 3. Run `pnpm test`.
 
 Preset files are loaded with `import.meta.glob`, so no manual registry entry is required.
+
+## Adding or updating a language
+
+The English catalog in `src/i18n/en.ts` is the source for every message key. The other locale files (`tr.ts`, `es.ts`, `ptBR.ts`, `id.ts`) are typed against the English keys, so TypeScript reports any missing key.
+
+1. Add or change keys in `src/i18n/en.ts` first. Keep each `{placeholder}` name the same in every locale.
+2. Give every key a value in each locale file. An empty value falls back to English.
+3. Count-based strings need a `.one` and an `.other` pair. Only those two forms are used, so a locale does not need other plural categories.
+4. To add a locale, create `src/i18n/<locale>.ts`, then register it in `SUPPORTED_LOCALES` and `CATALOGS` in `src/i18n/index.ts`. Add its native name to `LANGUAGE_NAMES` in `src/config/modalSections.ts` so it appears in the language select.
+5. Run `pnpm test:unit`. `tests/i18n.test.ts` checks that every locale has exactly the English keys and keeps every English placeholder.
 
 ## Changing userscript metadata
 

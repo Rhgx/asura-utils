@@ -237,6 +237,11 @@
   color: var(--auo-accent);
   font-weight: 600;
 }
+.au-dock-page {
+  font-size: 12px;
+  color: var(--auo-text-dim);
+  font-variant-numeric: tabular-nums;
+}
 .au-dock-icon-btn {
   width: 28px;
   height: 28px;
@@ -310,6 +315,18 @@
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .au-shortcut-hint.visible { opacity: 1; transform: translate(-50%, 0); }
+
+/* Fit width, image width and brightness only apply to comic images, so novel chapters hide the Layout section. */
+body.au-page-novel-reader .au-dock-layout-section {
+  display: none;
+}
+
+/* Page counter and page buttons only apply to comic images, so novel chapters hide them. */
+body.au-page-novel-reader .au-dock-page,
+body.au-page-novel-reader #au-dock-page-prev,
+body.au-page-novel-reader #au-dock-page-next {
+  display: none;
+}
 
 /* Hide the site's own tap-to-show reader bars and hint (the dock replaces them).
 Targets only site overlays: our elements have au- ids and no Tailwind classes. */
