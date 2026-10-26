@@ -9,16 +9,19 @@ import { ConfigStore } from "../store/configStore.js";
 import { t } from "../i18n/index.js";
 import type { MessageKey } from "../i18n/index.js";
 import { escapeHtml } from "./escapeHtml.js";
+import { searchText } from "./settingsSearch.js";
 
 function renderShortcutRow(field: KeybindField, cfg: AppConfig): string {
-  const help = "helpKey" in field
-    ? `<div class="au-shortcut-help">${escapeHtml(t(field.helpKey))}</div>`
+  const label = t(field.labelKey);
+  const helpText = "helpKey" in field ? t(field.helpKey) : "";
+  const help = helpText
+    ? `<div class="au-shortcut-help">${escapeHtml(helpText)}</div>`
     : "";
 
   return `
-    <div class="au-shortcut-row" data-shortcut-row="${field.key}">
+    <div class="au-shortcut-row" data-shortcut-row="${field.key}" data-au-search="${escapeHtml(searchText(`${label} ${helpText}`))}">
       <div class="au-shortcut-meta">
-        <div class="au-shortcut-name">${escapeHtml(t(field.labelKey))}</div>
+        <div class="au-shortcut-name">${escapeHtml(label)}</div>
         ${help}
       </div>
       <div class="au-shortcut-actions">
@@ -55,7 +58,7 @@ function groupShortcutFields(): Map<MessageKey, KeybindField[]> {
 
 export function renderShortcutsEditor(cfg: AppConfig): string {
   const groups = Array.from(groupShortcutFields(), ([groupKey, fields]) => `
-    <div class="au-shortcut-card">
+    <div class="au-shortcut-card" data-au-group>
       <div class="au-shortcut-card-title">${escapeHtml(t(groupKey))}</div>
       <div class="au-shortcut-grid">
         ${fields.map((field) => renderShortcutRow(field, cfg)).join("")}
@@ -69,9 +72,10 @@ export function renderShortcutsEditor(cfg: AppConfig): string {
     clear: "<b>Backspace/Delete</b>",
   });
 
+  // The intro is not a setting, so it is marked as group extra and hidden while searching.
   return `
-    <div class="au-shortcut-scroll">
-      <div class="au-shortcut-intro">
+    <div class="au-shortcut-editor">
+      <div class="au-shortcut-intro au-group-extra">
         <div class="au-shortcut-intro-title">${escapeHtml(t("shortcuts.introTitle"))}</div>
         <div class="au-shortcut-intro-copy">
           ${introCopy}

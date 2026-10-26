@@ -5,7 +5,7 @@ This directory contains the detailed guides for using, configuring, developing, 
 | Document | Audience | Contents |
 | --- | --- | --- |
 | [Usage guide](USAGE.md) | Users | Installation, reader controls, shortcuts, themes, history, and data management |
-| [Configuration reference](CONFIGURATION.md) | Users and contributors | Settings grouped by UI tab, defaults, ranges, and behavior |
+| [Configuration reference](CONFIGURATION.md) | Users and contributors | Settings grouped by settings section, defaults, ranges, and behavior |
 | [Development guide](DEVELOPMENT.md) | Contributors | Tooling, commands, build output, verification, and source structure |
 | [Release guide](RELEASING.md) | Maintainers | Versioning, tags, GitHub Actions, release assets, and automatic updates |
 

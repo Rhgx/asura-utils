@@ -1,9 +1,12 @@
-import {
-  appearanceModalSection,
-  languageModalSelect,
-  readerModalSection,
-} from "../config/modalSections.js";
-import type { ModalSection } from "../config/modalSections.js";
+import { SETTINGS_PAGES } from "../config/settingsLayout.js";
+import type {
+  ChecklistItem,
+  GroupContent,
+  SettingRow,
+  SettingsGroup,
+  SettingsPage,
+  SettingsPageKey,
+} from "../config/settingsLayout.js";
 import {
   KEYBIND_FIELDS,
   normalizeEventToBinding,
@@ -16,7 +19,7 @@ import {
   formatHistoryAge,
 } from "../store/historyStore.js";
 import { FilterStore } from "../store/filterStore.js";
-import { DEFAULTS, isConfigKey } from "../config/defaults.js";
+import { CONFIG_META, DEFAULTS, isConfigKey } from "../config/defaults.js";
 import type { AppConfig, ConfigKey } from "../config/defaults.js";
 import packageJson from "../../package.json";
 import {
@@ -26,58 +29,31 @@ import {
 import { formatPercent, t, tPlural } from "../i18n/index.js";
 import type { MessageKey } from "../i18n/index.js";
 import { escapeHtml } from "./escapeHtml.js";
+import { PAGE_ICONS, SEARCH_ICON, rocksEmblemSvg } from "./settingsIcons.js";
+import { matchesSearch, searchText } from "./settingsSearch.js";
 
 const APP_VERSION = packageJson.version;
+const AUTHOR_NAME = "Rocks";
+const AUTHOR_URL = "https://github.com/Rhgx";
+const RELEASES_URL = "https://github.com/Rhgx/asura-utils/releases";
 
-// Catalog keys for setting tooltips. Settings without an entry show no tooltip.
-const SETTING_TOOLTIP_KEYS: Partial<Record<ConfigKey, MessageKey>> = {
-  adBlock: "setting.adBlock.tooltip",
-  colorTimestamps: "setting.colorTimestamps.tooltip",
-  hideSlider: "setting.hideSlider.tooltip",
-  hideToraka: "setting.hideToraka.tooltip",
-  hideComments: "setting.hideComments.tooltip",
-  hideDefaultBackToTop: "setting.hideDefaultBackToTop.tooltip",
-  showNewChapterBadges: "setting.showNewChapterBadges.tooltip",
-  seriesFilters: "setting.seriesFilters.tooltip",
-  compactSidebar: "setting.compactSidebar.tooltip",
-  hidePopularSection: "setting.hidePopularSection.tooltip",
-  hideAnnouncements: "setting.hideAnnouncements.tooltip",
-  hideNovelPromos: "setting.hideNovelPromos.tooltip",
-  hideReactions: "setting.hideReactions.tooltip",
-  menuSeriesOverhaul: "setting.menuSeriesOverhaul.tooltip",
-  themePreset: "setting.themePreset.tooltip",
-  readerWidget: "setting.readerWidget.tooltip",
-  hideNativeReaderControls: "setting.hideNativeReaderControls.tooltip",
-  showProgressBar: "setting.showProgressBar.tooltip",
-  fitWidthMode: "setting.fitWidthMode.tooltip",
-  doubleClickScroll: "setting.doubleClickScroll.tooltip",
-  hasPremiumAccess: "setting.hasPremiumAccess.tooltip",
-  chapterEndAction: "setting.chapterEndAction.tooltip",
-  imageWidth: "setting.imageWidth.tooltip",
-  autoScrollSpeed: "setting.autoScrollSpeed.tooltip",
-  trackReadingHistory: "setting.trackReadingHistory.tooltip",
-  resumeChapterPosition: "setting.resumeChapterPosition.tooltip",
-  customAccentEnabled: "setting.customAccentEnabled.tooltip",
-  customAccent: "setting.customAccent.tooltip",
-  readerBrightness: "setting.readerBrightness.tooltip",
-  language: "setting.language.tooltip",
-};
-
-function tooltipFor(key: ConfigKey): string {
-  const messageKey = SETTING_TOOLTIP_KEYS[key];
-  return messageKey ? t(messageKey) : "";
+function dependencyAttrs(item: Pick<SettingRow, "requires" | "disabledWhen">): string {
+  return [
+    item.requires ? `data-au-requires="${item.requires}"` : "",
+    item.disabledWhen ? `data-au-disabled-when="${item.disabledWhen}"` : "",
+  ].join(" ");
 }
 
 export class SettingsModalView {
   readonly onConfigChanged: (key: ConfigKey, value: AppConfig[ConfigKey]) => void;
   modalOpen: boolean;
-  activeTabKey: string;
+  activePage: SettingsPageKey;
   modalCleanup: (() => void) | null;
 
   constructor(onConfigChanged: (key: ConfigKey, value: AppConfig[ConfigKey]) => void) {
     this.onConfigChanged = onConfigChanged;
     this.modalOpen = false;
-    this.activeTabKey = "general";
+    this.activePage = "reader";
     this.modalCleanup = null;
   }
 
@@ -138,7 +114,8 @@ export class SettingsModalView {
     );
   }
 
-  toggleModal() {
+  // A page opens the modal on that section; without one it reopens on the last section used.
+  toggleModal(page?: SettingsPageKey) {
     const existing = document.getElementById("au-modal-overlay");
     if (existing) {
       if (typeof this.modalCleanup === "function") {
@@ -148,6 +125,7 @@ export class SettingsModalView {
         this.modalOpen = false;
       }
     } else {
+      if (page) this.activePage = page;
       this.renderModal();
       this.modalOpen = true;
     }
@@ -158,187 +136,57 @@ export class SettingsModalView {
     const overlay = document.createElement("div");
     overlay.id = "au-modal-overlay";
 
-    const sections: ModalSection[] = [
-      {
-        key: "general",
-        title: t("tab.general"),
-        // Language is the first control on General, so it sits above the toggles.
-        selectsFirst: true,
-        selects: [languageModalSelect()],
-        toggles: [
-          ["adBlock", t("setting.adBlock.label")],
-          ["colorTimestamps", t("setting.colorTimestamps.label")],
-          ["hideSlider", t("setting.hideSlider.label")],
-          ["hideToraka", t("setting.hideToraka.label")],
-          ["hideComments", t("setting.hideComments.label")],
-          ["hideDefaultBackToTop", t("setting.hideDefaultBackToTop.label")],
-          ["showNewChapterBadges", t("setting.showNewChapterBadges.label")],
-        ],
-      },
-      {
-        key: "layout",
-        title: t("tab.layout"),
-        toggles: [
-          ["compactSidebar", t("setting.compactSidebar.label")],
-          ["hidePopularSection", t("setting.hidePopularSection.label")],
-          ["hideAnnouncements", t("setting.hideAnnouncements.label")],
-          ["hideNovelPromos", t("setting.hideNovelPromos.label")],
-          ["hideReactions", t("setting.hideReactions.label")],
-          ["menuSeriesOverhaul", t("setting.menuSeriesOverhaul.label")],
-          ["seriesFilters", t("setting.seriesFilters.label")],
-        ],
-      },
-      {
-        key: "filters",
-        title: t("tab.filters"),
-        render: () => `<div data-au-filters>${this.filtersBodyHTML()}</div>`,
-      },
-      { ...appearanceModalSection(), key: "appearance" },
-      { ...readerModalSection(), key: "reader" },
-      {
-        key: "shortcuts",
-        title: t("tab.shortcuts"),
-        render: () => renderShortcutsEditor(cfg),
-      },
-      {
-        key: "history",
-        title: t("tab.history"),
-        render: () => `<div data-au-history>${this.historyBodyHTML()}</div>`,
-      },
-      {
-        key: "data",
-        title: t("tab.data"),
-        render: () => this.dataSectionHTML(),
-      },
-    ];
-
-    const availableTabKeys = sections
-      .map((section) => section.key)
-      .filter(Boolean);
-    const initialTabKey = availableTabKeys.includes(this.activeTabKey)
-      ? this.activeTabKey
-      : availableTabKeys[0];
-
-    const tabButtonsHtml = sections
-      .map((section) => {
-        const isActive = section.key === initialTabKey;
-        return `
-          <button
-            type="button"
-            class="au-tab-btn ${isActive ? "active" : ""}"
-            data-tab="${section.key}"
-            role="tab"
-            aria-selected="${isActive ? "true" : "false"}"
-          >
-            ${escapeHtml(section.title)}
-          </button>
-        `;
-      })
-      .join("");
-
-    const sectionHtml = sections
-      .map((section) => {
-        const isActive = section.key === initialTabKey;
-        const toggles = (section.toggles || [])
-          .map(([key, label]) =>
-            this.toggleHTML(
-              key,
-              label,
-              cfg[key],
-              tooltipFor(key)
-            )
-          )
-          .join("");
-
-        const inputs = (section.inputs || [])
-          .map((input) => {
-            const isDisabled =
-              (input.key === "imageWidth" && !!cfg.fitWidthMode) ||
-              (input.key === "customAccent" && !cfg.customAccentEnabled);
-            const tooltip = input.tooltip || tooltipFor(input.key);
-            const inputClass =
-              input.type === "color" ? "au-input-color" : "au-input-num";
-            return `
-              <div class="au-control-row">
-                ${this.controlLabelHTML(input.label, tooltip)}
-                <input
-                  type="${input.type}"
-                  id="${input.id}"
-                  class="${inputClass}"
-                  data-key="${input.key}"
-                  step="${input.step || "1"}"
-                  value="${cfg[input.key]}"
-                  ${isDisabled ? 'disabled style="opacity:0.5"' : ""}
-                >
-              </div>
-            `;
-          })
-          .join("");
-
-        const selects = (section.selects || [])
-          .map((select) => {
-            const options = (select.options || [])
-              .map((opt) => {
-                const value = typeof opt === "string" ? opt : opt.value;
-                const label = typeof opt === "string" ? opt : opt.label;
-                const selected = String(cfg[select.key]) === String(value);
-                return `<option value="${value}" ${selected ? "selected" : ""}>${escapeHtml(label)}</option>`;
-              })
-              .join("");
-            const tooltip = select.tooltip || tooltipFor(select.key);
-
-            return `
-              <div class="au-control-row">
-                ${this.controlLabelHTML(select.label, tooltip)}
-                <select id="${select.id}" class="au-input-select" data-key="${select.key}">
-                  ${options}
-                </select>
-              </div>
-            `;
-          })
-          .join("");
-
-        const staticHtml =
-          typeof section.render === "function"
-            ? section.render()
-            : section.html || "";
-
-        return `
-          <div
-            class="au-section au-tab-panel ${isActive ? "active" : ""}"
-            data-tab-panel="${section.key}"
-            role="tabpanel"
-          >
-            <div class="au-section-title">${escapeHtml(section.title)}</div>
-            ${section.selectsFirst ? `${selects}${toggles}` : `${toggles}${selects}`}
-            ${inputs}
-            ${staticHtml}
-          </div>
-        `;
-      })
-      .join("");
+    const navHTML = (pages: readonly SettingsPage[]) =>
+      pages.map((page) => this.navButtonHTML(page)).join("");
+    const credit = escapeHtml(t("settings.madeBy", { author: AUTHOR_NAME }));
 
     overlay.innerHTML = `
-      <div id="au-modal">
-        <div class="au-modal-header">
-          <span class="au-modal-title">${escapeHtml(t("settings.title"))}</span>
-          <button type="button" class="au-close-btn" aria-label="${escapeHtml(t("settings.close"))}">
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-          </button>
+      <div id="au-modal" role="dialog" aria-modal="true" aria-labelledby="au-modal-title">
+        <aside class="au-sidebar">
+          <div class="au-sidebar-title" id="au-modal-title">${escapeHtml(t("settings.title"))}</div>
+          <label class="au-search">
+            ${SEARCH_ICON}
+            <input
+              type="search"
+              class="au-search-input"
+              placeholder="${escapeHtml(t("settings.search"))}"
+              aria-label="${escapeHtml(t("settings.search"))}"
+              autocomplete="off"
+              spellcheck="false"
+              data-au-search-input
+            >
+          </label>
+          <nav class="au-nav" role="tablist" aria-orientation="vertical" aria-label="${escapeHtml(t("settings.sections"))}">
+            ${navHTML(SETTINGS_PAGES.filter((page) => !page.footer))}
+            <div class="au-nav-spacer" aria-hidden="true"></div>
+            ${navHTML(SETTINGS_PAGES.filter((page) => page.footer))}
+          </nav>
+          <footer class="au-credits">
+            <a class="au-credits-link" href="${AUTHOR_URL}" target="_blank" rel="noopener noreferrer">
+              <span class="au-credits-avatar">${rocksEmblemSvg}</span>
+              ${credit}
+            </a>
+            <span class="au-credits-dot" aria-hidden="true">&middot;</span>
+            <a class="au-credits-link" href="${RELEASES_URL}" target="_blank" rel="noopener noreferrer">v${APP_VERSION}</a>
+          </footer>
+        </aside>
+        <div class="au-main">
+          <div class="au-main-header">
+            <h2 class="au-main-title" data-au-main-title></h2>
+            <button type="button" class="au-close-btn" aria-label="${escapeHtml(t("settings.close"))}">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+          </div>
+          <div class="au-content" data-au-content>
+            ${SETTINGS_PAGES.map((page) => this.pageHTML(page, cfg)).join("")}
+            <div class="au-search-empty" data-au-search-empty hidden>${escapeHtml(t("settings.noResults"))}</div>
+          </div>
         </div>
-        <div class="au-tab-bar" role="tablist">
-          ${tabButtonsHtml}
-        </div>
-        <div class="au-tab-panels">
-          ${sectionHtml}
-        </div>
-        <div class="au-modal-signature">${escapeHtml(t("settings.madeBy", { author: "Rocks" }))} &bull; v${APP_VERSION}</div>
       </div>
     `;
 
     document.body.appendChild(overlay);
 
-    let resizeHandler: (() => void) | null = null;
     let listeningShortcutKey = "";
     let isClosing = false;
     let closeTimer = 0;
@@ -361,10 +209,6 @@ export class SettingsModalView {
       setShortcutListeningState(overlay, listeningShortcutKey, false);
       listeningShortcutKey = "";
       document.removeEventListener("keydown", captureShortcutKeydown, true);
-      if (resizeHandler) {
-        window.removeEventListener("resize", resizeHandler);
-        resizeHandler = null;
-      }
 
       overlay.classList.add("au-closing");
       closeTimer = window.setTimeout(finalizeClose, 180);
@@ -378,41 +222,101 @@ export class SettingsModalView {
       if (e.target === overlay) close();
     };
 
-    const tabButtons = Array.from(overlay.querySelectorAll<HTMLButtonElement>(".au-tab-btn"));
-    const tabPanels = Array.from(overlay.querySelectorAll<HTMLElement>(".au-tab-panel"));
-    const panelsWrap = overlay.querySelector<HTMLElement>(".au-tab-panels");
+    const navButtons = Array.from(overlay.querySelectorAll<HTMLButtonElement>("[data-au-nav]"));
+    const pagePanels = Array.from(overlay.querySelectorAll<HTMLElement>("[data-au-page]"));
+    const content = overlay.querySelector<HTMLElement>("[data-au-content]");
+    const mainTitle = overlay.querySelector<HTMLElement>("[data-au-main-title]");
+    const searchInput = overlay.querySelector<HTMLInputElement>("[data-au-search-input]");
+    const searchEmpty = overlay.querySelector<HTMLElement>("[data-au-search-empty]");
+    const pageTitles = new Map(SETTINGS_PAGES.map((page) => [page.key, t(page.title)]));
 
-    const syncPanelMinHeight = () => {
-      if (!panelsWrap || tabPanels.length === 0) return;
-      const wrapWidth = panelsWrap.clientWidth || 1;
-      let maxHeight = 0;
-
-      // Measure every tab at the current width, including hidden tabs, so the
-      // modal does not jump in height when the user changes tabs.
-      tabPanels.forEach((panel) => {
-        const previousStyle = panel.getAttribute("style");
-
-        panel.style.display = "block";
-        panel.style.position = "absolute";
-        panel.style.visibility = "hidden";
-        panel.style.pointerEvents = "none";
-        panel.style.left = "0";
-        panel.style.top = "0";
-        panel.style.width = `${wrapWidth}px`;
-
-        maxHeight = Math.max(maxHeight, panel.scrollHeight);
-
-        if (previousStyle === null) {
-          panel.removeAttribute("style");
-        } else {
-          panel.setAttribute("style", previousStyle);
-        }
+    const setActivePage = (pageKey: SettingsPageKey) => {
+      this.activePage = pageKey;
+      navButtons.forEach((btn) => {
+        const isActive = btn.getAttribute("data-au-nav") === pageKey;
+        btn.classList.toggle("active", isActive);
+        btn.setAttribute("aria-selected", isActive ? "true" : "false");
       });
-
-      if (maxHeight > 0) {
-        panelsWrap.style.minHeight = `${Math.ceil(maxHeight)}px`;
-      }
+      pagePanels.forEach((panel) => {
+        panel.classList.toggle("active", panel.getAttribute("data-au-page") === pageKey);
+      });
+      if (mainTitle) mainTitle.textContent = pageTitles.get(pageKey) ?? "";
+      if (content) content.scrollTop = 0;
     };
+
+    // Search filters every page in place: unmatched rows, then empty groups and pages, are hidden.
+    // Lists and notes that are not settings are hidden by CSS while a search is active.
+    const applySearch = (query: string) => {
+      if (!content) return;
+      const trimmed = query.trim();
+      const items = content.querySelectorAll<HTMLElement>("[data-au-search]");
+      const groups = content.querySelectorAll<HTMLElement>("[data-au-group]");
+      content.classList.toggle("is-searching", trimmed !== "");
+
+      if (!trimmed) {
+        items.forEach((item) => { item.hidden = false; });
+        groups.forEach((group) => { group.hidden = false; });
+        pagePanels.forEach((panel) => { panel.hidden = false; });
+        if (searchEmpty) searchEmpty.hidden = true;
+        setActivePage(this.activePage);
+        return;
+      }
+
+      items.forEach((item) => {
+        item.hidden = !matchesSearch(item.getAttribute("data-au-search") ?? "", trimmed);
+      });
+      const hasMatch = (el: HTMLElement) => el.querySelector("[data-au-search]:not([hidden])") !== null;
+      groups.forEach((group) => { group.hidden = !hasMatch(group); });
+      pagePanels.forEach((panel) => { panel.hidden = !hasMatch(panel); });
+
+      navButtons.forEach((btn) => {
+        btn.classList.remove("active");
+        btn.setAttribute("aria-selected", "false");
+      });
+      if (searchEmpty) searchEmpty.hidden = pagePanels.some((panel) => !panel.hidden);
+      if (mainTitle) mainTitle.textContent = t("settings.searchResults");
+      content.scrollTop = 0;
+    };
+
+    const clearSearch = () => {
+      if (!searchInput || searchInput.value === "") return;
+      searchInput.value = "";
+      applySearch("");
+    };
+
+    searchInput?.addEventListener("input", () => applySearch(searchInput.value));
+    searchInput?.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape" || searchInput.value === "") return;
+      e.preventDefault();
+      clearSearch();
+    });
+
+    navButtons.forEach((btn) => {
+      btn.onclick = () => {
+        const pageKey = SETTINGS_PAGES.find((page) => page.key === btn.getAttribute("data-au-nav"))?.key;
+        if (!pageKey) return;
+        clearSearch();
+        setActivePage(pageKey);
+      };
+    });
+    setActivePage(this.activePage);
+
+    // Rows that depend on another setting are disabled while that setting blocks them.
+    const syncDependencies = () => {
+      overlay.querySelectorAll<HTMLElement>("[data-au-requires], [data-au-disabled-when]").forEach((el) => {
+        const requires = el.getAttribute("data-au-requires");
+        const disabledWhen = el.getAttribute("data-au-disabled-when");
+        const isDisabled =
+          (isConfigKey(requires) && !ConfigStore.get(requires)) ||
+          (isConfigKey(disabledWhen) && !!ConfigStore.get(disabledWhen));
+        el.classList.toggle("is-disabled", isDisabled);
+        el.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select").forEach((control) => {
+          control.disabled = isDisabled;
+        });
+      });
+    };
+    syncDependencies();
+
     const startShortcutCapture = (fieldKey: string | null) => {
       if (!fieldKey) return;
       if (listeningShortcutKey && listeningShortcutKey !== fieldKey) {
@@ -449,33 +353,9 @@ export class SettingsModalView {
       listeningShortcutKey = "";
     };
 
-    const setActiveTab = (tabKey: string | null | undefined) => {
-      if (!tabKey) return;
-      this.activeTabKey = tabKey;
-
-      tabButtons.forEach((btn) => {
-        const isActive = btn.getAttribute("data-tab") === tabKey;
-        btn.classList.toggle("active", isActive);
-        btn.setAttribute("aria-selected", isActive ? "true" : "false");
-      });
-
-      tabPanels.forEach((panel) => {
-        const isActive = panel.getAttribute("data-tab-panel") === tabKey;
-        panel.classList.toggle("active", isActive);
-      });
-    };
-
-    tabButtons.forEach((btn) => {
-      btn.onclick = () => setActiveTab(btn.getAttribute("data-tab"));
-    });
-    setActiveTab(initialTabKey);
-    syncPanelMinHeight();
-
-    resizeHandler = () => syncPanelMinHeight();
-    window.addEventListener("resize", resizeHandler, { passive: true });
     document.addEventListener("keydown", captureShortcutKeydown, true);
 
-    overlay.querySelectorAll<HTMLInputElement>(".au-toggle input").forEach((input) => {
+    overlay.querySelectorAll<HTMLInputElement>('input[type="checkbox"][data-key]').forEach((input) => {
       input.onchange = (e) => {
         const target = e.currentTarget as HTMLInputElement;
         const key = target.getAttribute("data-key");
@@ -483,26 +363,9 @@ export class SettingsModalView {
         const value = target.checked;
         ConfigStore.set(key, value);
         this.onConfigChanged(key, value);
-
-          if (key === "fitWidthMode") {
-            const widthInput = overlay.querySelector<HTMLInputElement>("#inp-imageWidth");
-            if (widthInput) {
-              widthInput.disabled = value;
-              widthInput.style.opacity = value ? "0.5" : "1";
-            }
-          }
-
-          if (key === "customAccentEnabled") {
-            const accentInput = overlay.querySelector<HTMLInputElement>("#inp-customAccent");
-            if (accentInput) {
-              accentInput.disabled = !value;
-              accentInput.style.opacity = value ? "1" : "0.5";
-            }
-          }
-
-          syncPanelMinHeight();
-        };
-      });
+        syncDependencies();
+      };
+    });
 
     overlay.querySelectorAll<HTMLButtonElement>("[data-au-action]").forEach((button) => {
       button.onclick = () =>
@@ -517,7 +380,6 @@ export class SettingsModalView {
       FilterStore.unhideSeries(path);
       this.onConfigChanged("seriesFilters", ConfigStore.get("seriesFilters"));
       if (filtersPanel) filtersPanel.innerHTML = this.filtersBodyHTML();
-      syncPanelMinHeight();
     });
     filtersPanel?.addEventListener("change", (e) => {
       // Checkbox state already matches the stored list, so the genre list is not re-rendered.
@@ -619,44 +481,165 @@ export class SettingsModalView {
     });
   }
 
-  controlLabelHTML(label: string, tooltip: string): string {
+  navButtonHTML(page: SettingsPage): string {
+    return `
+      <button
+        type="button"
+        class="au-nav-btn"
+        id="au-nav-${page.key}"
+        role="tab"
+        aria-controls="au-page-${page.key}"
+        aria-selected="false"
+        data-au-nav="${page.key}"
+      >
+        ${PAGE_ICONS[page.key]}
+        <span>${escapeHtml(t(page.title))}</span>
+      </button>
+    `;
+  }
+
+  pageHTML(page: SettingsPage, cfg: AppConfig): string {
+    return `
+      <div
+        class="au-page"
+        id="au-page-${page.key}"
+        role="tabpanel"
+        aria-labelledby="au-nav-${page.key}"
+        data-au-page="${page.key}"
+      >
+        <div class="au-page-label">${escapeHtml(t(page.title))}</div>
+        ${page.groups.map((group) => this.groupHTML(group, cfg)).join("")}
+      </div>
+    `;
+  }
+
+  groupHTML(group: SettingsGroup, cfg: AppConfig): string {
+    const title = group.title ? `<h3 class="au-group-title">${escapeHtml(t(group.title))}</h3>` : "";
+    const rows = group.rows
+      ? `<div class="au-card">${group.rows.map((row) => this.settingRowHTML(row, cfg)).join("")}</div>`
+      : "";
+    const checklist = group.checklist
+      ? `<div class="au-card au-checklist">${group.checklist.map((item) => this.checklistItemHTML(item, cfg)).join("")}</div>`
+      : "";
+    const content = group.content ? this.groupContentHTML(group.content, cfg) : "";
+
+    return `
+      <section class="au-group" data-au-group>
+        ${title}
+        ${rows}
+        ${checklist}
+        ${content}
+      </section>
+    `;
+  }
+
+  settingRowHTML(row: SettingRow, cfg: AppConfig): string {
+    const label = t(`setting.${row.key}.label`);
+    const hint = t(`setting.${row.key}.tooltip`);
     const safeLabel = escapeHtml(label);
-    if (!tooltip) return `<span>${safeLabel}</span>`;
-    const safeTip = escapeHtml(tooltip);
+    const value = escapeHtml(String(cfg[row.key]));
+    let control: string;
+
+    switch (row.kind) {
+      case "toggle":
+        control = `
+          <label class="au-toggle">
+            <input type="checkbox" data-key="${row.key}" aria-label="${safeLabel}" ${cfg[row.key] ? "checked" : ""}>
+            <span class="au-slider"></span>
+          </label>
+        `;
+        break;
+      case "number": {
+        const meta = CONFIG_META[row.key];
+        const range = [
+          meta?.min !== undefined ? `min="${meta.min}"` : "",
+          meta?.max !== undefined ? `max="${meta.max}"` : "",
+        ].join(" ");
+        control = `<input type="number" class="au-input-num" data-key="${row.key}" aria-label="${safeLabel}" step="${row.step}" ${range} value="${value}">`;
+        break;
+      }
+      case "color":
+        control = `<input type="color" class="au-input-color" data-key="${row.key}" aria-label="${safeLabel}" value="${value}">`;
+        break;
+      case "select": {
+        const options = row.options()
+          .map((opt) => {
+            const selected = String(cfg[row.key]) === opt.value;
+            return `<option value="${escapeHtml(opt.value)}" ${selected ? "selected" : ""}>${escapeHtml(opt.label)}</option>`;
+          })
+          .join("");
+        control = `<select class="au-input-select" data-key="${row.key}" aria-label="${safeLabel}">${options}</select>`;
+        break;
+      }
+    }
+
     return `
-      <span class="au-control-label" data-tooltip="${safeTip}">
-        <span>${safeLabel}</span>
-        <span class="au-control-tooltip" aria-hidden="true">?</span>
-      </span>
+      <div class="au-setting-row" data-au-search="${escapeHtml(searchText(`${label} ${hint}`))}" ${dependencyAttrs(row)}>
+        <div class="au-setting-text">
+          <div class="au-setting-label">${safeLabel}</div>
+          <div class="au-setting-hint">${escapeHtml(hint)}</div>
+        </div>
+        ${control}
+      </div>
     `;
   }
 
-  toggleHTML(key: ConfigKey, label: string, checked: AppConfig[ConfigKey], tooltip = ""): string {
+  // Checklist items keep the description in a hover tooltip so the grid stays compact.
+  checklistItemHTML(item: ChecklistItem, cfg: AppConfig): string {
+    const label = t(`setting.${item.key}.label`);
+    const hint = t(`setting.${item.key}.tooltip`);
+    const safeHint = escapeHtml(hint);
     return `
-      <div class="au-control-row">
-        ${this.controlLabelHTML(label, tooltip)}
-        <label class="au-toggle">
-          <input type="checkbox" data-key="${key}" ${checked ? "checked" : ""}>
-          <span class="au-slider"></span>
+      <div class="au-check" data-au-search="${escapeHtml(searchText(`${label} ${hint}`))}" ${dependencyAttrs(item)}>
+        <label class="au-check-main">
+          <input type="checkbox" data-key="${item.key}" aria-description="${safeHint}" ${cfg[item.key] ? "checked" : ""}>
+          <span>${escapeHtml(label)}</span>
         </label>
+        <span class="au-control-label" data-tooltip="${safeHint}">
+          <span class="au-control-tooltip" aria-hidden="true">?</span>
+        </span>
       </div>
     `;
   }
 
-  dataSectionHTML(): string {
-    return `
-      <div class="au-data-note">
-        ${escapeHtml(t("data.note"))}
-      </div>
-      <div class="au-data-actions">
-        <button type="button" class="au-data-btn" data-au-action="export">${escapeHtml(t("data.exportSettings"))}</button>
-        <button type="button" class="au-data-btn" data-au-action="import">${escapeHtml(t("data.importSettings"))}</button>
-        <button type="button" class="au-data-btn" data-au-action="export-history">${escapeHtml(t("data.exportHistory"))}</button>
-        <button type="button" class="au-data-btn" data-au-action="import-history">${escapeHtml(t("data.importHistory"))}</button>
-        <button type="button" class="au-data-btn" data-au-action="reset">${escapeHtml(t("data.reset"))}</button>
-        <button type="button" class="au-data-btn au-data-btn-danger" data-au-action="clear-history">${escapeHtml(t("data.clearHistory"))}</button>
-      </div>
-    `;
+  groupContentHTML(content: GroupContent, cfg: AppConfig): string {
+    switch (content) {
+      case "history":
+        return `
+          ${this.dataActionsHTML([
+            ["export-history", "data.exportHistory"],
+            ["import-history", "data.importHistory"],
+            ["clear-history", "data.clearHistory", true],
+          ])}
+          <div class="au-group-extra" data-au-history>${this.historyBodyHTML()}</div>
+        `;
+      case "filters":
+        return `<div class="au-group-extra" data-au-filters>${this.filtersBodyHTML()}</div>`;
+      case "shortcuts":
+        return renderShortcutsEditor(cfg);
+      case "settingsData":
+        return `
+          <div class="au-data-note au-group-extra">${escapeHtml(t("data.note"))}</div>
+          ${this.dataActionsHTML([
+            ["export", "data.exportSettings"],
+            ["import", "data.importSettings"],
+            ["reset", "data.reset", true],
+          ])}
+        `;
+    }
+  }
+
+  // The button labels double as the search text, so "export" or "reset" finds these actions.
+  dataActionsHTML(
+    actions: readonly (readonly [action: string, label: MessageKey, danger?: boolean])[]
+  ): string {
+    const labels = actions.map(([, label]) => t(label));
+    const buttons = actions
+      .map(([action, label, danger]) => `
+        <button type="button" class="au-data-btn${danger ? " au-data-btn-danger" : ""}" data-au-action="${action}">${escapeHtml(t(label))}</button>
+      `)
+      .join("");
+    return `<div class="au-data-actions" data-au-search="${escapeHtml(searchText(labels.join(" ")))}">${buttons}</div>`;
   }
 
   historyBodyHTML(): string {

@@ -202,7 +202,8 @@ export const PageController = {
       goTop: () => this.reader.goTop(),
       openSettings: () => {
         // The modal has no explicit open method, so only toggle when it is not already showing.
-        if (!document.getElementById("au-modal-overlay")) this.settingsView.toggleModal();
+        // Opened from the dock, it starts on the Reader section.
+        if (!document.getElementById("au-modal-overlay")) this.settingsView.toggleModal("reader");
       },
     });
 
