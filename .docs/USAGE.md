@@ -124,7 +124,7 @@ Use **Export History** above the list to copy your history as JSON. **Import His
 
 ## Appearance
 
-Choose a preset from **Settings → Appearance**. Available presets are Asura Classic, Asura Ocean, Asura Midnight (true black), Asura Sapphire, Asura Crimson, Asura Ember, and Asura Sakura.
+Choose a preset from **Settings → Appearance**. Available presets are Classic, Ocean, Midnight (true black), Sapphire, Crimson, Ember, and Sakura. Each preset in the theme menu shows swatches of its background, muted text, and accent colors.
 
 Enable **Custom Accent Color** to override the preset accent. Changes preview immediately and apply across supported site elements.
 

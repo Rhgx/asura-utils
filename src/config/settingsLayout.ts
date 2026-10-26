@@ -16,6 +16,7 @@ export type DescribedSettingKey = {
 type DescribedToggleKey = DescribedSettingKey & BooleanConfigKey;
 
 export interface SettingOption { value: string; label: string }
+export interface PaletteOption extends SettingOption { swatches: readonly string[] }
 
 interface RowDependencies {
   // The row is disabled while this setting is off.
@@ -30,6 +31,8 @@ export type SettingRow = RowDependencies & (
   | { kind: "color"; key: DescribedSettingKey }
   // Options are a function because their labels are translated when the modal renders.
   | { kind: "select"; key: DescribedSettingKey; options: () => readonly SettingOption[] }
+  // A dropdown whose options show color swatches, which a native select cannot draw.
+  | { kind: "palette"; key: DescribedSettingKey; options: () => readonly PaletteOption[] }
 );
 
 export interface ChecklistItem extends RowDependencies {
@@ -175,7 +178,7 @@ const SETTINGS_PAGES: readonly SettingsPage[] = [
       {
         title: "group.theme",
         rows: [
-          { kind: "select", key: "themePreset", options: () => THEME_PRESET_OPTIONS },
+          { kind: "palette", key: "themePreset", options: () => THEME_PRESET_OPTIONS },
           { kind: "toggle", key: "customAccentEnabled" },
           { kind: "color", key: "customAccent", requires: "customAccentEnabled" },
         ],

@@ -47,12 +47,16 @@ const THEME_PRESETS: Record<string, ThemePreset> = Object.fromEntries(
   presetList.map(({ key, label, tokens }) => [key, { label, tokens }])
 );
 
-const THEME_PRESET_OPTIONS = presetList.map(({ key, label }) => ({
+const BASE_THEME_TOKENS = baseThemeTokens as ThemeTokens;
+
+// Background, muted text, and accent: enough to tell the presets apart at a glance in the picker.
+const SWATCH_TOKENS = ["--au-bg-panel", "--au-text-dim", "--au-accent"] as const;
+
+const THEME_PRESET_OPTIONS = presetList.map(({ key, label, tokens }) => ({
   value: key,
   label,
+  swatches: SWATCH_TOKENS.map((token) => tokens[token] ?? BASE_THEME_TOKENS[token] ?? "transparent"),
 }));
-
-const BASE_THEME_TOKENS = baseThemeTokens as ThemeTokens;
 
 // Removed presets map to their closest replacement so saved and imported settings keep a similar look.
 const LEGACY_THEME_KEYS: Readonly<Record<string, string>> = {

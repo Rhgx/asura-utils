@@ -1,6 +1,7 @@
 import { SETTINGS_PAGES } from "../config/settingsLayout.js";
 import type {
   ChecklistItem,
+  PaletteOption,
   GroupContent,
   SettingRow,
   SettingsGroup,
@@ -29,7 +30,7 @@ import {
 import { formatPercent, t, tPlural } from "../i18n/index.js";
 import type { MessageKey } from "../i18n/index.js";
 import { escapeHtml } from "./escapeHtml.js";
-import { CLEAR_ICON, PAGE_ICONS, SEARCH_ICON, rocksEmblemSvg } from "./settingsIcons.js";
+import { CHEVRON_ICON, CLEAR_ICON, PAGE_ICONS, SEARCH_ICON, rocksEmblemSvg } from "./settingsIcons.js";
 import { matchesSearch, searchText } from "./settingsSearch.js";
 
 const APP_VERSION = packageJson.version;
@@ -66,8 +67,11 @@ export class SettingsModalView {
       btn = document.createElement("button");
       btn.id = "au-settings-btn-main";
       btn.className = "au-settings-btn";
+      btn.setAttribute("type", "button");
+      btn.title = t("dock.settings");
+      btn.setAttribute("aria-label", t("dock.openSettings"));
       btn.innerHTML =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+        '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
       btn.onclick = (e) => {
         e.preventDefault();
         this.toggleModal();
@@ -141,9 +145,8 @@ export class SettingsModalView {
     const credit = escapeHtml(t("settings.madeBy", { author: AUTHOR_NAME }));
 
     overlay.innerHTML = `
-      <div id="au-modal" role="dialog" aria-modal="true" aria-labelledby="au-modal-title">
+      <div id="au-modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(t("settings.title"))}">
         <aside class="au-sidebar">
-          <div class="au-sidebar-title" id="au-modal-title">${escapeHtml(t("settings.title"))}</div>
           <div class="au-search">
             ${SEARCH_ICON}
             <input
@@ -540,6 +543,68 @@ export class SettingsModalView {
         if (key === "language") this.reopenModal();
       };
     });
+
+    // Swatch colors are set through the style object, which a page's CSP cannot block the way it can
+    // block inline style attributes in markup.
+    overlay.querySelectorAll<HTMLElement>("[data-au-swatch]").forEach((swatch) => {
+      swatch.style.backgroundColor = swatch.getAttribute("data-au-swatch") ?? "";
+    });
+
+    overlay.querySelectorAll<HTMLElement>("[data-au-palette]").forEach((palette) => {
+      const key = palette.getAttribute("data-key");
+      const trigger = palette.querySelector<HTMLButtonElement>(".au-palette-trigger");
+      const current = palette.querySelector<HTMLElement>(".au-palette-current");
+      const menu = palette.querySelector<HTMLElement>(".au-palette-menu");
+      const options = Array.from(palette.querySelectorAll<HTMLElement>("[data-au-option]"));
+      if (!isConfigKey(key) || !trigger || !current || !menu) return;
+
+      const setOpen = (open: boolean) => {
+        menu.hidden = !open;
+        trigger.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open) (options.find((option) => option.getAttribute("aria-selected") === "true") ?? options[0])?.focus();
+      };
+
+      const choose = (option: HTMLElement) => {
+        const value = ConfigStore.set(key, option.getAttribute("data-au-option"));
+        options.forEach((candidate) => candidate.setAttribute("aria-selected", candidate === option ? "true" : "false"));
+        // Cloning keeps the swatch colors, which serialized markup would drop under a strict CSP.
+        current.replaceChildren(...Array.from(option.childNodes, (node) => node.cloneNode(true)));
+        setOpen(false);
+        trigger.focus();
+        this.onConfigChanged(key, value);
+      };
+
+      trigger.onclick = () => setOpen(trigger.getAttribute("aria-expanded") !== "true");
+      trigger.onkeydown = (e) => {
+        if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+        e.preventDefault();
+        setOpen(true);
+      };
+      options.forEach((option) => {
+        option.onclick = () => choose(option);
+      });
+      menu.onkeydown = (e) => {
+        const index = e.target instanceof HTMLElement ? options.indexOf(e.target) : -1;
+        const move = (next: number) => options[(next + options.length) % options.length]?.focus();
+        if (e.key === "ArrowDown") move(index + 1);
+        else if (e.key === "ArrowUp") move(index - 1);
+        else if (e.key === "Home") move(0);
+        else if (e.key === "End") move(options.length - 1);
+        else if ((e.key === "Enter" || e.key === " ") && options[index]) choose(options[index]);
+        else if (e.key === "Escape") {
+          setOpen(false);
+          trigger.focus();
+        } else if (e.key === "Tab") {
+          setOpen(false);
+          return;
+        } else return;
+        e.preventDefault();
+      };
+      // Any press outside the dropdown closes it.
+      overlay.addEventListener("pointerdown", (e) => {
+        if (!menu.hidden && !(e.target instanceof Node && palette.contains(e.target))) setOpen(false);
+      });
+    });
   }
 
   navButtonHTML(page: SettingsPage): string {
@@ -629,6 +694,38 @@ export class SettingsModalView {
           })
           .join("");
         control = `<select class="au-input-select" data-key="${row.key}" aria-label="${safeLabel}">${options}</select>`;
+        break;
+      }
+      case "palette": {
+        const options = row.options();
+        const selected = options.find((opt) => opt.value === String(cfg[row.key])) ?? options[0];
+        const optionBody = (opt: PaletteOption) => `
+          <span class="au-swatches" aria-hidden="true">
+            ${opt.swatches.map((color) => `<span class="au-swatch" data-au-swatch="${escapeHtml(color)}"></span>`).join("")}
+          </span>
+          <span class="au-palette-name">${escapeHtml(opt.label)}</span>
+        `;
+        control = `
+          <div class="au-palette" data-au-palette data-key="${row.key}">
+            <button type="button" class="au-palette-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="${safeLabel}">
+              <span class="au-palette-current">${selected ? optionBody(selected) : ""}</span>
+              ${CHEVRON_ICON}
+            </button>
+            <div class="au-palette-menu" role="listbox" aria-label="${safeLabel}" hidden>
+              ${options
+                .map((opt) => `
+                  <div
+                    class="au-palette-option"
+                    role="option"
+                    tabindex="-1"
+                    aria-selected="${opt === selected ? "true" : "false"}"
+                    data-au-option="${escapeHtml(opt.value)}"
+                  >${optionBody(opt)}</div>
+                `)
+                .join("")}
+            </div>
+          </div>
+        `;
         break;
       }
     }

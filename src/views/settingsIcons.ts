@@ -42,5 +42,7 @@ const PAGE_ICONS: Readonly<Record<SettingsPageKey, string>> = {
 const SEARCH_ICON = lucide('<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>');
 // x
 const CLEAR_ICON = lucide('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>');
+// chevron-down
+const CHEVRON_ICON = lucide('<path d="m6 9 6 6 6-6"/>');
 
-export { CLEAR_ICON, PAGE_ICONS, SEARCH_ICON, rocksEmblemSvg };
+export { CHEVRON_ICON, CLEAR_ICON, PAGE_ICONS, SEARCH_ICON, rocksEmblemSvg };

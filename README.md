@@ -68,9 +68,9 @@ The default chapter-end action intelligently opens the next available chapter. I
 
 | Preset | Preset | Preset |
 | --- | --- | --- |
-| Asura Classic | Asura Ocean | Asura Midnight |
-| Asura Sapphire | Asura Crimson | Asura Ember |
-| Asura Sakura |  |  |
+| Classic | Ocean | Midnight |
+| Sapphire | Crimson | Ember |
+| Sakura |  |  |
 
 Every preset supports an optional custom accent color with live preview.
 

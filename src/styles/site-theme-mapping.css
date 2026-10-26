@@ -62,21 +62,18 @@ body.au-theme-enabled img[src*="asurascans.com/images/logo.webp"] {
   transition: filter 0.25s ease, transform 0.2s ease;
 }
 
-body.au-theme-enabled .au-overhaul-header .au-overhaul-auth-btn,
-body.au-theme-enabled .au-settings-btn {
+body.au-theme-enabled .au-overhaul-header .au-overhaul-auth-btn {
   background-color: transparent !important;
   border-color: color-mix(in srgb, white 22%, transparent) !important;
   color: #fff !important;
 }
 
-body.au-theme-enabled .au-overhaul-header .au-overhaul-auth-btn svg,
-body.au-theme-enabled .au-settings-btn svg {
+body.au-theme-enabled .au-overhaul-header .au-overhaul-auth-btn svg {
   color: #fff !important;
   stroke: currentColor !important;
 }
 
-body.au-theme-enabled .au-overhaul-header .au-overhaul-auth-btn:hover,
-body.au-theme-enabled .au-settings-btn:hover {
+body.au-theme-enabled .au-overhaul-header .au-overhaul-auth-btn:hover {
   background-color: color-mix(in srgb, white 14%, transparent) !important;
   border-color: color-mix(in srgb, white 34%, transparent) !important;
 }

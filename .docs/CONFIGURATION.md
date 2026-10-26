@@ -89,7 +89,7 @@ Genres are learned from series seen on the site, so a series is hidden by genre 
 
 | Group | Setting | Default | Values | Description |
 | --- | --- | --- | --- | --- |
-| Theme | Theme | Asura Classic | Seven bundled presets | Selects the full-site color preset |
+| Theme | Theme | Classic | Seven bundled presets, each shown with color swatches | Selects the full-site color preset |
 | Theme | Custom Accent Color | Off | On / Off | Enables the custom accent override |
 | Theme | Accent Color | `#913fe2` | Browser color value | Sets the override color. Disabled while Custom Accent Color is off |
 | Language | Language | Auto | Auto, English, Türkçe, Español, Português (Brasil), Bahasa Indonesia | Language for Asura Utils menus and messages. Auto follows the browser language |
