@@ -4,8 +4,8 @@
 
 | Tool | Version / expectation |
 | --- | --- |
-| Node.js | 22, matching the release workflow |
-| pnpm | 11.3.0, declared by `packageManager` |
+| Node.js | 26, matching the release workflow |
+| pnpm | 12.15.0, declared by `packageManager` |
 | Browser | A browser with Tampermonkey for installation testing |
 
 ## Setup

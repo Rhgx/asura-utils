@@ -96,7 +96,7 @@ Settings, reading history, and series filters remain in Tampermonkey storage on 
 
 ## Development
 
-Requires Node.js 22 and `pnpm`.
+Requires Node.js 26 and `pnpm`.
 
 | Command | Purpose |
 | --- | --- |

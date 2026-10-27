@@ -42,7 +42,7 @@ Do not reuse or move a published version tag. If a release needs correction, pub
 The `Release build` workflow performs these steps:
 
 1. Checks out the tagged commit.
-2. Installs pnpm and Node.js 22.
+2. Installs pnpm and Node.js 26.
 3. Installs dependencies with `pnpm install --frozen-lockfile`.
 4. Compares the tag with `package.json`.
 5. Runs `pnpm test`.
