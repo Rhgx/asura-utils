@@ -1,3 +1,4 @@
+import type { ComponentType } from "preact";
 import type { SettingsPageKey } from "../config/settingsLayout.js";
 import rocksEmblemSvg from "../assets/rocks.svg?raw";
 
@@ -11,11 +12,28 @@ import rocksEmblemSvg from "../assets/rocks.svg?raw";
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
  */
-function lucide(body: string): string {
-  return `<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+// The bodies are static path markup from this file. Setting them on the svg element parses them as SVG.
+function lucide(body: string): ComponentType {
+  return function LucideIcon() {
+    return (
+      <svg
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        dangerouslySetInnerHTML={{ __html: body }}
+      />
+    );
+  };
 }
 
-const PAGE_ICONS: Readonly<Record<SettingsPageKey, string>> = {
+const PAGE_ICONS: Readonly<Record<SettingsPageKey, ComponentType>> = {
   // book-open
   reader: lucide(
     '<path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/>'
@@ -39,10 +57,20 @@ const PAGE_ICONS: Readonly<Record<SettingsPageKey, string>> = {
 };
 
 // search
-const SEARCH_ICON = lucide('<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>');
+const SearchIcon = lucide('<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>');
 // x
-const CLEAR_ICON = lucide('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>');
+const ClearIcon = lucide('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>');
 // chevron-down
-const CHEVRON_ICON = lucide('<path d="m6 9 6 6 6-6"/>');
+const ChevronIcon = lucide('<path d="m6 9 6 6 6-6"/>');
 
-export { CHEVRON_ICON, CLEAR_ICON, PAGE_ICONS, SEARCH_ICON, rocksEmblemSvg };
+// The close button is a plain svg, not a Lucide body, so it is written out as JSX.
+function CloseIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M18 6 6 18"></path>
+      <path d="m6 6 12 12"></path>
+    </svg>
+  );
+}
+
+export { ChevronIcon, ClearIcon, CloseIcon, PAGE_ICONS, SearchIcon, rocksEmblemSvg };

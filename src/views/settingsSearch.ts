@@ -17,3 +17,8 @@ export function matchesSearch(haystack: string, query: string): boolean {
     .split(" ")
     .every((word) => haystack.includes(word));
 }
+
+// The id a rendered search target carries, so a result can find its element again.
+export function searchItemId(kind: "row" | "check" | "action" | "shortcut", key: string): string {
+  return `${kind}:${key}`;
+}
