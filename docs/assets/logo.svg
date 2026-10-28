@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="none" viewBox="0 0 80 80">
+  <defs>
+    <linearGradient id="paint0_linear_1018_14934" x1="23.19" x2="49.27" y1="47.4" y2="67.27" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#531E96" offset="0"/>
+      <stop stop-color="#7A2BC8" offset=".349"/>
+      <stop stop-color="#8631D6" offset=".724"/>
+      <stop stop-color="#6424A7" offset="1"/>
+    </linearGradient>
+    <linearGradient id="paint1_linear_1018_14934" x1="40" x2="56.24" y1="14.87" y2="65.1" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D86FED" offset="0"/>
+      <stop stop-color="#9D3DEB" offset=".3802"/>
+      <stop stop-color="#802CD2" offset=".724"/>
+      <stop stop-color="#562097" offset="1"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(40 40) scale(1.155735) translate(-40 -40.14)" id="badge_content"><circle cx="40" cy="40.14" r="34.61" fill="#28292F"/>
+  <path d="M40 14.87c-2.32 0-4.85 2.71-7.73 6.88-4.76 6.76-8.97 15.24-12.75 22.93-3.33 6.58-6.07 11.57-9.38 12.49 1.54 2.93 3.75 5.7 6.07 7.94 4.01-2.33 6.12-8.38 7.9-14.72 1.75-6.05 4.33-11.85 8.33-16.81 3.06-3.81 6.08-6.51 7.6-6.51 1.52 0 4.54 2.7 7.6 6.51 4 4.96 6.58 10.76 8.33 16.81 1.78 6.34 3.89 12.39 7.9 14.72 2.32-2.24 4.53-5.01 6.07-7.94-3.31-0.92-6.05-5.91-9.38-12.49-3.78-7.69-7.99-16.17-12.75-22.93-2.88-4.17-5.41-6.88-7.73-6.88z" fill="url(#paint1_linear_1018_14934)" id="letterform_a"/>
+  <path d="M40 38.9c-3.3 0-6.55 0.82-9.2 2.05 2.65 1.4 5.88 2.74 9.2 2.74 3.32 0 6.55-1.34 9.2-2.74-2.65-1.23-5.9-2.05-9.2-2.05z" fill="#fff" id="slit"/></g>
+</svg>

@@ -1,112 +1,47 @@
-# Asura Utils
+# <img src="docs/assets/logo.svg" alt="" width="36" height="36" align="absmiddle"> Asura Utils
 
-[![Release](https://img.shields.io/github/v/release/Rhgx/asura-utils?label=release)](https://github.com/Rhgx/asura-utils/releases/latest)
-[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/Rhgx/asura-utils?label=release&color=8b3fd9)](https://github.com/Rhgx/asura-utils/releases/latest)
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-8b3fd9.svg)](LICENSE)
 
-A Tampermonkey userscript that makes reading on [Asura Scans](https://asurascans.com/) cleaner and more convenient. It adds a reader dock, auto-scroll, reading history, themes, keyboard shortcuts, layout controls, and page cleanup.
+A Tampermonkey userscript that makes reading on [Asura Scans](https://asurascans.com/) cleaner and more convenient.
+
+**[Install the latest release](https://github.com/Rhgx/asura-utils/releases/latest/download/asura-utils.user.js)**
 
 ## Install
 
-### From a release
+1. Install a userscript manager: <a href="https://www.tampermonkey.net/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/third-party/tampermonkey-dark-theme.png"><img src="docs/assets/third-party/tampermonkey.png" alt="" width="16" height="16" align="absmiddle"></picture></a> [Tampermonkey](https://www.tampermonkey.net/), <a href="https://violentmonkey.github.io/"><img src="docs/assets/third-party/violentmonkey.png" alt="" width="16" height="16" align="absmiddle"></a> [Violentmonkey](https://violentmonkey.github.io/), or <a href="https://scriptcat.org/"><img src="docs/assets/third-party/scriptcat.png" alt="" width="16" height="16" align="absmiddle"></a> [ScriptCat](https://scriptcat.org/).
+2. Open the [latest userscript](https://github.com/Rhgx/asura-utils/releases/latest/download/asura-utils.user.js) and approve the installation.
+3. Visit [asurascans.com](https://asurascans.com/). Open a chapter and select the handle on the right edge to expand the reader dock.
 
-1. Install [Tampermonkey](https://www.tampermonkey.net/) in your browser.
-2. Open the [latest userscript](https://github.com/Rhgx/asura-utils/releases/latest/download/asura-utils.user.js).
-3. Approve the installation in Tampermonkey.
-4. Visit [asurascans.com](https://asurascans.com/).
+Your userscript manager checks for new releases automatically. Asura Utils is developed and tested with Tampermonkey.
 
-Once a release build is installed, Tampermonkey can discover later releases automatically. See [Updates](#updates) for details.
+## Features
 
-### From source
-
-```sh
-pnpm install
-pnpm build
-```
-
-Open `dist/asura-utils.user.js` in your browser and approve the Tampermonkey installation.
-
-## Highlights
-
-| Area | What it adds |
-| --- | --- |
-| Reader | Collapsible reader dock for comic and novel chapters, auto-scroll, adjustable speed, image width and brightness controls |
-| Navigation | Previous and next chapter and page controls, series navigation, Next Unread and Mark Read Up To on chapter lists, chapter-end actions, premium-lock handling |
-| Progress | Reading progress bar with page readout, per-series history, continue-reading links, new chapter badges, and position restoration |
-| Filters | Hide individual series and exclude genres on the home and browse pages |
-| Appearance | Seven theme presets, custom accent colors, full-site color remapping, and five interface languages |
-| Cleanup | Ad and promotion blocking, optional section hiding, compact sidebar, and layout overhaul |
-| Controls | Rebindable shortcuts plus double-click auto-scroll |
-| Data | Settings export/import, reading-history export/import with a searchable history manager, reset controls |
-
-## Default shortcuts
-
-Shortcuts can be rebound or cleared from **Settings → Shortcuts**.
-
-| Key | Action | Context |
-| :---: | --- | --- |
-| `S` | Toggle auto-scroll | Reader |
-| `Q` / `E` | Decrease / increase scroll speed | Reader |
-| `A` / `D` | Previous / next chapter | Reader |
-| `Z` / `X` | Previous / next page | Comic reader |
-| `B` | Return to the series page | Reader |
-| `W` | Toggle fit-width mode | Reader |
-| `C` | Focus search | Series page |
-| `L` | Jump to the chapter list | Series page |
-
-Auto-scroll can also be toggled by double-clicking a chapter page when that option is enabled.
-
-## Quick start
-
-1. Open a chapter page.
-2. Select the slim handle on the right edge to expand the reader dock.
-3. Adjust scrolling, image width, brightness, or navigation from the dock.
-4. Select the gear button in the site header or the reader dock to configure appearance, reader behavior, layout, shortcuts, and saved data.
-
-The default chapter-end action intelligently opens the next available chapter. It checks for premium locks before navigating and shows when a locked chapter unlocks.
-
-## Themes
-
-| Preset | Preset | Preset |
-| --- | --- | --- |
-| Classic | Ocean | Midnight |
-| Sapphire | Crimson | Ember |
-| Sakura |  |  |
-
-Every preset supports an optional custom accent color with live preview.
-
-## Updates
-
-Release builds include Tampermonkey `@updateURL` and `@downloadURL` metadata. Tampermonkey checks the lightweight metadata asset from the latest GitHub release and installs the full userscript when it finds a newer version.
-
-Users who installed a build from before automatic updates were introduced must install a current release once. Update frequency is controlled by Tampermonkey's own settings.
-
-## Privacy
-
-Settings, reading history, and series filters remain in Tampermonkey storage on your device. Asura Utils does not send that data anywhere.
+- A collapsible reader dock with auto-scroll, speed control, image width, and brightness, for comic and novel chapters.
+- Chapter and page navigation, a smart next-chapter action that detects premium locks, and Next Unread and Mark Read Up To on chapter lists.
+- A reading progress bar, per-series history with Continue Reading links, new chapter badges, and position restoration.
+- Series and genre filters for the home and browse pages.
+- Seven theme presets, a custom accent color, full-site color remapping, and five interface languages.
+- Ad and promotion blocking, optional section hiding, a compact sidebar, and a layout overhaul.
+- Rebindable keyboard shortcuts, plus double-click to toggle auto-scroll.
+- Settings and reading-history export and import, with a searchable history manager.
 
 ## Documentation
 
-| Guide | Contents |
-| --- | --- |
-| [Documentation index](.docs/README.md) | Overview of all project guides |
-| [Usage guide](.docs/USAGE.md) | Reader controls, page navigation, novels, shortcuts, filters, history, language, themes, and data tools |
-| [Configuration reference](.docs/CONFIGURATION.md) | Every setting, default value, and valid range |
-| [Development guide](.docs/DEVELOPMENT.md) | Local setup, scripts, build artifacts, and source layout |
-| [Release guide](.docs/RELEASING.md) | Versioning, tagged releases, CI, and automatic updates |
+- [Using Asura Utils](docs/usage.md): the reader dock, shortcuts, navigation, history, filters, and themes
+- [Configuration](docs/configuration.md): every setting, with its default and valid range
+- [Development](docs/development.md): building from source, scripts, and project layout
+- [Releasing](docs/releasing.md): versioning, tagged releases, and automatic updates
 
-## Development
+## Privacy
 
-Requires Node.js 22 and `pnpm`.
+Settings, reading history, and series filters stay in your userscript manager's storage on your device. Asura Utils does not send this data anywhere.
 
-| Command | Purpose |
-| --- | --- |
-| `pnpm dev` | Start Vite in userscript development mode |
-| `pnpm typecheck` | Check TypeScript without emitting files |
-| `pnpm build` | Build the userscript and metadata files into `dist/` |
-| `pnpm test` | Typecheck, build, and verify both release artifacts |
-| `pnpm preview` | Start the Vite preview server |
+## Credits
 
-See the [development guide](.docs/DEVELOPMENT.md) for the complete project layout and workflow.
+Asura Scans, its name, logo, and site content are the property of their respective owners. The Asura Utils logo borrows the colors and shapes of the Asura Scans logo. This is an independent community project and is not affiliated with, sponsored by, or endorsed by Asura Scans.
+
+The Tampermonkey, Violentmonkey, and ScriptCat logos belong to their respective projects. The settings window uses icons from <a href="https://lucide.dev"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/third-party/lucide-dark-theme.svg"><img src="docs/assets/third-party/lucide.svg" alt="" width="16" height="16" align="absmiddle"></picture></a> [Lucide](https://lucide.dev), licensed under the ISC License.
 
 ## License
 

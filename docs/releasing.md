@@ -1,6 +1,6 @@
-# Releasing Asura Utils
+# Releasing
 
-GitHub Actions builds and publishes releases from tags beginning with `v`. The tag version must exactly match the version in `package.json` after removing the leading `v`.
+GitHub Actions builds and publishes a release for every tag that starts with `v`. Without the `v`, the tag must exactly match the version in `package.json`.
 
 ## Release checklist
 
@@ -8,7 +8,7 @@ GitHub Actions builds and publishes releases from tags beginning with `v`. The t
 | :---: | --- |
 | 1 | Decide the next semantic version |
 | 2 | Update `version` in `package.json` |
-| 3 | Update release-facing documentation when behavior changed |
+| 3 | Update the documentation if behavior changed |
 | 4 | Run `pnpm test` locally |
 | 5 | Commit and push the release changes |
 | 6 | Create and push the matching tag |
@@ -24,22 +24,22 @@ Use semantic versions in `major.minor.patch` form:
 | Backward-compatible feature | Minor | `1.0.1` → `1.1.0` |
 | Breaking behavior or configuration change | Major | `1.1.0` → `2.0.0` |
 
-Tampermonkey compares the generated `@version` value when checking for updates. Always increase the version for a public update; republishing different code under the same version will not reliably update existing installations.
+Tampermonkey compares the generated `@version` value when it checks for updates. Always increase the version for a public update. Publishing different code under the same version will not reliably update existing installs.
 
 ## Create the release
 
-After the release commit is on `main`, create an annotated matching tag:
+Once the release commit is on `main`, create a matching annotated tag:
 
 ```sh
 git tag -a v1.0.1 -m "Asura Utils v1.0.1"
 git push origin v1.0.1
 ```
 
-Do not reuse or move a published version tag. If a release needs correction, publish a new patch version.
+Do not reuse or move a published version tag. To fix a release, publish a new patch version.
 
 ## What CI verifies
 
-The `Release build` workflow performs these steps:
+The `Release build` workflow runs these steps:
 
 1. Checks out the tagged commit.
 2. Installs pnpm and Node.js 22.
@@ -51,10 +51,10 @@ The `Release build` workflow performs these steps:
 
 | Release asset | Role |
 | --- | --- |
-| `asura-utils.user.js` | Full script installed and executed by Tampermonkey |
-| `asura-utils.meta.js` | Small metadata file checked for newer versions |
+| `asura-utils.user.js` | The full script that Tampermonkey installs and runs |
+| `asura-utils.meta.js` | A small metadata file checked for newer versions |
 
-The workflow can also be started manually. Manual runs perform the build and upload a workflow artifact, but do not create a GitHub release.
+You can also start the workflow manually. A manual run builds and uploads a workflow artifact, but does not create a GitHub release.
 
 ## Automatic-update flow
 
@@ -68,14 +68,14 @@ Tampermonkey checks latest asura-utils.meta.js
           └─ yes → download asura-utils.user.js
 ```
 
-Both URLs use GitHub's stable latest-release asset path:
+Both URLs use GitHub's stable path to the latest release's assets:
 
 ```text
 https://github.com/Rhgx/asura-utils/releases/latest/download/asura-utils.meta.js
 https://github.com/Rhgx/asura-utils/releases/latest/download/asura-utils.user.js
 ```
 
-Anyone who installed a build from before these metadata fields were added must install a current release once. Later releases are discovered according to their Tampermonkey update-check settings.
+Anyone who installed a build from before these metadata fields were added must install a current release once. After that, Tampermonkey finds new releases according to its update settings.
 
 ## Post-release checks
 
@@ -86,4 +86,4 @@ After the workflow succeeds:
 3. Open the `asura-utils.meta.js` asset and verify the expected `@version`, `@updateURL`, and `@downloadURL`.
 4. Install the `asura-utils.user.js` asset in Tampermonkey when the release changes installation or metadata behavior.
 
-If the workflow fails, fix the underlying source or configuration, increment to a new version if the failed release was already published, and push a new tag.
+If the workflow fails, fix the source or configuration and push a new tag. If the failed release was already published, increase the version first.

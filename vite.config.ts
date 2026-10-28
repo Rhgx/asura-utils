@@ -15,7 +15,7 @@ export default defineConfig({
           "A cleaner way to read on Asura Scans with auto-scroll, reader dock, themes, reading history, keyboard shortcuts, ad blocking, and layout controls.",
         author: "Rocks",
         match: ["https://asurascans.com/*"],
-        icon: "https://asurascans.com/images/logo.webp",
+        icon: "https://raw.githubusercontent.com/Rhgx/asura-utils/main/docs/assets/logo.png",
         updateURL: `${latestReleaseAssetUrl}/asura-utils.meta.js`,
         downloadURL: `${latestReleaseAssetUrl}/asura-utils.user.js`,
         // Start before the site renders so cleanup and theme fixes can avoid a visible flash.
