@@ -20,7 +20,7 @@ export default defineConfig({
         downloadURL: `${latestReleaseAssetUrl}/asura-utils.user.js`,
         // Start before the site renders so cleanup and theme fixes can avoid a visible flash.
         "run-at": "document-start",
-        grant: ["GM_getValue", "GM_setValue"],
+        grant: ["GM_getValue", "GM_setValue", "GM_registerMenuCommand"],
       },
       server: {
         open: true,

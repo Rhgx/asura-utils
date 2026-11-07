@@ -50,7 +50,7 @@ const THEME_PRESETS: Record<string, ThemePreset> = Object.fromEntries(
 const BASE_THEME_TOKENS = baseThemeTokens as ThemeTokens;
 
 // Background, muted text, and accent: enough to tell the presets apart at a glance in the picker.
-const SWATCH_TOKENS = ["--au-bg-panel", "--au-text-dim", "--au-accent"] as const;
+const SWATCH_TOKENS = ["--auo-bg", "--auo-text-dim", "--auo-accent"] as const;
 
 const THEME_PRESET_OPTIONS = presetList.map(({ key, label, tokens }) => ({
   value: key,

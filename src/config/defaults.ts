@@ -25,6 +25,8 @@ const DEFAULTS = {
   hideReactions: false,
   menuSeriesOverhaul: false,
   readerDockCollapsed: true,
+  // Set once the one-time pointer to the collapsed dock has been shown.
+  dockHintShown: false,
   readerDockSection: "all",
   chapterEndAction: "nextChapter" as ChapterEndAction,
   hasPremiumAccess: false,

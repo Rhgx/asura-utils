@@ -47,5 +47,16 @@ describe("theme presets", () => {
       assert.ok(contrast(text, bg) >= 7, `text contrast ${contrast(text, bg).toFixed(2)}`);
       assert.ok(contrast(dim, bg) >= 4.5, `dim text contrast ${contrast(dim, bg).toFixed(2)}`);
     });
+
+    // Focus rings use the link token, so it must stand out on every surface the controls sit on.
+    it(`${file} keeps focus rings visible`, () => {
+      const link = tokens["--auo-link"] ?? "";
+      assert.match(link, HEX);
+      for (const name of ["--auo-bg", "--auo-surface", "--auo-card-alt-bg"]) {
+        const surface = tokens[name] ?? "";
+        assert.match(surface, HEX);
+        assert.ok(contrast(link, surface) >= 3, `focus ring on ${name}: ${contrast(link, surface).toFixed(2)}`);
+      }
+    });
   }
 });

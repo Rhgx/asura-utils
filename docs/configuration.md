@@ -2,7 +2,7 @@
 
 Select the gear button in the Asura Scans header to change these options. Settings are saved to Tampermonkey storage immediately.
 
-The settings window lists its sections in a sidebar: Reader, Site, Library, Appearance, and Shortcuts, with Backup & Reset pinned at the bottom. Typing in the search box at the top of the sidebar replaces the section list with matching settings from every section, each labeled with its section. Settings whose name matches come before settings that match only in their description. To open a result's section and highlight the setting, select the result, or move through the results with the arrow keys and press `Enter`. Press `Esc` or the clear button to return to the section list. The gear in the reader dock opens the window on the Reader section. On narrow screens, the sidebar becomes a strip above the settings.
+The settings window lists its sections in a sidebar: Reader, Site, Library, Appearance, and Shortcuts, with Backup & Reset pinned at the bottom. Typing in the search box at the top of the sidebar replaces the section list with matching settings from every section, each labeled with its section. Settings whose name matches come before settings that match only in their description. The highlighted result's setting is shown and marked. To go to a setting and focus its control, select the result, or move through the results with the arrow keys and press `Enter`. Press `Esc` or the clear button to return to the section list and the section you were on. The gear in Reader Tools opens the window on the Reader section. On phones, the window fills the screen and the sections appear as a grid above the settings.
 
 ## Reader
 
@@ -11,8 +11,8 @@ The settings window lists its sections in a sidebar: Reader, Site, Library, Appe
 | Images | Fit Width to Screen | Off | On / Off | Fits reader images to the width of the viewport |
 | Images | Image Width | `800 px` | `400–3000 px` | Sets the fixed reader image width. Disabled while Fit Width to Screen is on |
 | Images | Image Brightness | `100%` | `40–100%`, steps of 5 | Dims reader images without changing the page theme |
-| Reader Tools | Enable Reader Dock | On | On / Off | Shows the collapsible chapter reader controls |
-| Reader Tools | Hide Site Reader Controls | Off | On / Off | Hides the site's tap-to-show bars and hint on chapter pages, which the dock replaces |
+| Reader Tools | Enable Reader Tools | On | On / Off | Shows the collapsible chapter reader controls |
+| Reader Tools | Hide Site Reader Controls | Off | On / Off | Hides the site's tap-to-show bars and hint on chapter pages, which Reader Tools replaces |
 | Reader Tools | Show Progress Bar | On | On / Off | Shows reading progress at the top of chapter pages |
 | Auto Scroll | Scroll Speed | `2.0` | `0.1–15.0` | Sets the automatic scrolling speed |
 | Auto Scroll | Double-Click to Scroll | On | On / Off | Toggles auto-scroll when you double-click the page |
@@ -22,8 +22,6 @@ The settings window lists its sections in a sidebar: Reader, Site, Library, Appe
 ## Site
 
 ### Hide on Site
-
-These options appear as a two-column checklist. Hover over the `?` beside an option to see its description.
 
 | Setting | Default | Description |
 | --- | :---: | --- |
@@ -66,8 +64,6 @@ When **Colored Chapter Timestamps** is on, only the timestamp's text color and f
 | Resume Chapter Position | On | Restores saved progress when reopening a chapter. Disabled while Track Reading History is off |
 | New Chapter Badges | On | Shows a `N new` badge on series covers in your history when the page shows newer chapters. Disabled while Track Reading History is off |
 
-Below the settings are **Export History**, **Import History**, and **Clear Reading History**. Next comes the history list: your saved series, most recently read first, with a search box and a **Remove** button for each series. History keeps the 150 most recently read series and up to 600 read chapters per series.
-
 ### Filters
 
 | Setting | Default | Description |
@@ -82,6 +78,10 @@ The rules apply only while Series Filters is on.
 | Excluded Genres | A checkbox for each genre seen on the site. Checked genres hide series with that genre |
 
 Asura Utils learns genres from the series you see on the site, so it can only hide a series by genre after it has seen that series' genres. Genre matching ignores case. The learned genre cache keeps up to 3000 series, and the genre name list keeps up to 300 names.
+
+### Reading History
+
+The last group is the history list: your saved series, most recently read first, with a search box and a **Remove** button for each series. History keeps the 150 most recently read series and up to 600 read chapters per series.
 
 ## Appearance
 
@@ -103,8 +103,11 @@ The [usage guide](usage.md#keyboard-shortcuts) lists every default shortcut and 
 | Export Settings | Copies the current configuration as JSON |
 | Import Settings | Applies configuration from pasted JSON |
 | Reset to Defaults | Restores every setting to its default |
+| Export History | Copies your reading history as JSON |
+| Import History | Merges pasted reading history JSON into your history |
+| Clear Reading History | Removes all saved series and chapter progress |
 
-Reading history has its own export, import, and clear actions under **Library → History**.
+Importing opens a panel in the window that explains any mistake and keeps your paste. Importing settings, resetting them, and clearing history can each be undone from the bar at the bottom of the window. The offer lasts until you close the window, and for settings, until you change another setting.
 
 ## Data storage
 

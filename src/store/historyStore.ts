@@ -230,6 +230,13 @@ export const HistoryStore = {
     this.save(history);
   },
 
+  // Puts back an entry that remove() took out, so a removal can be undone exactly.
+  restore(seriesSlug: string, entry: HistoryEntry): void {
+    const history = this.load();
+    history[seriesSlug] = entry;
+    this.save(history);
+  },
+
   // Returns how many entries were merged in. 0 means no valid entries were found and nothing was saved.
   importEntries(raw: unknown): number {
     const incoming = parseHistoryImport(raw);

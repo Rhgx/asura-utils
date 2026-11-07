@@ -1,39 +1,71 @@
+/* Phones and narrow windows: the dock becomes a bottom sheet that is only as tall as its content. */
 @media (max-width: 900px) {
+  /* A transformed shell would anchor the fixed sheet to itself, so the handle and sheet position themselves. */
   #au-reader-dock-shell {
-    top: 0;
-    right: 0;
+    position: static;
+    display: block;
     transform: none;
-    width: 100%;
-    height: 100vh;
-    pointer-events: none;
-    align-items: flex-start;
   }
   #au-reader-dock-handle {
-    pointer-events: auto;
-    margin-top: calc(50vh - 74px);
-    margin-right: 6px;
-    border-radius: 15px;
-  }
-  #au-reader-dock {
     position: fixed;
-    right: 8px;
-    top: 8px;
-    bottom: 8px;
-    width: min(320px, 84vw);
-    max-width: min(320px, 84vw);
-    border-radius: 14px;
-    overflow: auto;
-    pointer-events: auto;
-    transition: transform 0.25s ease, opacity 0.2s ease;
+    top: 50%;
+    right: 0;
+    width: 24px;
+    height: 96px;
+    transform: translateY(-50%);
+    z-index: 99996;
+  }
+  /* The sheet has its own close button and covers this area. */
+  #au-reader-dock-shell:not(.is-collapsed) #au-reader-dock-handle { visibility: hidden; }
+  #au-reader-dock,
+  #au-reader-dock-shell.is-collapsed #au-reader-dock {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: 480px;
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+    margin: 0 auto;
+    z-index: 99996;
+    border-width: 1px 1px 0;
+    border-radius: 12px 12px 0 0;
+    transition: transform 0.2s ease, opacity 0.15s ease;
   }
   #au-reader-dock-shell.is-collapsed #au-reader-dock {
-    width: min(320px, 84vw);
-    transform: translateX(calc(100% + 12px));
-    opacity: 0;
+    transform: translateY(100%);
+    border-color: transparent;
   }
-  #au-reader-dock-shell:not(.is-collapsed) #au-reader-dock {
-    transform: translateX(0);
-    opacity: 1;
+  #au-reader-dock-shell:not(.is-collapsed) #au-reader-dock { transform: none; }
+  .au-dock-content {
+    width: 100%;
+    padding: 8px 14px calc(14px + env(safe-area-inset-bottom, 0px));
   }
-  .au-dock-content { min-width: 0; }
+  #au-dock-close { display: grid; }
+  .au-dock-icon-btn {
+    width: 40px;
+    height: 40px;
+  }
+  .au-dock-section { gap: 8px; }
+  .au-dock-row,
+  .au-dock-switch-row { min-height: 40px; }
+  .au-dock-primary { min-height: 44px; }
+  .au-dock-nav-btn { min-height: 44px; }
+  .au-dock-step {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  #au-reader-dock .au-dock-num {
+    width: 64px;
+    height: 40px;
+    /* 16px stops iOS from zooming the page when the field takes focus. */
+    font-size: 16px;
+  }
+  .au-dock-range {
+    max-width: none;
+    height: 40px;
+  }
+  .au-dock-nav-row { grid-template-columns: 60px minmax(0, 1fr) minmax(0, 1fr); }
 }

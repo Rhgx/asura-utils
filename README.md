@@ -11,13 +11,13 @@ A Tampermonkey userscript that makes reading on [Asura Scans](https://asurascans
 
 1. Install a userscript manager: <a href="https://www.tampermonkey.net/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/third-party/tampermonkey-dark-theme.png"><img src="docs/assets/third-party/tampermonkey.png" alt="" width="16" height="16" align="absmiddle"></picture></a> [Tampermonkey](https://www.tampermonkey.net/), <a href="https://violentmonkey.github.io/"><img src="docs/assets/third-party/violentmonkey.png" alt="" width="16" height="16" align="absmiddle"></a> [Violentmonkey](https://violentmonkey.github.io/), or <a href="https://scriptcat.org/"><img src="docs/assets/third-party/scriptcat.png" alt="" width="16" height="16" align="absmiddle"></a> [ScriptCat](https://scriptcat.org/).
 2. Open the [latest userscript](https://github.com/Rhgx/asura-utils/releases/latest/download/asura-utils.user.js) and approve the installation.
-3. Visit [asurascans.com](https://asurascans.com/). Open a chapter and select the handle on the right edge to expand the reader dock.
+3. Visit [asurascans.com](https://asurascans.com/). Open a chapter and select the tab on the right edge to open Reader Tools.
 
 Your userscript manager checks for new releases automatically. Asura Utils is developed and tested with Tampermonkey.
 
 ## Features
 
-- A collapsible reader dock with auto-scroll, speed control, image width, and brightness, for comic and novel chapters.
+- A collapsible Reader Tools panel with auto-scroll, speed control, image width, and brightness, for comic and novel chapters.
 - Chapter and page navigation, a smart next-chapter action that detects premium locks, and Next Unread and Mark Read Up To on chapter lists.
 - A reading progress bar, per-series history with Continue Reading links, new chapter badges, and position restoration.
 - Series and genre filters for the home and browse pages.
@@ -28,7 +28,7 @@ Your userscript manager checks for new releases automatically. Asura Utils is de
 
 ## Documentation
 
-- [Using Asura Utils](docs/usage.md): the reader dock, shortcuts, navigation, history, filters, and themes
+- [Using Asura Utils](docs/usage.md): Reader Tools, shortcuts, navigation, history, filters, and themes
 - [Configuration](docs/configuration.md): every setting, with its default and valid range
 - [Development](docs/development.md): building from source, scripts, and project layout
 - [Releasing](docs/releasing.md): versioning, tagged releases, and automatic updates

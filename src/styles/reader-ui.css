@@ -1,3 +1,4 @@
+/* Focus rings use the link token: the accent can fall below 3:1 on these dark surfaces in some presets. */
 #au-progress-bar {
   position: fixed;
   top: 0;
@@ -9,161 +10,432 @@
   cursor: pointer;
   transition: height 0.15s ease;
 }
-#au-progress-bar:hover { height: 9px; }
+/* Invisible extra hit area below the thin bar, so it can be hit without covering the page visually. */
+#au-progress-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 -10px 0;
+}
+#au-progress-bar:hover,
+#au-progress-bar:focus-visible { height: 9px; }
+#au-progress-bar:focus-visible {
+  outline: 2px solid var(--auo-link);
+  outline-offset: -2px;
+}
 #au-progress-bar-fill {
   height: 100%;
   width: 0;
-  background: linear-gradient(90deg, var(--au-accent-strong), var(--au-accent), var(--au-progress-end));
-  border-radius: 0 4px 4px 0;
-  box-shadow: 0 0 10px color-mix(in srgb, var(--auo-accent) 45%, transparent);
+  background: var(--auo-accent);
   transition: width 0.1s ease-out;
 }
 
 #au-reader-dock-shell {
   position: fixed;
-  right: 14px;
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: row-reverse;
-  align-items: stretch;
+  align-items: center;
   gap: 8px;
   z-index: 99996;
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
-#au-reader-dock-handle {
-  width: 48px;
-  min-width: 48px;
-  border: 1px solid var(--au-border);
-  border-radius: 14px;
-  background: var(--au-dock-handle-bg);
-  color: var(--au-text);
-  backdrop-filter: blur(12px);
-  box-shadow: var(--au-shadow);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  font-size: 18px;
-  transition: background 0.2s, border-color 0.2s, transform 0.2s;
-}
-#au-reader-dock-handle:hover {
-  background: var(--au-dock-handle-hover-bg);
-  border-color: var(--au-dock-handle-hover-border);
-  transform: translateX(-1px);
-}
-#au-reader-dock {
-  width: 280px;
-  max-width: calc(100vw - 90px);
-  background: var(--au-dock-panel-bg);
-  border: 1px solid var(--au-border);
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
-  box-shadow: var(--au-shadow);
-  color: var(--au-text);
-  overflow: hidden;
-  transition: width 0.25s ease, opacity 0.2s ease, border-color 0.2s ease;
-}
-#au-reader-dock-shell.is-collapsed #au-reader-dock { width: 0; opacity: 0; border-color: transparent; }
-#au-reader-dock-shell.is-scrolling #au-reader-dock { opacity: 0.94; }
+#au-reader-dock-shell [hidden] { display: none !important; }
 
-.au-dock-content { padding: 14px; min-width: 280px; box-sizing: border-box; }
+/* A slim tab on the screen edge: quiet over the art, with an invisible margin that makes it easy to hit. */
+#au-reader-dock-handle {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 84px;
+  padding: 0;
+  border: 1px solid var(--auo-border);
+  border-right: 0;
+  border-radius: 8px 0 0 8px;
+  background: var(--auo-surface);
+  color: var(--auo-text);
+  opacity: 0.7;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+#au-reader-dock-handle::before {
+  content: "";
+  position: absolute;
+  inset: -10px 0 -10px -12px;
+}
+#au-reader-dock-handle svg { transition: transform 0.2s ease; }
+#au-reader-dock-handle:hover,
+#au-reader-dock-handle:focus-visible {
+  opacity: 1;
+  background: var(--auo-surface-hover);
+}
+#au-reader-dock-handle:focus-visible {
+  outline: 2px solid var(--auo-link);
+  outline-offset: -2px;
+}
+#au-reader-dock-shell:not(.is-collapsed) #au-reader-dock-handle {
+  opacity: 1;
+}
+#au-reader-dock-shell:not(.is-collapsed) #au-reader-dock-handle svg { transform: rotate(180deg); }
+/* Fades further during auto-scroll, when nothing should compete with the art. Touch screens have no
+   hover to bring it back, and the handle is how a phone reader stops scrolling, so it stays as it is there. */
+@media (hover: hover) {
+  #au-reader-dock-shell.is-scrolling.is-collapsed #au-reader-dock-handle:not(:hover):not(:focus-visible) {
+    opacity: 0.35;
+  }
+}
+
+#au-reader-dock {
+  width: 308px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 16px);
+  box-sizing: border-box;
+  border: 1px solid var(--auo-border);
+  border-radius: 8px;
+  background: var(--auo-surface);
+  color: var(--auo-text);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  overflow: hidden auto;
+  scrollbar-width: thin;
+  transition: width 0.2s ease, opacity 0.15s ease;
+}
+#au-reader-dock-shell.is-collapsed #au-reader-dock {
+  width: 0;
+  opacity: 0;
+  border-color: transparent;
+  box-shadow: none;
+}
+/* Focus-visible, not focus-within: a mouse click leaves focus on the button, which must not cancel the fade. */
+@media (hover: hover) {
+  #au-reader-dock-shell.is-scrolling:not(:hover):not(:has(:focus-visible)) #au-reader-dock { opacity: 0.6; }
+}
+
+.au-dock-content {
+  width: 306px;
+  box-sizing: border-box;
+  padding: 10px 12px 12px;
+  font-size: 13px;
+  line-height: 1.35;
+}
 .au-dock-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  gap: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--au-border-soft);
 }
-.au-dock-title { font-size: 14px; font-weight: 700; letter-spacing: 0.02em; color: var(--au-dock-title); }
-.au-dock-progress { font-size: 12px; color: var(--au-text-dim); font-variant-numeric: tabular-nums; }
-.au-dock-section {
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--au-dock-section-border);
+.au-dock-title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--auo-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.au-dock-section:last-of-type { border-bottom: none; margin-bottom: 6px; padding-bottom: 0; }
-.au-dock-section-label {
-  margin-bottom: 8px;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--au-text-dim);
-  font-weight: 700;
+.au-dock-header-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
 }
-.au-dock-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 13px; }
-.au-dock-btn,
-.au-dock-nav-btn {
-  border: 1px solid var(--au-dock-btn-border);
-  border-radius: 8px;
-  background: var(--au-bg-control);
-  color: var(--au-text);
+.au-dock-stats {
+  display: flex;
+  gap: 8px;
+  margin-right: 4px;
+  color: var(--auo-text-dim);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.au-dock-icon-btn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--auo-text-dim);
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.au-dock-btn { padding: 6px 10px; font-size: 12px; min-width: 84px; text-align: center; }
-.au-dock-btn:hover,
-.au-dock-nav-btn:hover { background: var(--au-dock-btn-hover-bg); border-color: var(--au-dock-btn-hover-border); }
-.au-dock-btn.active {
-  background: linear-gradient(135deg, var(--au-accent), var(--au-accent-strong));
-  border-color: var(--au-dock-btn-active-border);
-  color: var(--au-shortcut-text);
-  box-shadow: 0 0 0 1px var(--au-dock-btn-active-inset) inset;
+.au-dock-icon-btn:hover {
+  background: var(--auo-surface-hover);
+  color: var(--auo-text);
 }
-.au-dock-btn:disabled,
-.au-dock-nav-btn:disabled,
-.au-dock-step:disabled,
-.au-dock-num:disabled { opacity: 0.45; cursor: not-allowed; }
-/* The dock has its own -/+ steppers, so the native spinner arrows are hidden. */
-.au-dock-num { -moz-appearance: textfield; appearance: textfield; }
+/* The handle sits right beside the panel on desktop, so the close button only appears where the sheet covers it. */
+#au-dock-close { display: none; }
+
+.au-dock-section {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.au-dock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+  color: var(--auo-text);
+}
+.au-dock-row.is-disabled label { color: var(--auo-text-dim); }
+
+.au-dock-primary,
+.au-dock-nav-btn,
+.au-dock-step {
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: var(--auo-card-alt-bg);
+  color: var(--auo-text);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.au-dock-primary:hover,
+.au-dock-nav-btn:hover,
+.au-dock-step:hover {
+  background: var(--auo-surface-hover);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.au-dock-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  font-weight: 600;
+  text-align: left;
+}
+.au-dock-primary-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+}
+.au-dock-primary.active,
+.au-dock-primary.active:hover {
+  background: var(--auo-accent);
+  border-color: var(--auo-accent);
+  color: var(--auo-on-accent);
+}
+
+.au-dock-btn-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Key hints: shown as generated content so they stay out of each button's accessible name. */
+[data-au-key]::after {
+  content: attr(data-au-key);
+  flex: none;
+  margin-left: auto;
+  padding: 0 4px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 3px;
+  color: var(--auo-text-dim);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 15px;
+}
+.au-dock-primary.active[data-au-key]::after {
+  border-color: currentColor;
+  color: inherit;
+}
+
+.au-dock-nav-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+.au-dock-nav-label {
+  overflow: hidden;
+  color: var(--auo-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.au-dock-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  min-width: 0;
+  min-height: 30px;
+  padding: 3px 4px;
+  font-size: 12px;
+}
+.au-dock-nav-btn svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.au-dock-stepper {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+.au-dock-step {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+}
+#au-reader-dock .au-dock-num {
+  width: 56px;
+  height: 28px;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: var(--auo-bg);
+  color: var(--auo-text);
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+/* The dock has its own steppers, so the native spinner arrows are hidden. */
 .au-dock-num::-webkit-outer-spin-button,
 .au-dock-num::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-.au-dock-stepper { display: inline-flex; align-items: center; gap: 6px; }
-.au-dock-step {
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--au-dock-btn-border);
-  border-radius: 6px;
-  background: var(--au-bg-control);
-  color: var(--au-text);
-  cursor: pointer;
-  font-size: 15px;
-  line-height: 1;
+.au-dock-primary:disabled,
+.au-dock-nav-btn:disabled,
+.au-dock-step:disabled,
+.au-dock-num:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
-.au-dock-num {
-  width: 70px;
-  height: 28px;
-  border: 1px solid var(--au-dock-btn-border);
-  border-radius: 6px;
-  background: var(--au-dock-input-bg);
-  color: var(--au-text);
-  text-align: center;
-  font-size: 12px;
-  padding: 0 4px;
+
+.au-dock-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--auo-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.au-dock-switch-row:hover .au-dock-btn-text { color: var(--auo-link); }
+.au-dock-switch-row[data-au-key]::after {
+  order: 1;
+  margin-left: 0;
+}
+.au-dock-switch-row .au-dock-btn-text { flex: 1; }
+.au-dock-switch {
+  position: relative;
+  flex: none;
+  order: 2;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--auo-text-dim) 45%, var(--auo-surface));
+  transition: background 0.15s ease;
+}
+.au-dock-switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s ease;
+}
+.au-dock-switch-row[aria-checked="true"] .au-dock-switch { background: var(--auo-accent); }
+.au-dock-switch-row[aria-checked="true"] .au-dock-switch::before { transform: translateX(16px); }
+
+.au-dock-range-wrap {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
 }
 .au-dock-range {
-  width: 92px;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  max-width: 136px;
+  height: 24px;
+  margin: 0;
   accent-color: var(--auo-accent);
   cursor: pointer;
 }
-.au-dock-range:disabled { opacity: 0.45; cursor: not-allowed; }
 .au-dock-range-val {
-  min-width: 38px;
-  text-align: right;
+  flex: none;
+  min-width: 36px;
+  color: var(--auo-text-dim);
   font-size: 12px;
-  color: var(--au-text-dim);
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
-.au-dock-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.au-dock-nav-btn { padding: 7px 9px; font-size: 12px; text-align: center; }
-.au-dock-footer { margin-top: 8px; color: var(--au-dock-footer); font-size: 10px; line-height: 1.5; text-align: left; }
 
+.au-dock-footer {
+  display: grid;
+  gap: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--auo-text-dim);
+  font-size: 12px;
+}
+.au-dock-link {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--auo-link);
+  font: inherit;
+  cursor: pointer;
+}
+.au-dock-link:hover { text-decoration: underline; }
+.au-dock-link svg { flex: none; width: 14px; height: 14px; }
+
+#au-reader-dock :focus-visible {
+  outline: 2px solid var(--auo-link);
+  outline-offset: 1px;
+}
+#au-reader-dock .au-dock-num:focus,
+#au-reader-dock .au-dock-num:focus-visible {
+  outline: 2px solid var(--auo-link);
+  outline-offset: 0;
+}
+
+/* Light enough that brightness and width changes can still be judged through it. */
 #au-reader-dock-backdrop {
   position: fixed;
   inset: 0;
-  background: var(--au-reader-backdrop);
+  background: rgba(0, 0, 0, 0.2);
   z-index: 99995;
   opacity: 0;
   pointer-events: none;
@@ -171,168 +443,67 @@
 }
 #au-reader-dock-backdrop.visible { opacity: 1; pointer-events: auto; }
 
+/* Hint toast: bottom-center, matching the site's toast placement. */
 .au-shortcut-hint {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--au-shortcut-bg);
-  color: var(--au-shortcut-text);
-  padding: 14px 20px;
-  border: 1px solid var(--au-shortcut-border);
-  box-shadow: var(--au-shortcut-shadow);
-  border-radius: 8px;
-  font-size: 15px;
-  z-index: 99999;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.au-shortcut-hint.visible { opacity: 1; }
-
-/* Current Asura reader UI alignment */
-#au-reader-dock-shell { right: 10px; gap: 10px; }
-
-/* Tall grip handle: barely-there until hovered or the dock is open. */
-#au-reader-dock-handle {
-  align-self: center;
-  width: 30px;
-  min-width: 30px;
-  height: 148px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 15px;
-  background: color-mix(in srgb, var(--auo-surface) 55%, transparent);
-  color: var(--auo-text-dim);
-  opacity: 0.5;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(6px);
-  transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease,
-    color 0.2s ease;
-}
-#au-reader-dock-handle:hover {
-  opacity: 1;
-  background: var(--auo-surface);
-  border-color: color-mix(in srgb, var(--auo-accent) 70%, transparent);
-  color: var(--auo-text);
-  transform: none;
-}
-#au-reader-dock-shell:not(.is-collapsed) #au-reader-dock-handle {
-  opacity: 1;
-  background: var(--auo-surface);
-  border-color: color-mix(in srgb, var(--auo-accent) 55%, transparent);
-  color: var(--auo-accent);
-}
-
-#au-reader-dock {
-  width: 292px;
-  border: 1px solid rgba(255,255,255,.09);
-  border-radius: 12px;
-  background: var(--auo-surface);
-  color: var(--auo-text);
-  box-shadow: 0 18px 50px rgba(0,0,0,.48);
-  backdrop-filter: none;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-.au-dock-content { min-width: 292px; padding: 16px; }
-.au-dock-header { border-bottom-color: rgba(255, 255, 255, 0.08); }
-.au-dock-title { color: var(--auo-text); font-size: 14px; font-weight: 600; letter-spacing: 0; }
-.au-dock-header-actions { display: flex; align-items: center; gap: 8px; }
-.au-dock-progress {
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--auo-accent) 16%, transparent);
-  color: var(--auo-accent);
-  font-weight: 600;
-}
-.au-dock-page {
-  font-size: 12px;
-  color: var(--auo-text-dim);
-  font-variant-numeric: tabular-nums;
-}
-.au-dock-icon-btn {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 6px;
-  background: var(--auo-card-alt-bg);
-  color: var(--auo-text-dim);
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
-}
-.au-dock-icon-btn:hover {
-  background: var(--auo-surface-hover);
-  border-color: color-mix(in srgb, var(--auo-accent) 60%, transparent);
-  color: var(--auo-text);
-}
-.au-dock-icon-btn:focus-visible {
-  outline: 2px solid var(--auo-accent);
-  outline-offset: 2px;
-}
-.au-dock-section { border-bottom-color: rgba(255, 255, 255, 0.06); }
-.au-dock-section-label { color: var(--auo-text-dim); font-weight: 600; }
-.au-dock-row { color: var(--auo-text); }
-.au-dock-btn,
-.au-dock-nav-btn,
-.au-dock-step {
-  border-color: rgba(255, 255, 255, 0.09);
-  border-radius: 6px;
-  background: var(--auo-card-alt-bg);
-  color: var(--auo-text);
-  font-family: inherit;
-}
-.au-dock-btn:hover,
-.au-dock-nav-btn:hover,
-.au-dock-step:hover {
-  background: var(--auo-surface-hover);
-  border-color: color-mix(in srgb, var(--auo-accent) 60%, transparent);
-}
-.au-dock-btn.active { background: var(--auo-accent); border-color: var(--auo-accent); color: var(--auo-on-accent); box-shadow: none; }
-.au-dock-num {
-  border-color: rgba(255, 255, 255, 0.09);
-  border-radius: 6px;
-  background: var(--auo-bg);
-  color: var(--auo-text);
-  font-family: inherit;
-}
-.au-dock-num:focus {
-  outline: none;
-  border-color: var(--auo-accent);
-}
-.au-dock-footer { color: var(--auo-text-dim); opacity: 0.75; }
-
-/* Hint toast: bottom-center pill, matching the site's toast placement. */
-.au-shortcut-hint {
-  top: auto;
   bottom: 26px;
   left: 50%;
   transform: translate(-50%, 8px);
-  padding: 10px 18px;
-  border: 1px solid color-mix(in srgb, var(--auo-accent) 38%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--auo-surface) 94%, transparent);
+  /* left: 50% alone would limit the toast to half the screen, which wraps long text on a phone. */
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  padding: 8px 14px;
+  border: 1px solid var(--auo-border);
+  border-radius: 8px;
+  background: var(--auo-surface);
   color: var(--auo-text);
-  box-shadow: 0 12px 32px rgba(0,0,0,.42);
-  backdrop-filter: blur(8px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   font-weight: 500;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .au-shortcut-hint.visible { opacity: 1; transform: translate(-50%, 0); }
+/* Chapter pages show the site's tap-to-show hint at this spot, which would peek out behind the toast. */
+body.au-page-reader .au-shortcut-hint { bottom: 64px; }
 
-/* Fit width, image width and brightness only apply to comic images, so novel chapters hide the Layout section. */
+/* Fit width, image width and brightness only apply to comic images, so novel chapters hide the section. */
 body.au-page-novel-reader .au-dock-layout-section {
   display: none;
 }
 
 /* Page counter and page buttons only apply to comic images, so novel chapters hide them. */
 body.au-page-novel-reader .au-dock-page,
-body.au-page-novel-reader #au-dock-page-prev,
-body.au-page-novel-reader #au-dock-page-next {
+body.au-page-novel-reader .au-dock-page-row {
   display: none;
+}
+
+/* Key hints mean nothing without a keyboard. */
+@media (hover: none) {
+  [data-au-key]::after { display: none; }
+  .au-dock-nav-btn { justify-content: center; }
+  /* Both footer items describe mouse and keyboard use. */
+  .au-dock-footer { display: none; }
+  .au-dock-section:last-of-type { padding-bottom: 0; }
+  /* Fingers need more than the thin bar's desktop margin. */
+  #au-progress-bar::before { bottom: -20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #au-progress-bar,
+  #au-progress-bar-fill,
+  #au-reader-dock,
+  #au-reader-dock *,
+  #au-reader-dock-handle,
+  #au-reader-dock-handle svg,
+  #au-reader-dock-backdrop,
+  .au-shortcut-hint {
+    transition: none !important;
+  }
 }
 
 /* Hide the site's own tap-to-show reader bars and hint (the dock replaces them).

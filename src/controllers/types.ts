@@ -114,7 +114,7 @@ export interface PageControllerContext {
   handleChapterPickKeyDown(event: KeyboardEvent): void;
   focusSearch(): void;
   scrollToChapterList(): void;
-  showHint(message: string): void;
+  showHint(message: string, durationMs?: number): void;
   findAncestor(element: Element, predicate: (element: Element) => boolean): Element | null;
   getSeriesAnchors(root?: QueryRoot, options?: { includeChapters?: boolean }): HTMLAnchorElement[];
   getChapterAnchors(root?: QueryRoot): HTMLAnchorElement[];

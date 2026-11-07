@@ -23,6 +23,8 @@ interface RowDependencies {
   requires?: BooleanConfigKey;
   // The row is disabled while this setting is on.
   disabledWhen?: BooleanConfigKey;
+  // Extra search terms, for things this row controls that search cannot index itself.
+  keywords?: readonly MessageKey[];
 }
 
 export type SettingRow = RowDependencies & (
@@ -35,18 +37,12 @@ export type SettingRow = RowDependencies & (
   | { kind: "palette"; key: DescribedSettingKey; options: () => readonly PaletteOption[] }
 );
 
-export interface ChecklistItem extends RowDependencies {
-  key: DescribedToggleKey;
-}
-
 // Panels that are not plain settings and are rendered by the settings view itself.
-export type GroupContent = "history" | "filters" | "shortcuts" | "settingsData";
+export type GroupContent = "history" | "filters" | "shortcuts" | "settingsData" | "historyData";
 
 export interface SettingsGroup {
   title?: MessageKey;
   rows?: readonly SettingRow[];
-  // Compact two-column checkboxes for long runs of simple on/off switches.
-  checklist?: readonly ChecklistItem[];
   content?: GroupContent;
 }
 
@@ -129,16 +125,16 @@ const SETTINGS_PAGES: readonly SettingsPage[] = [
     groups: [
       {
         title: "group.hide",
-        checklist: [
-          { key: "adBlock" },
-          { key: "hideSlider" },
-          { key: "hideToraka" },
-          { key: "hidePopularSection" },
-          { key: "hideAnnouncements" },
-          { key: "hideNovelPromos" },
-          { key: "hideComments" },
-          { key: "hideReactions" },
-          { key: "hideDefaultBackToTop" },
+        rows: [
+          { kind: "toggle", key: "adBlock" },
+          { kind: "toggle", key: "hideSlider" },
+          { kind: "toggle", key: "hideToraka" },
+          { kind: "toggle", key: "hidePopularSection" },
+          { kind: "toggle", key: "hideAnnouncements" },
+          { kind: "toggle", key: "hideNovelPromos" },
+          { kind: "toggle", key: "hideComments" },
+          { kind: "toggle", key: "hideReactions" },
+          { kind: "toggle", key: "hideDefaultBackToTop" },
         ],
       },
       {
@@ -158,17 +154,24 @@ const SETTINGS_PAGES: readonly SettingsPage[] = [
       {
         title: "group.history",
         rows: [
-          { kind: "toggle", key: "trackReadingHistory" },
+          { kind: "toggle", key: "trackReadingHistory", keywords: ["history.search", "history.remove"] },
           { kind: "toggle", key: "resumeChapterPosition", requires: "trackReadingHistory" },
           { kind: "toggle", key: "showNewChapterBadges", requires: "trackReadingHistory" },
         ],
-        content: "history",
       },
       {
         title: "group.filters",
-        rows: [{ kind: "toggle", key: "seriesFilters" }],
+        rows: [
+          {
+            kind: "toggle",
+            key: "seriesFilters",
+            keywords: ["filters.hiddenHeading", "filters.genresHeading", "filters.unhide"],
+          },
+        ],
         content: "filters",
       },
+      // Last, because it can hold 150 rows and would otherwise push everything else out of reach.
+      { title: "group.historyData", content: "history" },
     ],
   },
   {
@@ -198,7 +201,10 @@ const SETTINGS_PAGES: readonly SettingsPage[] = [
     key: "backup",
     title: "tab.backup",
     footer: true,
-    groups: [{ title: "group.settingsData", content: "settingsData" }],
+    groups: [
+      { title: "group.settingsData", content: "settingsData" },
+      { title: "group.historyData", content: "historyData" },
+    ],
   },
 ];
 

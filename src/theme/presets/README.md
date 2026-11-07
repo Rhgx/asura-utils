@@ -9,7 +9,7 @@ Schema:
   "label": "Human Name",
   "order": 0,
   "tokens": {
-    "--au-accent": "#913fe2"
+    "--auo-accent": "#913fe2"
   }
 }
 ```

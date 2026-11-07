@@ -4,26 +4,35 @@ Asura Utils adds two controls to Asura Scans:
 
 | Control | Location | Purpose |
 | --- | --- | --- |
-| Reader handle | Right edge of a chapter page | Expands or collapses the reader dock |
-| Settings button | Site header beside the profile control, and the reader dock header on chapter pages | Opens all Asura Utils settings |
+| Reader Tools tab | Right edge of a chapter page | Opens or closes the Reader Tools panel |
+| Settings button | Site header beside the profile control, and the Reader Tools header on chapter pages | Opens all Asura Utils settings |
 
-The settings window has a sidebar with six sections: Reader, Site, Library, Appearance, Shortcuts, and Backup & Reset. To find a setting, type in the search box at the top of the sidebar. Matching settings from every section appear, and selecting one jumps to it. Press `Esc` to clear the search. The gear in the reader dock opens the window on the Reader section.
+The userscript manager's menu also has an **Asura Utils Settings** command, which opens settings if the site's header ever changes.
 
-## Reader dock
+The settings window has a sidebar with six sections: Reader, Site, Library, Appearance, Shortcuts, and Backup & Reset. To find a setting, type in the search box at the top of the sidebar. Matching settings from every section appear, and the highlighted result's setting is shown and marked on the right. Use the arrow keys to move through the results and `Enter` to go to a setting, or clear the search to return to the section you were on. The gear in Reader Tools opens the window on the Reader section.
 
-The dock puts the most common reading actions in one place:
+`Esc` backs out one step at a time: it clears the search, closes a menu or import panel, cancels a shortcut change, and then closes the window.
 
-- Start or stop auto-scroll and adjust its speed. Scrolling manually with the wheel, touch, or scroll keys pauses auto-scroll, and it resumes about a second later.
-- Set a fixed image width or toggle fit-width mode (comic chapters only).
+After most changes that lose data or replace something, a bar at the bottom of the window offers **Undo**. It stays until the next result replaces it or the window closes, and `Ctrl+Z` triggers it too. For importing or resetting settings, it also ends when you change another setting, because undoing would discard that change. This covers removing a series from history, unhiding a series, changing a shortcut, importing settings, resetting settings, and clearing reading history.
+
+## Reader Tools
+
+The panel puts the most common reading actions in one place:
+
+- Start or stop auto-scroll and adjust its speed. Scrolling manually with the wheel, touch, or scroll keys pauses auto-scroll, and it resumes about a second later. The panel fades during auto-scroll on desktop, and comes back when you hover over it or move focus to it.
+- Go to the previous or next chapter or page (page buttons apply to comic chapters only; see [Page navigation](#page-navigation)).
+- Go to the series page or the top of the page.
+- Toggle fit-width mode, or set a fixed image width (comic chapters only).
 - Reduce image brightness for night reading (comic chapters only).
-- Go to the previous chapter, next chapter, series page, or top of the page.
-- Move to the previous or next page (comic chapters only; see [Page navigation](#page-navigation)).
-- Choose what happens at the end of a chapter.
-- Open settings with the gear in the dock header.
+- Open settings with the gear in the header.
 
-The dock starts collapsed. You can turn it off completely in **Settings → Reader**. In the same section, **Hide Site Reader Controls** hides the site's own tap-to-show reader bars, which the dock replaces.
+Buttons show their current keyboard shortcut, and they update when you rebind one. The **Keyboard shortcuts** link at the bottom opens the Shortcuts section.
 
-The dock also works on novel chapters. There, it hides the Layout section (width, fit width, and brightness), the page counter, and the page buttons.
+The panel starts closed, and a one-time hint on your first chapter points to its tab. To open or close it, select the tab or press `T`. Press `Esc` to close it while it has focus. You can turn it off completely in **Settings → Reader**. In the same section, **Hide Site Reader Controls** hides the site's own tap-to-show reader bars, which Reader Tools replaces.
+
+On phones and narrow windows, the panel is a sheet at the bottom of the screen with its own close button. It closes itself when you navigate or start or stop auto-scroll, so the page stays in view.
+
+Reader Tools also works on novel chapters. There, it hides the image controls, the page counter, and the page buttons.
 
 ## Chapter-end actions
 
@@ -53,18 +62,23 @@ If your Asura Scans account has premium access, turn on **Account Has Premium** 
 | `X` | Next page (comic chapters) | None |
 | `B` | Go to series page | None |
 | `W` | Toggle fit width | None |
+| `T` | Open or close Reader Tools | None |
 | `C` | Focus series search | None |
 | `L` | Jump to the chapter list | None |
 
-To rebind a shortcut, open **Settings → Shortcuts**, select its key field, and press the new key. To clear a shortcut, press `Backspace` or `Delete` while it is capturing. Modifier keys on their own, and combinations with `Ctrl`, `Alt`, or the OS key, are not accepted.
+To rebind a shortcut, open **Settings → Shortcuts**, select its key field, and press the new key. To clear a shortcut, press `Backspace` or `Delete` while it is capturing. Press `Esc` or `Tab` to cancel. A **Reset** button appears once a shortcut differs from its default. Modifier keys on their own, and combinations with `Ctrl`, `Alt`, or the OS key, are not accepted. Rebinding needs a physical keyboard.
+
+If you pick a key another action already uses, the key moves to the new action and the old one becomes unassigned; **Undo** puts both back. A key you assign always takes priority over a built-in alternate key.
+
+The speed shortcuts show the new speed in a short hint, since the panel is often closed.
 
 ## Page navigation
 
 Page navigation applies to comic chapters, where each page is a separate image.
 
-- The dock header shows the current page and the total, such as `3 / 24`.
-- **Prev Page** and **Next Page** in the dock's Navigation section, and the `Z` and `X` shortcuts, move between pages.
-- Partway down a tall page, **Prev Page** first returns to the top of that page. Press it again to go to the previous page.
+- The Reader Tools header shows the current page and the total, such as `3 / 24`.
+- **Previous** and **Next** on the **Page** row of Reader Tools, and the `Z` and `X` shortcuts, move between pages.
+- Partway down a tall page, **Previous** first returns to the top of that page. Press it again to go to the previous page.
 - Hovering over the progress bar shows the current page in a tooltip.
 - A short hint appears when you reach the first or last page.
 
@@ -76,18 +90,18 @@ When history tracking is on, Asura Utils saves the last chapter you opened and y
 - Chapter lists mark the current chapter.
 - Finished chapters appear dimmed.
 - When position restoration is on, reopening an unfinished chapter returns you to your saved position. If the site has its own saved position for the chapter, the site restores it instead. On novel chapters, the site always handles position restoration.
-- The progress bar at the top shows your position in the chapter. Select it to jump within the page.
+- The progress bar at the top shows your position in the chapter. Select it to jump within the page. With keyboard focus on it, the arrow keys, `Page Up`, `Page Down`, `Home`, and `End` move through the chapter.
 
-History is stored locally in Tampermonkey. To remove it, use **Settings → Library → Clear Reading History**.
+History is stored locally in Tampermonkey. To remove it, use **Clear Reading History** in **Settings → Backup & Reset**.
 
 ## Novels
 
 Novel chapters (`/novels/{series}/chapter/{number}`) support most reader features:
 
-- The reader dock, auto-scroll, and progress bar work. Progress and chapter-end actions measure the novel text.
+- Reader Tools, auto-scroll, and the progress bar work. Progress and chapter-end actions measure the novel text.
 - Reading history records novel chapters. Continue Reading, read marks, and chapter list tools work on novel series pages.
 - Novel chapters are locked with Shards. Asura Utils reads the lock state from the page, and **Account Has Premium** does not bypass it.
-- The dock's Layout section, page counter, and page buttons are hidden, and the `Z` and `X` shortcuts do nothing.
+- The image controls, page counter, and page buttons are hidden in Reader Tools, and the `Z` and `X` shortcuts do nothing.
 
 ## New chapter badges
 
@@ -110,15 +124,15 @@ The **Filters** group in **Settings → Library** lists hidden series, each with
 
 ## History manager
 
-The **History** group in **Settings → Library** lists every series in your reading history, most recently read first. Each row shows:
+The **Reading History** group at the end of **Settings → Library** lists every series in your reading history, most recently read first. Each row shows:
 
 - The series title, which links to the last chapter you read.
 - The last chapter, your progress (or **Finished** at 90 percent or more), and how long ago you read it.
 - The number of chapters marked as read, and a **Novel** tag for novel series.
 
-Type in the search box to filter the list by title. **Remove** deletes a series from your history.
+Type in the search box to filter the list by title. **Remove** deletes a series from your history, and **Undo** brings it back.
 
-**Export History**, above the list, copies your history as JSON. **Import History** takes pasted JSON, either from an export or a bare history object, and merges it into your history. When a series appears in both, the entry read more recently supplies the title, last chapter, and progress, and the read chapters from both are combined. Invalid entries are skipped. If no entry is valid, nothing is imported.
+**Export History**, in **Settings → Backup & Reset**, copies your history as JSON. **Import History** takes pasted JSON, either from an export or a bare history object, and merges it into your history. When a series appears in both, the entry read more recently supplies the title, last chapter, and progress, and the read chapters from both are combined. Invalid entries are skipped. If no entry is valid, nothing is imported.
 
 ## Appearance
 
@@ -128,7 +142,7 @@ Turn on **Custom Accent Color** to replace the preset's accent. Changes preview 
 
 ## Language
 
-**Language** in **Settings → Appearance** sets the language of the Asura Utils menus, reader dock, and messages. The options are:
+**Language** in **Settings → Appearance** sets the language of the Asura Utils menus, Reader Tools, and messages. The options are:
 
 - **Auto (browser language)**, the default. It uses the first browser language Asura Utils supports, or English if none match.
 - English, Türkçe, Español, Português (Brasil), and Bahasa Indonesia.
@@ -137,15 +151,13 @@ Changes apply immediately. Only Asura Utils' own text is translated, not the sit
 
 ## Importing and exporting settings
 
-**Settings → Backup & Reset** has three actions for your settings:
+**Settings → Backup & Reset** has three actions for your settings and three for your reading history. Importing opens a panel where you paste the JSON; a mistake is explained there, and your paste stays in place to correct.
 
 | Action | Result |
 | --- | --- |
 | Export Settings | Copies the current configuration as JSON |
 | Import Settings | Applies configuration from pasted JSON |
 | Reset to Defaults | Restores every setting to its default |
-
-Reading history has its own actions in **Settings → Library**, above the history list:
 
 | Action | Result |
 | --- | --- |

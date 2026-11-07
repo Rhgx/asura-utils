@@ -34,43 +34,80 @@
   }
 }
 
+/* The dialog element itself is the dimmed layer; the visible window is #au-modal inside it.
+   Light enough that theme and width changes can be judged against the page behind it. */
 #au-modal-overlay {
   position: fixed;
   inset: 0;
-  background: var(--au-modal-overlay);
-  z-index: 99999;
   display: flex;
   justify-content: center;
   align-items: center;
-  backdrop-filter: blur(8px);
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+  /* Panning stays inside the window's own panes, while pinch-zoom keeps working everywhere. */
+  touch-action: pinch-zoom;
   animation: au-overlay-fade-in 0.18s ease;
 }
+#au-modal-overlay::backdrop { background: transparent; }
 #au-modal-overlay.au-closing {
   pointer-events: none;
   animation: au-overlay-fade-out 0.16s ease forwards;
 }
+/* Rows and notes toggled with the hidden attribute also set display, which would otherwise win over [hidden]. */
+#au-modal-overlay [hidden] { display: none !important; }
+
 #au-modal {
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);
-  background: var(--auo-surface);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 12px;
   width: 780px;
   max-width: calc(100vw - 32px);
   /* Fixed height so switching sections never resizes the modal; only the content pane scrolls. */
-  height: min(640px, calc(100vh - 32px));
+  height: min(720px, calc(100vh - 32px));
   overflow: hidden;
   padding: 0;
+  border: 1px solid var(--auo-border);
+  border-radius: 12px;
+  background: var(--auo-surface);
   color: var(--auo-text);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 14px;
   line-height: 1.5;
+  /* The site turns off text selection on chapter pages; titles here should still be copyable. */
+  user-select: text;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
   animation: au-modal-enter 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+#au-modal:focus { outline: none; }
 #au-modal-overlay.au-closing #au-modal {
   animation: au-modal-exit 0.18s cubic-bezier(0.4, 0.2, 0.9, 1) forwards;
 }
+/* One focus style everywhere. The link token stays above 3:1 on these surfaces in every preset, unlike the accent. */
+#au-modal :focus-visible {
+  outline: 2px solid var(--auo-link);
+  outline-offset: 2px;
+}
+#au-modal input:focus-visible,
+#au-modal select:focus-visible,
+#au-modal textarea:focus-visible { outline-offset: 0; }
+.au-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Sidebar */
 .au-sidebar {
   display: flex;
   flex-direction: column;
@@ -85,7 +122,7 @@
   position: relative;
   display: block;
 }
-.au-search svg {
+.au-search > svg {
   position: absolute;
   top: 50%;
   left: 9px;
@@ -95,19 +132,22 @@
   transform: translateY(-50%);
   pointer-events: none;
 }
-.au-search-input {
+/* The site sizes inputs with its own rule, which the id here outranks. */
+#au-modal .au-search-input {
+  display: block;
   width: 100%;
   box-sizing: border-box;
-  padding: 6px 30px 6px 29px;
+  height: 32px;
+  padding: 0 30px 0 29px;
+  border: 1px solid var(--auo-border);
+  border-radius: 6px;
+  background: var(--au-input-bg);
+  color: var(--auo-text);
   font: inherit;
   font-size: 13px;
-  background: var(--au-input-bg);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 6px;
-  color: var(--auo-text);
-  outline: none;
 }
-.au-search-input:focus { border-color: var(--auo-accent); }
+.au-search-input::placeholder { color: var(--auo-text-dim); opacity: 1; }
+.au-search-input:placeholder-shown { text-overflow: ellipsis; }
 /* The browser's own clear control is replaced by the button below, which matches the theme. */
 .au-search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 .au-search-clear {
@@ -115,8 +155,8 @@
   top: 50%;
   right: 4px;
   display: grid;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   place-items: center;
   border: 0;
@@ -141,9 +181,12 @@
   gap: 2px;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 .au-result {
   display: flex;
+  flex: none;
   align-items: flex-start;
   gap: 10px;
   width: 100%;
@@ -151,7 +194,7 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #a1a1aa;
+  color: var(--auo-text-dim);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -175,7 +218,7 @@
   white-space: nowrap;
 }
 .au-result-page {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.35;
   color: var(--auo-text-dim);
 }
@@ -202,11 +245,12 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 7px 8px;
+  min-height: 32px;
+  padding: 5px 8px;
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #a1a1aa;
+  color: var(--auo-text-dim);
   font: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -223,7 +267,7 @@
 }
 .au-nav-btn:hover {
   background: rgba(255, 255, 255, 0.06);
-  color: #e4e4e7;
+  color: var(--auo-text);
 }
 .au-nav-btn.active {
   background: color-mix(in srgb, var(--auo-accent) 22%, transparent);
@@ -231,28 +275,30 @@
 }
 .au-nav-btn.active svg { color: var(--auo-link); }
 .au-nav-btn:focus-visible,
-.au-result:focus-visible,
-.au-search-clear:focus-visible,
-.au-close-btn:focus-visible {
-  outline: 2px solid var(--auo-accent);
-  outline-offset: -2px;
-}
+.au-result:focus-visible { outline-offset: -2px; }
+
 /* Author credit, matching PuzzleSync: muted until hovered, when the emblem regains its colors. */
 .au-credits {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 4px 12px;
   padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 12px;
   line-height: 1.4;
 }
+/* A second copy at the end of the settings, used on phones where a fixed footer would cost too much height. */
+.au-credits-inline {
+  display: none;
+  margin-top: 20px;
+}
 .au-credits-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-height: 24px;
   color: var(--auo-text-dim);
   text-decoration: none;
   transition: color 0.15s ease;
@@ -261,13 +307,10 @@
   color: var(--auo-text);
   text-decoration: underline;
 }
-/* The dot travels with the version, so a long translated credit never leaves it dangling at a line end. */
 .au-credits-version {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
 }
-.au-credits-dot { color: color-mix(in srgb, var(--auo-text-dim) 55%, transparent); }
 .au-credits-avatar {
   display: block;
   flex: none;
@@ -286,6 +329,8 @@
   filter: none;
   opacity: 1;
 }
+
+/* Main pane */
 .au-main {
   display: flex;
   flex-direction: column;
@@ -297,7 +342,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px 12px 22px;
+  padding: 10px 12px 10px 22px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .au-main-title {
@@ -305,7 +350,7 @@
   font-size: 16px;
   font-weight: 600;
   line-height: 1.3;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--auo-text);
 }
 .au-close-btn {
   display: grid;
@@ -316,18 +361,21 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
+  color: var(--auo-text-dim);
   cursor: pointer;
-  font-size: 24px;
-  color: #a1a1aa;
-  line-height: 1;
-  transition: color 0.18s, transform 0.18s;
+  transition: color 0.15s ease, background 0.15s ease;
 }
-.au-close-btn:hover { color: white; background: rgba(255,255,255,.07); transform: none; }
+.au-close-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--auo-text);
+}
 .au-content {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 18px 22px 22px;
+  overscroll-behavior: contain;
+  touch-action: pan-y pinch-zoom;
+  padding: 16px 22px 22px;
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--auo-text-dim) 45%, transparent) transparent;
 }
@@ -335,8 +383,13 @@
 .au-page.active {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 20px;
   animation: au-tab-panel-in 0.18s ease;
+}
+/* Marks the setting behind the highlighted search result, which may share the screen with many others. */
+.is-preview {
+  background: color-mix(in srgb, var(--auo-accent) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--auo-accent) 70%, transparent);
 }
 /* Briefly marks the setting a search result opened. */
 .is-flash {
@@ -346,14 +399,14 @@
 .au-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 .au-group-title {
-  margin: 0 0 -2px;
-  font-size: 11px;
+  margin: 0;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--auo-text-dim);
 }
@@ -362,16 +415,59 @@
   border-radius: 8px;
   background: var(--auo-card-alt-bg);
 }
+
+/* Status bar: reports results in one consistent place, below the scrolling content. */
+.au-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  box-sizing: border-box;
+  padding: 6px 12px 6px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--auo-card-alt-bg);
+  font-size: 13px;
+}
+.au-status-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.au-status-undo {
+  flex: none;
+  min-height: 28px;
+  padding: 2px 10px;
+  border: 1px solid var(--auo-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--auo-link);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.au-status-undo:hover { background: var(--auo-surface-hover); }
+
+/* Setting rows */
 .au-setting-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  min-height: 52px;
+  min-height: 48px;
   box-sizing: border-box;
-  padding: 10px 14px;
+  padding: 8px 14px;
 }
 .au-setting-row + .au-setting-row { border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.au-setting-row:first-child { border-radius: 7px 7px 0 0; }
+.au-setting-row:last-child { border-radius: 0 0 7px 7px; }
+.au-setting-row:only-child { border-radius: 7px; }
+.au-setting-row-toggle {
+  cursor: pointer;
+  /* Quick repeated clicks on a row toggle it; they should not also select its text. */
+  user-select: none;
+  transition: background 0.15s ease;
+}
+.au-setting-row-toggle:hover { background: rgba(255, 255, 255, 0.03); }
 .au-setting-text {
   display: grid;
   gap: 2px;
@@ -387,150 +483,105 @@
   line-height: 1.45;
   color: var(--auo-text-dim);
 }
-.au-setting-row.is-disabled,
-.au-check.is-disabled { opacity: 0.5; }
+.au-setting-row.is-disabled { cursor: not-allowed; }
+.au-setting-row.is-disabled:hover { background: transparent; }
+/* The text stays readable, because it explains what the setting would do. */
+.au-setting-row.is-disabled .au-setting-label { color: var(--auo-text-dim); }
+.au-setting-row.is-disabled input,
+.au-setting-row.is-disabled select,
+.au-setting-row.is-disabled .au-toggle { opacity: 0.5; }
 .is-disabled input,
 .is-disabled select,
-.is-disabled .au-slider,
-.is-disabled .au-check-main { cursor: not-allowed; }
-.au-checklist {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2px 16px;
-  padding: 8px 10px;
-}
-.au-check {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  padding: 6px 4px;
-}
-.au-check-main {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-width: 0;
-  font-size: 13px;
-  color: var(--auo-text);
-  cursor: pointer;
-}
-.au-check-main span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.au-check input,
-.au-filter-genre input {
-  flex: none;
-  width: 15px;
-  height: 15px;
-  margin: 0;
-  accent-color: var(--auo-accent);
-  cursor: pointer;
-}
-/* The help icon sits at the end of each cell, so its tooltip opens toward the cell instead of past the modal edge. */
-/* The [data-tooltip] attribute makes these outrank the base tooltip rules, which come later in this file. */
-.au-check .au-control-label[data-tooltip]::before { left: auto; right: 1px; }
-.au-check .au-control-label[data-tooltip]::after { left: auto; right: -6px; }
-.au-control-label {
+.is-disabled .au-slider { cursor: not-allowed; }
+
+/* Controls */
+.au-toggle {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: inline-block;
+  flex: none;
+  width: 36px;
+  height: 20px;
 }
-.au-control-label[data-tooltip] {
-  cursor: help;
-}
-.au-control-label[data-tooltip]::before,
-.au-control-label[data-tooltip]::after {
+/* The input keeps the full control area, so assistive tech and touch exploration can find it. */
+.au-toggle input {
   position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.16s ease, transform 0.16s ease;
-  z-index: 3;
+  cursor: pointer;
 }
-.au-control-label[data-tooltip]::before {
-  content: "";
-  left: 18px;
-  top: calc(100% + 2px);
-  border-width: 6px;
-  border-style: solid;
-  border-color: transparent transparent color-mix(in srgb, var(--au-bg-panel) 96%, black) transparent;
-  transform: translateY(-2px);
-}
-.au-control-label[data-tooltip]::after {
-  content: attr(data-tooltip);
-  left: 0;
-  top: calc(100% + 12px);
-  width: max-content;
-  max-width: min(280px, calc(100vw - 88px));
-  padding: 9px 11px;
+.au-slider {
+  position: absolute;
+  inset: 0;
   border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--au-border-soft) 82%, transparent);
-  background: color-mix(in srgb, var(--au-bg-panel) 96%, black);
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--au-shadow) 42%, transparent);
-  color: var(--au-text);
-  font-size: 11px;
-  line-height: 1.5;
-  white-space: normal;
-  transform: translateY(-4px);
+  background: color-mix(in srgb, var(--auo-text-dim) 45%, var(--auo-card-alt-bg));
+  pointer-events: none;
+  transition: background 0.15s ease;
 }
-.au-control-label[data-tooltip]:hover::before,
-.au-control-label[data-tooltip]:hover::after {
-  opacity: 1;
-  transform: translateY(0);
+.au-slider::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s ease;
 }
-.au-control-tooltip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  border: 1px solid var(--au-dock-btn-border);
-  color: var(--au-text-dim);
-  font-size: 10px;
-  line-height: 1;
-  cursor: help;
-  user-select: none;
-  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+.au-toggle input:checked + .au-slider { background: var(--auo-accent); }
+.au-toggle input:checked + .au-slider::before { transform: translateX(16px); }
+.au-toggle input:focus-visible + .au-slider {
+  outline: 2px solid var(--auo-link);
+  outline-offset: 2px;
 }
-.au-control-label[data-tooltip]:hover .au-control-tooltip {
-  border-color: var(--au-dock-btn-hover-border);
-  color: var(--au-text);
-  background: color-mix(in srgb, var(--au-dock-btn-hover-bg) 72%, transparent);
-}
-.au-input-num {
-  background: var(--au-input-bg);
-  border: 1px solid var(--au-input-border);
-  color: var(--au-shortcut-text);
-  padding: 7px 8px;
+.au-input-num,
+.au-input-select {
+  flex: none;
+  height: 32px;
+  box-sizing: border-box;
+  border: 1px solid var(--auo-border);
   border-radius: 6px;
-  width: 76px;
-  text-align: center;
-  outline: none;
+  background: var(--au-input-bg);
+  color: var(--auo-text);
 }
-.au-input-num:focus { border-color: var(--au-accent); }
+#au-modal .au-input-num,
+#au-modal .au-input-select {
+  font: inherit;
+  font-size: 13px;
+}
+#au-modal .au-input-num {
+  width: 76px;
+  padding: 0 8px;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
 /* The native spinner arrows clash with the theme; the arrow keys still step the value. */
-.au-input-num { -moz-appearance: textfield; appearance: textfield; }
 .au-input-num::-webkit-outer-spin-button,
 .au-input-num::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-.au-input-select {
-  background: var(--au-input-bg);
-  border: 1px solid var(--au-input-border);
-  color: var(--au-text);
-  padding: 7px 30px 7px 10px;
-  border-radius: 6px;
-  min-width: 150px;
-  max-width: 200px;
-  outline: none;
+#au-modal .au-input-select {
+  width: 210px;
+  max-width: 50%;
+  padding: 0 6px;
 }
-.au-input-select:focus { border-color: var(--au-accent); }
+.au-input-color {
+  flex: none;
+  width: 76px;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 2px;
+  border: 1px solid var(--auo-border);
+  border-radius: 6px;
+  background: var(--au-input-bg);
+  cursor: pointer;
+}
+
 /* Theme picker: a dropdown whose rows show each preset's swatches beside its name. */
 .au-palette {
   position: relative;
@@ -542,7 +593,9 @@
   align-items: center;
   gap: 10px;
   min-width: 170px;
-  padding: 6px 8px 6px 10px;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 8px 0 10px;
   border: 1px solid var(--auo-border);
   border-radius: 6px;
   background: var(--au-input-bg);
@@ -551,12 +604,7 @@
   font-size: 13px;
   cursor: pointer;
 }
-.au-palette-trigger:focus-visible,
-.au-palette-trigger[aria-expanded="true"] {
-  outline: none;
-  border-color: var(--auo-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--auo-accent) 32%, transparent);
-}
+.au-palette-trigger[aria-expanded="true"] { border-color: var(--auo-link); }
 .au-palette-trigger > svg {
   flex: none;
   margin-left: auto;
@@ -591,7 +639,6 @@
   font-size: 13px;
   color: var(--auo-text);
   cursor: pointer;
-  outline: none;
 }
 .au-palette-option:hover,
 .au-palette-option:focus {
@@ -602,6 +649,7 @@
   --au-swatch-ring: color-mix(in srgb, var(--auo-accent) 22%, var(--auo-surface));
   background: color-mix(in srgb, var(--auo-accent) 22%, var(--auo-surface));
 }
+#au-modal .au-palette-option:focus-visible { outline-offset: -2px; }
 .au-palette-name { white-space: nowrap; }
 .au-swatches {
   display: inline-flex;
@@ -616,63 +664,97 @@
   box-shadow: 0 0 0 2px var(--au-swatch-ring), inset 0 0 0 1px rgba(255, 255, 255, 0.16);
 }
 .au-swatch + .au-swatch { margin-left: -5px; }
-.au-input-color {
-  width: 76px;
-  height: 30px;
-  padding: 2px;
-  background: var(--au-input-bg);
-  border: 1px solid var(--au-input-border);
-  border-radius: 6px;
-  cursor: pointer;
-}
-.au-input-color:focus { border-color: var(--au-accent); outline: none; }
+
+/* Data actions and import */
 .au-data-note {
-  font-size: 11px;
-  line-height: 1.55;
-  color: var(--au-shortcuts-copy);
-  margin-bottom: 12px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--auo-text-dim);
 }
 .au-data-actions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 .au-data-btn {
-  padding: 9px 10px;
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: var(--auo-card-alt-bg);
+  color: var(--auo-text);
+  font: inherit;
   font-size: 12px;
   font-weight: 600;
-  border-radius: 7px;
-  border: 1px solid var(--au-dock-btn-border);
-  background: var(--au-bg-control);
-  color: var(--au-text);
   cursor: pointer;
-  font-family: inherit;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.16s ease;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 .au-data-btn:hover {
-  border-color: var(--au-dock-btn-hover-border);
-  background: var(--au-dock-btn-hover-bg);
-  transform: translateY(-1px);
+  background: var(--auo-surface-hover);
+  border-color: rgba(255, 255, 255, 0.24);
 }
-.au-data-btn-danger {
-  color: #f87171;
-  border-color: color-mix(in srgb, #f87171 45%, transparent);
+.au-data-btn[aria-expanded="true"] { border-color: var(--auo-link); }
+.au-data-btn-primary,
+.au-data-btn-primary:hover {
+  background: var(--auo-accent);
+  border-color: var(--auo-accent);
+  color: var(--auo-on-accent);
 }
+.au-data-btn-danger { color: #f87171; }
 .au-data-btn-danger:hover {
-  background: color-mix(in srgb, #f87171 14%, transparent);
+  background: color-mix(in srgb, #f87171 14%, var(--auo-card-alt-bg));
   border-color: #f87171;
 }
-.au-filter-heading {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--au-text);
-  margin-bottom: 8px;
-}
-.au-filter-list {
+.au-import {
   display: grid;
   gap: 8px;
-  margin: 0 0 16px;
-  padding: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: var(--auo-card-alt-bg);
+}
+.au-import-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+.au-import-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--auo-border);
+  border-radius: 6px;
+  background: var(--au-input-bg);
+  color: var(--auo-text);
+  font-family: ui-monospace, Consolas, "Cascadia Mono", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  resize: vertical;
+}
+.au-import-input[aria-invalid="true"] { border-color: #f87171; }
+.au-import-error {
+  color: #f87171;
+  font-size: 12px;
+}
+.au-import-error:empty { display: none; }
+.au-import-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Filters */
+.au-filter-heading {
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--auo-text);
+}
+.au-filter-heading:first-child { margin-top: 0; }
+.au-filter-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
   list-style: none;
 }
 .au-filter-item {
@@ -681,7 +763,7 @@
   justify-content: space-between;
   gap: 10px;
   font-size: 13px;
-  color: var(--au-text);
+  color: var(--auo-text);
 }
 .au-filter-name {
   min-width: 0;
@@ -693,33 +775,47 @@
 .au-filter-genres {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 8px 12px;
+  gap: 2px 12px;
+  margin-top: 8px;
 }
 .au-filter-genre {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 28px;
   font-size: 13px;
-  color: var(--au-text);
+  color: var(--auo-text);
   cursor: pointer;
 }
-.au-history-search {
+.au-filter-genre input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--auo-accent);
+  cursor: pointer;
+}
+
+/* History */
+#au-modal .au-history-search {
+  display: block;
   width: 100%;
   box-sizing: border-box;
-  margin-bottom: 12px;
-  padding: 7px 10px;
+  height: 32px;
+  margin-bottom: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--auo-border);
+  border-radius: 6px;
+  background: var(--au-input-bg);
+  color: var(--auo-text);
   font: inherit;
   font-size: 13px;
-  background: var(--au-input-bg);
-  border: 1px solid var(--au-input-border);
-  color: var(--au-text);
-  border-radius: 6px;
-  outline: none;
 }
-.au-history-search:focus { border-color: var(--au-accent); }
+.au-history-search::placeholder { color: var(--auo-text-dim); opacity: 1; }
+[data-au-history] .au-data-note { margin-bottom: 8px; }
 .au-history-list {
   display: grid;
-  gap: 8px;
+  gap: 2px;
   margin: 0;
   list-style: none;
 }
@@ -729,28 +825,28 @@
 .au-filter-genres {
   max-height: 200px;
   overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 8px 10px;
+  padding: 6px 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   background: var(--auo-card-alt-bg);
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--auo-text-dim) 45%, transparent) transparent;
 }
-.au-history-list { max-height: 300px; }
+/* This list comes last on its page, so it flows with the page rather than scrolling on its own. */
+#au-modal .au-history-list { max-height: none; overflow: visible; }
 .au-history-list:empty,
 .au-filter-genres:empty { display: none; }
-[data-au-history] [hidden] { display: none; }
 .au-history-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   min-width: 0;
+  padding: 4px 0;
 }
 .au-history-info {
   display: grid;
-  gap: 3px;
+  gap: 1px;
   min-width: 0;
 }
 .au-history-title-row {
@@ -765,168 +861,103 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--au-text);
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--auo-text);
   text-decoration: none;
 }
-.au-history-title:hover { color: var(--au-accent); }
+.au-history-title:hover {
+  color: var(--auo-link);
+  text-decoration: underline;
+}
 .au-history-tag {
   flex: none;
-  font-size: 10px;
-  padding: 1px 5px;
+  padding: 0 5px;
+  border: 1px solid var(--auo-border);
   border-radius: 4px;
-  border: 1px solid var(--au-input-border);
-  color: var(--au-shortcuts-copy);
+  color: var(--auo-text-dim);
+  font-size: 11px;
 }
 .au-history-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--au-shortcuts-copy);
+  gap: 0 8px;
+  font-size: 12px;
+  color: var(--auo-text-dim);
 }
 .au-history-item .au-data-btn { flex: none; }
-.au-toggle { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
-.au-toggle input { opacity: 0; width: 0; height: 0; }
-.au-slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background: #3f3f46;
-  transition: 0.25s;
-  border-radius: 34px;
-}
-.au-slider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 3px;
-  bottom: 3px;
-  background: var(--au-shortcut-text);
-  transition: 0.25s;
-  border-radius: 50%;
-}
-input:checked + .au-slider { background: var(--auo-accent); }
-input:checked + .au-slider:before { transform: translateX(20px); }
 
-.au-shortcut-intro {
-  border: 1px solid var(--au-border-soft);
-  background: color-mix(in srgb, var(--au-bg-soft) 58%, transparent);
-  border-radius: 10px;
-  padding: 11px 12px;
-  margin-bottom: 12px;
-}
-.au-shortcut-intro-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--au-text);
-  margin-bottom: 4px;
-}
-.au-shortcut-intro-copy {
-  font-size: 11px;
-  line-height: 1.55;
-  color: var(--au-shortcuts-copy);
-}
-.au-shortcut-cards {
-  display: grid;
-  gap: 10px;
-}
-.au-shortcut-card {
-  border: 1px solid var(--au-border-soft);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--au-bg-control) 72%, transparent);
-  padding: 10px;
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--au-shadow) 25%, transparent);
-}
-.au-shortcut-card-title {
-  margin-bottom: 8px;
-  font-size: 10px;
-  color: var(--au-section-title);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 700;
-}
-.au-shortcut-grid {
-  display: grid;
-  gap: 8px;
-}
-.au-shortcut-row {
+/* Shortcuts: the same rows as every other section, so the page reads like the rest of the window. */
+.au-shortcut-editor {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px;
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 8px;
-  background: var(--auo-bg);
-  transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  flex-direction: column;
+  gap: 20px;
 }
-.au-shortcut-row:hover {
-  border-color: var(--au-dock-btn-hover-border);
-  transform: translateY(-1px);
+.au-shortcut-intro kbd {
+  padding: 0 4px;
+  border: 1px solid var(--auo-border);
+  border-radius: 3px;
+  color: var(--auo-text);
+  font: inherit;
+  font-size: 11px;
 }
-.au-shortcut-row.is-listening {
-  border-color: var(--au-accent);
-  background: color-mix(in srgb, var(--au-accent-glow) 40%, var(--au-input-bg));
+.au-shortcut-touch-note { display: none; }
+/* Capturing a key needs a keyboard, which a touch screen does not bring up for a button. */
+@media (hover: none) {
+  .au-shortcut-intro { display: none; }
+  .au-shortcut-touch-note { display: block; }
 }
-.au-shortcut-meta {
-  min-width: 0;
-}
-.au-shortcut-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--au-text);
-  margin-bottom: 2px;
-}
-.au-shortcut-help {
-  font-size: 10px;
-  line-height: 1.45;
-  color: var(--au-shortcuts-copy);
-}
+.au-shortcut-row { min-height: 44px; }
+.au-shortcut-row.is-listening { background: color-mix(in srgb, var(--auo-accent) 12%, transparent); }
 .au-shortcut-actions {
   display: inline-flex;
+  flex: none;
   align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
+  gap: 8px;
 }
 .au-shortcut-bind-btn,
 .au-shortcut-reset-btn {
-  border-radius: 7px;
-  border: 1px solid var(--au-dock-btn-border);
-  background: var(--au-bg-control);
-  color: var(--au-text);
+  min-height: 28px;
+  border-radius: 6px;
+  font: inherit;
   cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.16s ease;
-}
-.au-shortcut-bind-btn:hover,
-.au-shortcut-reset-btn:hover {
-  border-color: var(--au-dock-btn-hover-border);
-  background: var(--au-dock-btn-hover-bg);
-  transform: translateY(-1px);
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 .au-shortcut-bind-btn {
   min-width: 96px;
-  padding: 6px 10px;
+  max-width: 150px;
+  padding: 2px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--au-input-bg);
+  color: var(--auo-text);
+  font-size: 12px;
+  font-weight: 600;
   text-align: center;
-  font-size: 11px;
-  font-weight: 700;
 }
-.au-shortcut-bind-btn.is-listening {
-  border-color: var(--au-dock-btn-active-border);
-  background: linear-gradient(135deg, var(--au-accent), var(--au-accent-strong));
-  color: var(--au-shortcut-text);
-  animation: au-shortcut-pulse 0.95s ease-in-out infinite alternate;
+.au-shortcut-bind-btn:hover {
+  background: var(--auo-surface-hover);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.au-shortcut-bind-btn.is-listening,
+.au-shortcut-bind-btn.is-listening:hover {
+  background: var(--auo-accent);
+  border-color: var(--auo-accent);
+  color: var(--auo-on-accent);
 }
 .au-shortcut-reset-btn {
-  padding: 6px 8px;
-  font-size: 10px;
-  color: var(--au-text-dim);
+  padding: 2px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--auo-text-dim);
+  font-size: 12px;
 }
-.au-shortcut-bind-label {
-  display: inline-block;
-  min-height: 1em;
+.au-shortcut-reset-btn:hover {
+  background: var(--auo-surface-hover);
+  color: var(--auo-text);
 }
+/* Reset only appears once a binding has changed; visibility keeps the key column aligned. */
+.au-shortcut-reset-btn.is-default { visibility: hidden; }
+
 @keyframes au-overlay-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -959,25 +990,6 @@ input:checked + .au-slider:before { transform: translateX(20px); }
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@keyframes au-shortcut-pulse {
-  from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--au-accent-glow) 44%, transparent); }
-  to { box-shadow: 0 0 0 6px color-mix(in srgb, var(--au-accent-glow) 0%, transparent); }
-}
-
-@media (max-width: 520px) {
-  .au-shortcut-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .au-shortcut-actions {
-    width: 100%;
-    justify-content: stretch;
-  }
-  .au-shortcut-bind-btn,
-  .au-shortcut-reset-btn {
-    flex: 1 1 0;
-  }
-}
 
 .au-content::-webkit-scrollbar,
 .au-history-list::-webkit-scrollbar,
@@ -988,104 +1000,131 @@ input:checked + .au-slider:before { transform: translateX(20px); }
 .au-filter-list::-webkit-scrollbar-thumb,
 .au-filter-genres::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--auo-text-dim) 45%, transparent);
-  border-radius: 999px;
+  border-radius: 4px;
 }
 .au-content::-webkit-scrollbar-track,
 .au-history-list::-webkit-scrollbar-track,
 .au-filter-list::-webkit-scrollbar-track,
 .au-filter-genres::-webkit-scrollbar-track { background: transparent; }
-.au-input-num,
-.au-input-select {
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 6px;
-  background: var(--auo-bg);
-  color: var(--auo-text);
-  font: inherit;
-}
-.au-slider::before { width: 18px; height: 18px; left: 3px; bottom: 2px; }
-input:checked + .au-slider::before { transform: translateX(16px); }
-.au-shortcut-intro,
-.au-shortcut-card { border-color: rgba(255,255,255,.08); background: var(--auo-card-alt-bg); box-shadow: none; }
-.au-shortcut-bind-btn,
-.au-shortcut-reset-btn,
-.au-data-btn { border-color: rgba(255,255,255,.09); border-radius: 6px; background: var(--auo-card-alt-bg); font-family: inherit; }
-.au-shortcut-bind-btn:hover,
-.au-shortcut-reset-btn:hover,
-.au-data-btn:hover {
-  background: var(--auo-surface-hover);
-  border-color: color-mix(in srgb, var(--auo-accent) 60%, transparent);
-}
-.au-data-btn-danger { background: var(--auo-card-alt-bg); }
-.au-data-btn-danger:hover {
-  background: color-mix(in srgb, #f87171 14%, var(--auo-card-alt-bg));
-  border-color: #f87171;
-}
-body.au-theme-enabled #au-modal .au-input-num,
-body.au-theme-enabled #au-modal .au-input-select {
-  background: var(--au-input-bg);
-  border-color: var(--auo-border);
-  color: var(--auo-text);
-  box-shadow: none;
-}
 
-body.au-theme-enabled #au-modal .au-input-num:focus,
-body.au-theme-enabled #au-modal .au-input-select:focus {
-  outline: none;
-  border-color: var(--auo-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--auo-accent) 32%, transparent);
-}
-/* Narrow screens stack everything in one column: the sidebar's search and sections become a strip above the content. */
+/* Phones use the whole screen. The title gives way to the search box, since the sections below name the page. */
 @media (max-width: 640px) {
   #au-modal {
-    display: flex;
-    flex-direction: column;
-    max-width: calc(100vw - 16px);
-    height: calc(100vh - 16px);
-    height: calc(100dvh - 16px);
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    width: 100%;
+    max-width: none;
+    height: 100vh;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
   }
   .au-sidebar,
-  .au-main { display: contents; }
-  .au-main-header {
-    order: 0;
-    padding: 10px 10px 10px 16px;
+  .au-main,
+  .au-main-header { display: contents; }
+  .au-main-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
   .au-search {
-    order: 1;
-    margin: 10px 12px 0;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    margin: 8px 0 8px 12px;
   }
+  #au-modal .au-search-input {
+    height: 40px;
+    /* 16px stops iOS from zooming the page when the field takes focus. */
+    font-size: 16px;
+  }
+  .au-close-btn {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    width: 44px;
+    height: 44px;
+    margin-right: 6px;
+  }
+  /* Two rows of three keep every section visible, with no hidden overflow to discover. */
   .au-nav {
-    order: 2;
-    flex: none;
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 8px 12px;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding: 0 12px 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    scrollbar-width: none;
   }
   .au-nav-spacer { display: none; }
+  .au-nav-btn {
+    justify-content: center;
+    min-height: 40px;
+    padding: 4px;
+    text-align: center;
+  }
+  .au-nav-btn svg { display: none; }
+  .au-nav-btn span { white-space: normal; line-height: 1.2; }
   .au-search-results {
-    order: 2;
-    flex: none;
-    max-height: 40vh;
-    padding: 8px 12px;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    max-height: 35vh;
+    padding: 0 12px 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
-  .au-nav-btn {
-    flex: none;
-    width: auto;
-  }
   .au-content {
-    order: 3;
-    padding: 14px;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    padding: 14px 12px 20px;
   }
-  .au-credits {
-    order: 4;
-    padding: 8px 12px;
-    border-top-color: rgba(255, 255, 255, 0.08);
+  .au-status {
+    grid-column: 1 / -1;
+    grid-row: 4;
   }
-  .au-checklist { grid-template-columns: minmax(0, 1fr); }
+  .au-status-bar { padding-left: 14px; }
+  .au-sidebar > .au-credits { display: none; }
+  .au-credits-inline { display: flex; }
+  .au-setting-row { min-height: 56px; }
+  .au-toggle {
+    width: 44px;
+    height: 24px;
+  }
+  .au-slider { border-radius: 12px; }
+  .au-slider::before { width: 20px; height: 20px; }
+  .au-toggle input:checked + .au-slider::before { transform: translateX(20px); }
+  #au-modal .au-input-num,
+  #au-modal .au-input-select,
+  .au-input-color,
+  .au-palette-trigger,
+  #au-modal .au-history-search {
+    height: 40px;
+    font-size: 16px;
+  }
+  #au-modal .au-input-select { width: 170px; }
+  .au-palette-trigger { min-width: 150px; }
+  .au-data-btn { min-height: 44px; font-size: 13px; }
+  /* Three buttons wrap to two columns on a phone; the last one takes the full row rather than sitting alone at half width. */
+  .au-data-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .au-data-actions .au-data-btn:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .au-shortcut-bind-btn { min-height: 40px; min-width: 88px; }
+  .au-shortcut-reset-btn { min-height: 40px; }
+  .au-filter-genre { min-height: 40px; }
+  /* A nested scroller on a phone traps swipes, so these lists just flow with the page. */
+  .au-history-list,
+  .au-filter-list,
+  .au-filter-genres {
+    max-height: none;
+    overflow: visible;
+  }
 }
 
-/* Rows and notes toggled with the hidden attribute also set display, which would otherwise win over [hidden]. */
-#au-modal-overlay [hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  #au-modal-overlay,
+  #au-modal,
+  #au-modal * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

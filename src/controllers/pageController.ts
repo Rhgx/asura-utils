@@ -10,11 +10,12 @@ import { readingHistoryController } from "./readingHistoryController.js";
 import { newChapterBadgeController } from "./newChapterBadgeController.js";
 import { seriesFilterController } from "./seriesFilterController.js";
 import { chapterToolsController } from "./chapterToolsController.js";
+import { keyboardController } from "./keyboardController.js";
 import { ConfigStore } from "../store/configStore.js";
 import { CONSTANTS } from "../config/defaults.js";
 import type { ConfigKey } from "../config/defaults.js";
-import { matchesBinding } from "../config/keybinds.js";
-import { resolveLocale, setLocale } from "../i18n/index.js";
+import { KEYBIND_FIELDS, matchesBinding } from "../config/keybinds.js";
+import { resolveLocale, setLocale, t } from "../i18n/index.js";
 import type { PageContext, PageControllerContext, QueryRoot } from "./types.js";
 import type { ReaderStateSnapshot } from "./readerController.js";
 
@@ -28,6 +29,7 @@ export const PageController = {
   ...pageTargetController,
   ...chapterEndController,
   ...pageCleanupController,
+  ...keyboardController,
   settingsView: new SettingsModalView((key) => PageController.handleConfigChanged(key)),
   progressBarView: new ProgressBarView(),
   dockView: new ReaderDockView((collapsed) => {
@@ -113,6 +115,13 @@ export const PageController = {
   bindGlobalListeners() {
     if (this.globalListenersBound) return;
     this.globalListenersBound = true;
+
+    // A live region must exist before its text changes, or screen readers miss the first message.
+    const hint = document.createElement("div");
+    hint.id = "au-shortcut-hint";
+    hint.className = "au-shortcut-hint";
+    hint.setAttribute("role", "status");
+    document.body.appendChild(hint);
 
     // Capture on window so this runs before the site's document-level key handlers; stopPropagation keeps them from also acting on the same key.
     window.addEventListener("keydown", (e) => this.handleKeyDown(e), true);
@@ -200,14 +209,19 @@ export const PageController = {
       jumpPage: (direction) => this.reader.jumpPage(direction),
       goSeries: () => this.reader.goSeries(),
       goTop: () => this.reader.goTop(),
-      openSettings: () => {
+      openSettings: (page) => {
         // The modal has no explicit open method, so only toggle when it is not already showing.
-        // Opened from the dock, it starts on the Reader section.
-        if (!document.getElementById("au-modal-overlay")) this.settingsView.toggleModal("reader");
+        if (!document.getElementById("au-modal-overlay")) this.settingsView.toggleModal(page);
       },
     });
 
     this.dockView.setCollapsed(ConfigStore.get("readerDockCollapsed"), false);
+
+    // A collapsed dock is only a small unlabelled tab, so a new reader gets one pointer to it.
+    if (ConfigStore.get("readerDockCollapsed") && !ConfigStore.get("dockHintShown")) {
+      ConfigStore.set("dockHintShown", true);
+      this.showHint(t("dock.firstRunHint"), 6000);
+    }
 
     if (ConfigStore.get("showProgressBar")) {
       this.progressBarView.mount();
@@ -304,6 +318,10 @@ export const PageController = {
   },
 
   handleConfigChanged(key: ConfigKey): void {
+    if (key.startsWith("keybind") || key === "doubleClickScroll") {
+      this.dockView.syncShortcuts();
+    }
+
     if (key === "themePreset") {
       ThemeController.apply(ConfigStore.get("themePreset"));
     }
@@ -394,196 +412,14 @@ export const PageController = {
     });
   },
 
-  handleKeyDown(e: KeyboardEvent): void {
-    const targetElement = e.target instanceof Element ? e.target : null;
-    const tag = targetElement?.tagName || "";
-    if (tag === "INPUT" || tag === "TEXTAREA") return;
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (targetElement?.closest("#au-modal-overlay")) {
-      return;
-    }
-    if (targetElement?.closest("[contenteditable='true'],[contenteditable='']")) {
-      return;
-    }
-
-    const context = this.getPageContext();
-    const key = typeof e.key === "string" ? e.key : "";
-    const code = e.code || "";
-    const matchesConfig = (configKey: ConfigKey, legacy = false) =>
-      matchesBinding(e, ConfigStore.get(configKey)) || !!legacy;
-
-    if (context.isReader) {
-      const readerEnabled = ConfigStore.get("readerWidget");
-      const speedUpLegacy = key === "=" || key === "+" || code === "NumpadAdd";
-      const speedDownLegacy =
-        key === "-" || key === "_" || code === "NumpadSubtract";
-      const nextLegacy = key === "ArrowRight" || key === "PageDown" || key === "]";
-      const prevLegacy = key === "ArrowLeft" || key === "PageUp" || key === "[";
-
-      if (matchesConfig("keybindToggleScroll")) {
-        if (readerEnabled) {
-          e.preventDefault();
-          e.stopPropagation();
-          this.reader.toggleScroll();
-        }
-        return;
-      }
-
-      if (matchesConfig("keybindSpeedUp", speedUpLegacy)) {
-        if (readerEnabled) {
-          e.preventDefault();
-          e.stopPropagation();
-          this.reader.stepSpeed(CONSTANTS.SPEED_STEP);
-        }
-        return;
-      }
-
-      if (matchesConfig("keybindSpeedDown", speedDownLegacy)) {
-        if (readerEnabled) {
-          e.preventDefault();
-          e.stopPropagation();
-          this.reader.stepSpeed(-CONSTANTS.SPEED_STEP);
-        }
-        return;
-      }
-
-      if (matchesConfig("keybindNextChapter", nextLegacy)) {
-        if (readerEnabled) {
-          e.preventDefault();
-          e.stopPropagation();
-          this.reader.navigate("next");
-        }
-        return;
-      }
-
-      if (matchesConfig("keybindPrevChapter", prevLegacy)) {
-        if (readerEnabled) {
-          e.preventDefault();
-          e.stopPropagation();
-          this.reader.navigate("prev");
-        }
-        return;
-      }
-
-      if (matchesConfig("keybindNextPage")) {
-        // Page jumps only make sense for comic images, so novel text leaves the key alone.
-        if (readerEnabled && !context.isNovel) {
-          e.preventDefault();
-          e.stopPropagation();
-          this.reader.jumpPage("next");
-        }
-        return;
-      }
-
-      if (matchesConfig("keybindPrevPage")) {
-        if (readerEnabled && !context.isNovel) {
-          e.preventDefault();
-          e.stopPropagation();
-          this.reader.jumpPage("prev");
-        }
-        return;
-      }
-
-      if (matchesConfig("keybindGoSeries")) {
-        if (readerEnabled) {
-          e.preventDefault();
-          e.stopPropagation();
-          this.reader.goSeries();
-        }
-        return;
-      }
-
-      if (matchesConfig("keybindToggleFitWidth")) {
-        // Fit width only affects chapter images, so novel text leaves the key alone.
-        if (readerEnabled && !context.isNovel) {
-          e.preventDefault();
-          e.stopPropagation();
-          this.reader.toggleFitWidth();
-        }
-        return;
-      }
-    }
-
-    if (matchesConfig("keybindFocusSearch")) {
-      e.preventDefault();
-      e.stopPropagation();
-      this.focusSearch();
-      return;
-    }
-
-    if (context.isSeriesPage) {
-      if (matchesConfig("keybindJumpChapters")) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.scrollToChapterList();
-        return;
-      }
-    }
-  },
-
-  handleDblClick(e: MouseEvent): void {
-    if (!this.pageContext.isReader) return;
-    if (!ConfigStore.get("readerWidget")) return;
-    if (!ConfigStore.get("doubleClickScroll")) return;
-
-    const target = e.target instanceof Element ? e.target : null;
-    if (!target) return;
-    if (target.closest("#au-reader-dock-shell")) return;
-    if (target.closest("#au-modal-overlay")) return;
-
-    this.reader.toggleScroll();
-  },
-
-  focusSearch() {
-    const searchInput =
-      document.querySelector<HTMLInputElement>('input[placeholder*="Search"]') ||
-      document.querySelector<HTMLInputElement>('input[type="search"]') ||
-      document.querySelector<HTMLInputElement>("#browse-interactive input") ||
-      document.querySelector<HTMLInputElement>(".series-search input");
-
-    if (searchInput) {
-      searchInput.focus();
-      searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
-    }
-
-    // Header search may render as a button that opens a dialog.
-    const searchTrigger =
-      document.querySelector<HTMLButtonElement>('astro-island[component-url*="SearchBar"] button') ||
-      document.querySelector<HTMLButtonElement>('header button[aria-label*="search" i]');
-    if (searchTrigger) searchTrigger.click();
-  },
-
-  scrollToChapterList() {
-    const headings = Array.from(document.querySelectorAll("h2, h3, h4"));
-    const chapterHeading = headings.find((h) =>
-      (h.textContent || "").toLowerCase().includes("chapter")
-    );
-
-    const chapterSection =
-      chapterHeading ||
-      document.querySelector('astro-island[component-url*="ChapterListReact"]') ||
-      document.querySelector('[class*="chapter"]') ||
-      document.querySelector("div.chapter");
-
-    const firstChapter = document.querySelector('a[href*="/chapter/"]');
-    const target = chapterSection || (firstChapter && firstChapter.closest("div"));
-    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-  },
-
-  showHint(message: string): void {
-    let hint = document.getElementById("au-shortcut-hint");
-    if (!hint) {
-      hint = document.createElement("div");
-      hint.id = "au-shortcut-hint";
-      hint.className = "au-shortcut-hint";
-      document.body.appendChild(hint);
-    }
+  showHint(message: string, durationMs = 2000): void {
+    const hint = document.getElementById("au-shortcut-hint");
+    if (!hint) return;
 
     hint.textContent = message;
     hint.classList.add("visible");
     window.clearTimeout(this.hintTimer);
-    this.hintTimer = window.setTimeout(() => hint.classList.remove("visible"), 1000);
+    this.hintTimer = window.setTimeout(() => hint.classList.remove("visible"), durationMs);
   },
 
   hasClasses(el: Element | null | undefined, classes: readonly string[]): boolean {
@@ -617,6 +453,8 @@ export const PageController = {
   getChapterAnchors(root: QueryRoot = document): HTMLAnchorElement[] {
     if (!root || !root.querySelectorAll) return [];
     return Array.from(root.querySelectorAll<HTMLAnchorElement>(CHAPTER_LINK_SELECTOR)).filter((anchor) => {
+      // The history list in our own settings window links to chapters, but it is not part of the site's lists.
+      if (anchor.closest("#au-modal-overlay")) return false;
       const href = anchor.getAttribute("href") || anchor.href || "";
       return /\/chapter\//.test(href);
     });

@@ -44,5 +44,26 @@ const SEARCH_ICON = lucide('<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" 
 const CLEAR_ICON = lucide('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>');
 // chevron-down
 const CHEVRON_ICON = lucide('<path d="m6 9 6 6 6-6"/>');
+// chevron-left
+const CHEVRON_LEFT_ICON = lucide('<path d="m15 18-6-6 6-6"/>');
+// chevron-right
+const CHEVRON_RIGHT_ICON = lucide('<path d="m9 18 6-6-6-6"/>');
+// play
+const PLAY_ICON = lucide('<path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/>');
+// pause
+const PAUSE_ICON = lucide('<rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/>');
+// settings
+const GEAR_ICON = lucide('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>');
 
-export { CHEVRON_ICON, CLEAR_ICON, PAGE_ICONS, SEARCH_ICON, rocksEmblemSvg };
+export {
+  CHEVRON_ICON,
+  CHEVRON_LEFT_ICON,
+  CHEVRON_RIGHT_ICON,
+  CLEAR_ICON,
+  GEAR_ICON,
+  PAGE_ICONS,
+  PAUSE_ICON,
+  PLAY_ICON,
+  SEARCH_ICON,
+  rocksEmblemSvg,
+};

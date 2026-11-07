@@ -69,6 +69,7 @@ function verifyGrants(meta: Metadata, filePath: string): void {
   const grants = meta.get("grant") || [];
   assert(grants.includes("GM_getValue"), `Missing @grant GM_getValue in ${filePath}`);
   assert(grants.includes("GM_setValue"), `Missing @grant GM_setValue in ${filePath}`);
+  assert(grants.includes("GM_registerMenuCommand"), `Missing @grant GM_registerMenuCommand in ${filePath}`);
 }
 
 function verifyUpdates(meta: Metadata, filePath: string): void {

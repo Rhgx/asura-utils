@@ -16,16 +16,10 @@ export const ThemeController = {
 
   buildCustomAccentTokens(accent: string): ThemeTokens {
     return {
-      "--au-accent": accent,
       "--auo-accent": accent,
-      "--au-accent-strong": `color-mix(in srgb, ${accent} 68%, black)`,
       "--auo-accent-strong": `color-mix(in srgb, ${accent} 68%, black)`,
       "--au-accent-glow": `color-mix(in srgb, ${accent} 38%, transparent)`,
-      "--au-settings-btn-bg": `color-mix(in srgb, ${accent} 68%, black)`,
-      "--au-settings-btn-hover": `color-mix(in srgb, ${accent} 54%, black)`,
-      "--au-progress-end": `color-mix(in srgb, ${accent} 55%, white)`,
       "--auo-link": `color-mix(in srgb, ${accent} 45%, white)`,
-      "--auo-auth-hover-bg": `color-mix(in srgb, ${accent} 54%, black)`,
       "--auo-chapter-hover-border": `color-mix(in srgb, ${accent} 45%, transparent)`,
       "--auo-on-accent": this.pickOnAccent(accent),
     };

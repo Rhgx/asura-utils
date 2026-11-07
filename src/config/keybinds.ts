@@ -62,6 +62,12 @@ const KEYBIND_FIELDS = [
     defaultBinding: "KeyW",
   },
   {
+    key: "keybindToggleDock",
+    groupKey: "shortcuts.group.reader",
+    labelKey: "keybind.keybindToggleDock.label",
+    defaultBinding: "KeyT",
+  },
+  {
     key: "keybindFocusSearch",
     groupKey: "shortcuts.group.series",
     labelKey: "keybind.keybindFocusSearch.label",
@@ -157,7 +163,9 @@ function normalizeKeyToCode(key: unknown): string {
   return "";
 }
 
-function matchesBinding(event: KeyboardEvent | null | undefined, binding: unknown): boolean {
+type KeyIdentity = Pick<KeyboardEvent, "key" | "code">;
+
+function matchesBinding(event: KeyIdentity | null | undefined, binding: unknown): boolean {
   const target = normalizeBinding(binding);
   if (!target || !event) return false;
   if (event.code === target) return true;
@@ -167,10 +175,34 @@ function matchesBinding(event: KeyboardEvent | null | undefined, binding: unknow
   return !!fallback && fallback === target;
 }
 
+// The action other than `key` that already holds this binding, if any. An empty binding conflicts with nothing.
+function findKeybindConflict(
+  key: KeybindKey,
+  binding: string,
+  getBinding: (field: KeybindKey) => string,
+): KeybindField | undefined {
+  if (!binding) return undefined;
+  return KEYBIND_FIELDS.find((field) => field.key !== key && getBinding(field.key) === binding);
+}
+
+// Keys that work in the reader without being configured. A key the user has assigned to anything takes priority.
+const READER_KEY_ALTERNATES: Partial<Readonly<Record<KeybindKey, (event: KeyIdentity) => boolean>>> = {
+  keybindSpeedUp: ({ key, code }) => key === "=" || key === "+" || code === "NumpadAdd",
+  keybindSpeedDown: ({ key, code }) => key === "-" || key === "_" || code === "NumpadSubtract",
+  keybindNextChapter: ({ key }) => key === "ArrowRight" || key === "PageDown" || key === "]",
+  keybindPrevChapter: ({ key }) => key === "ArrowLeft" || key === "PageUp" || key === "[",
+};
+
+function matchesReaderAlternate(event: KeyIdentity, key: KeybindKey): boolean {
+  return READER_KEY_ALTERNATES[key]?.(event) ?? false;
+}
+
 export {
   KEYBIND_DEFAULTS,
   KEYBIND_FIELDS,
   bindingToLabel,
+  findKeybindConflict,
   matchesBinding,
+  matchesReaderAlternate,
   normalizeEventToBinding,
 };
